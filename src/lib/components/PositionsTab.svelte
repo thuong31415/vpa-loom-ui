@@ -70,27 +70,54 @@
                     }
                 }
 
-                // Deterministic Algorithmic Position Actions (No Human Emotions)
+                // Native Engine Position Management Decisions (Direct from VPA Loom Core)
                 let actionCode = 'HOLD';
-                let actionTitle = '🟢 LỆNH THUẬT TOÁN: TIẾP TỤC NẮM GIỮ (HOLD)';
+                let actionTitle = '🟢 LỆNH ENGINE: TIẾP TỤC NẮM GIỮ (HOLD)';
                 let actionBadge = 'badge-emerald';
-                let actionDesc = 'Tất cả các điều kiện duy trì vị thế đều thỏa mãn. Không có tín hiệu vi phạm cấu trúc.';
+                let actionDesc = 'Tất cả các điều kiện duy trì vị thế đều thỏa mãn. Cấu trúc sóng và SL an toàn.';
 
-                if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
-                    actionCode = 'RUNNER_HOLD';
-                    actionTitle = '🚀 LỆNH THUẬT TOÁN: GỒNG LÃI RUNNER (TIẾP TỤC GIỮ)';
+                const engineRec = anaRes.data?.position?.recommendation;
+
+                if (engineRec === 'STOP_LOSS') {
+                    actionCode = 'STOP_LOSS';
+                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (CHẠM STOP LOSS)';
+                    actionBadge = 'badge-rose';
+                    actionDesc = 'Giá đã vi phạm ngưỡng cắt lỗ bảo vệ. Engine yêu cầu đóng vị thế dứt khoát.';
+                } else if (engineRec === 'TAKE_PROFIT') {
+                    actionCode = 'TAKE_PROFIT';
+                    actionTitle = '🟢 LỆNH ENGINE: CHỐT LỜI (TAKE PROFIT REACHED)';
                     actionBadge = 'badge-emerald';
-                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}). Thuật toán kích hoạt chế độ RUNNER: Dời Trailing Stop lên mốc $${tp.toFixed(3)} để khóa cứng lợi nhuận tối thiểu +9.1 R. Giữ lệnh cho đến khi có tín hiệu Dynamic Close.`;
+                    actionDesc = 'Giá đã chạm mục tiêu lợi nhuận định lượng của kế hoạch giao dịch.';
+                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL') {
+                    actionCode = 'EXIT_ON_OPPOSITE_SIGNAL';
+                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (TÍN HIỆU ĐẢO CHIỀU ĐỐI NGHỊCH)';
+                    actionBadge = 'badge-rose';
+                    actionDesc = 'Thị trường xuất hiện tín hiệu đảo chiều ngược hướng. Engine ra lệnh đóng vị thế ngay lập tức.';
+                } else if (engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS') {
+                    actionCode = 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS';
+                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (GÃY CẤU TRÚC SÓNG)';
+                    actionBadge = 'badge-rose';
+                    actionDesc = 'Gãy cấu trúc Swing đỡ giá. Engine kích hoạt đóng vị thế để bảo toàn vốn.';
+                } else if (engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
+                    actionCode = 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL';
+                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (SÓNG RUNNER ĐẢO CHIỀU ĐỈNH)';
+                    actionBadge = 'badge-rose';
+                    actionDesc = 'Chu kỳ Runner hoàn tất và xác nhận đảo chiều đỉnh. Engine ra lệnh chốt lãi toàn bộ.';
+                } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
+                    actionCode = 'RUNNER_HOLD';
+                    actionTitle = '🚀 LỆNH ENGINE: GỒNG LÃI RUNNER (TIẾP TỤC GIỮ)';
+                    actionBadge = 'badge-emerald';
+                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}). Engine duy trì chế độ RUNNER: Dời Trailing Stop lên $${tp.toFixed(3)} để khóa cứng tối thiểu +9.1 R. Giữ lệnh cho tới khi Engine phát tín hiệu Dynamic Close.`;
                 } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
                     actionCode = 'DYNAMIC_CLOSE_TRIGGERED';
-                    actionTitle = '🔴 LỆNH THUẬT TOÁN: KÍCH HOẠT ĐÓNG VỊ THẾ (DYNAMIC CLOSE)';
+                    actionTitle = '🔴 LỆNH ENGINE: KÍCH HOẠT DYNAMIC CLOSE';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Phát hiện lực cản xả hàng của Smart Money (HIGH_EFFORT_LOW_RESULT). Thuật toán kích hoạt tín hiệu THOÁT LỆNH DỨT KHOÁT để chốt lời toàn bộ!';
+                    actionDesc = 'Phát hiện lực cản xả hàng của Smart Money (HIGH_EFFORT_LOW_RESULT). Engine kích hoạt thoát lệnh dứt khoát.';
                 } else if (rMultiple >= 2.0 && sl < entry) {
                     actionCode = 'TIGHTEN_STOP_BE';
-                    actionTitle = '🛡️ LỆNH THUẬT TOÁN: NÂNG STOP LOSS VỀ ENTRY (HÒA VỐN)';
+                    actionTitle = '🛡️ LỆNH ENGINE: NÂNG STOP LOSS VỀ HÒA VỐN (BE)';
                     actionBadge = 'badge-amber';
-                    actionDesc = `Lợi nhuận đã đạt +${rMultiple.toFixed(2)} R (> 2.0R). Quy tắc quản lý rủi ro yêu cầu dời Stop Loss về giá Entry ($${entry.toFixed(3)}) để đưa rủi ro vị thế về 0%.`;
+                    actionDesc = `Lợi nhuận đã đạt +${rMultiple.toFixed(2)} R (> 2.0R). Quy tắc Engine yêu cầu dời Stop Loss về giá Entry ($${entry.toFixed(3)}) để đưa rủi ro về 0%.`;
                 }
 
                 return {
