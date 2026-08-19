@@ -28,12 +28,22 @@
                 const risk = parseFloat(p.quote_amount ?? p.quoteAmount ?? p.notional_amount ?? p.risk) || 200;
                 const direction = (p.direction || 'LONG').toUpperCase();
 
-                // Fetch latest current price
+                // Fetch latest current price and market analysis
                 let currentPrice = entry;
+                let effortType = 'NORMAL';
+                let trend = 'BULLISH';
                 try {
                     const anaRes = await fetchAnalysis(sym);
-                    if (anaRes.success && anaRes.data && anaRes.data.reference_price) {
-                        currentPrice = parseFloat(anaRes.data.reference_price);
+                    if (anaRes.success && anaRes.data) {
+                        if (anaRes.data.reference_price) {
+                            currentPrice = parseFloat(anaRes.data.reference_price);
+                        }
+                        if (anaRes.data.market_state?.effort_result?.type) {
+                            effortType = anaRes.data.market_state.effort_result.type;
+                        }
+                        if (anaRes.data.market_state?.trend) {
+                            trend = anaRes.data.market_state.trend;
+                        }
                     }
                 } catch (e) {
                     console.warn(`Could not fetch live price for ${sym}:`, e);
@@ -60,6 +70,25 @@
                     }
                 }
 
+                // Smart Position Advisory
+                let advisoryTitle = '🟢 TIẾP TỤC NẮM GIỮ (HOLD)';
+                let advisoryBadge = 'badge-emerald';
+                let advisoryDesc = 'Cấu trúc nến và vùng bảo vệ Stop Loss vẫn an toàn. Tiếp tục gồng theo kế hoạch.';
+
+                if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
+                    advisoryTitle = '🚀 RUNNER: ĐÃ VƯỢT TARGET — TIẾP TỤC GỒNG LÃI';
+                    advisoryBadge = 'badge-emerald';
+                    advisoryDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ban đầu ($${tp.toFixed(3)}). Động lực tăng vẫn rất mạnh! Khuyến nghị dời Trailing Stop lên $${tp.toFixed(3)} để khóa chắc lợi nhuận tối thiểu và gồng tiếp trọn sóng lớn!`;
+                } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
+                    advisoryTitle = '⚠️ CẢNH BÁO: XUẤT HIỆN LỰC BÁN CẢN (ABSORPTION)';
+                    advisoryBadge = 'badge-amber';
+                    advisoryDesc = 'Khối lượng giao dịch tăng cao nhưng nến bị rút râu (HIGH_EFFORT_LOW_RESULT). Có thể gặp áp lực chốt lời ngắn hạn, cân nhắc nâng Stop Loss bảo vệ lãi!';
+                } else if (rMultiple >= 5) {
+                    advisoryTitle = '💎 LÃI LỚN: TIẾP TỤC GỒNG XU HƯỚNG';
+                    advisoryBadge = 'badge-emerald';
+                    advisoryDesc = `Vị thế đang có hiệu suất rất cao (+${rMultiple.toFixed(2)} R). Xu hướng ${trend} duy trì tốt, chưa có tín hiệu phá vỡ cấu trúc giảm.`;
+                }
+
                 return {
                     id: `pos-${p.id}`,
                     rawId: p.id,
@@ -79,6 +108,9 @@
                     pnlUsdt: pnlUsdt,
                     rMultiple: rMultiple,
                     rResult: `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`,
+                    advisoryTitle: advisoryTitle,
+                    advisoryBadge: advisoryBadge,
+                    advisoryDesc: advisoryDesc,
                     actionBtnText: 'Chốt đóng vị thế',
                     nextStatus: 'CLOSED'
                 };
@@ -218,6 +250,21 @@
                         <span class="p-metric-val" style="font-size: 1.15rem; font-weight: 800; color: {pos.rMultiple >= 0 ? 'var(--emerald)' : 'var(--rose)'}; margin-top: 0.15rem; display: block;">
                             {pos.rResult}
                         </span>
+                    </div>
+                </div>
+
+                <!-- Smart Trade Advisory / Holding Recommendation -->
+                <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; background: {pos.advisoryBadge === 'badge-amber' ? 'var(--amber-bg)' : 'var(--emerald-bg)'}; border: 1px solid {pos.advisoryBadge === 'badge-amber' ? 'var(--amber-border)' : 'var(--emerald-border)'}; border-radius: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <span style="font-size: 0.85rem; font-weight: 800; color: {pos.advisoryBadge === 'badge-amber' ? 'var(--amber)' : 'var(--emerald)'};">
+                            {pos.advisoryTitle}
+                        </span>
+                        <span class="badge {pos.advisoryBadge}" style="font-size: 0.75rem;">
+                            {pos.direction === 'LONG' && pos.tp > 0 && pos.currentPrice >= pos.tp ? '🚀 VƯỢT TARGET TP' : 'SÓNG TĂNG DUY TRÌ'}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45;">
+                        {pos.advisoryDesc}
                     </div>
                 </div>
 
