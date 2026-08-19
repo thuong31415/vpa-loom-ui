@@ -159,14 +159,14 @@ export async function createPositionApi(orderData) {
 }
 
 /**
- * Close an existing position
+ * Close an active position
  * POST /api/v1/positions/{id}/close
  */
 export async function closePositionApi(id, exitPrice, reason = 'MANUAL_CLOSE') {
     const endpoint = `/api/v1/positions/${id}/close`;
     const body = JSON.stringify({
         exitPrice: parseFloat(exitPrice),
-        reason: reason
+        reason
     });
 
     const res = await safeJsonFetch(endpoint, {
@@ -179,6 +179,19 @@ export async function closePositionApi(id, exitPrice, reason = 'MANUAL_CLOSE') {
         return { success: true, data: res.data };
     }
     return { success: false };
+}
+
+/**
+ * Fetch closed trade history from PostgreSQL database
+ * GET /api/v1/positions/history?limit=50
+ */
+export async function fetchPositionHistoryApi(limit = 50) {
+    const endpoint = `/api/v1/positions/history?limit=${limit}`;
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
+    if (res.ok && Array.isArray(res.data)) {
+        return { success: true, data: res.data };
+    }
+    return { success: false, data: [] };
 }
 
 /**
