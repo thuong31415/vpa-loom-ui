@@ -62,9 +62,9 @@ async function safeJsonFetch(endpoint, options = {}) {
 
 /**
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=600
+ * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
-export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 600) {
+export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
@@ -78,9 +78,9 @@ export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit =
 
 /**
  * Hydrate and resolve analysis for a single symbol
- * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=600
+ * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
-export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 600) {
+export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
@@ -94,9 +94,9 @@ export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit
 
 /**
  * Fetch market scanner candidates across all 12 universe coins
- * POST /api/v1/analysis/scan?interval=4h&limit=600
+ * POST /api/v1/analysis/scan?interval=4h&limit=720
  */
-export async function fetchScanCandidates(interval = '4h', limit = 600) {
+export async function fetchScanCandidates(interval = '4h', limit = 720) {
     const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}`;
 
     let res = await safeJsonFetch(endpoint, { method: 'POST' });
