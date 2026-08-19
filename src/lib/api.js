@@ -8,51 +8,76 @@ export const UNIVERSE_COINS = [
 ];
 
 /**
+ * Robust JSON Fetcher:
+ * 1. Tries relative path (Vite / Nginx proxy).
+ * 2. If proxy returns HTML / 404 / fails, falls back directly to REMOTE_API_HOST (http://103.167.88.197:8081).
+ * 3. Always validates Content-Type is JSON before parsing to prevent "Unexpected token '<'".
+ */
+async function safeJsonFetch(endpoint, options = {}) {
+    const defaultHeaders = {
+        'Accept': 'application/json',
+        ...(options.headers || {})
+    };
+
+    // 1. Try relative path first (through reverse proxy)
+    const relativeUrl = `${BASE_URL}${endpoint}`;
+    try {
+        const response = await fetch(relativeUrl, { ...options, headers: defaultHeaders });
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('application/json')) {
+            const data = await response.json();
+            return { ok: true, data, status: response.status, source: 'PROXY' };
+        }
+    } catch (err) {
+        console.warn(`Relative proxy fetch failed for ${endpoint}:`, err);
+    }
+
+    // 2. Direct fallback to remote host if relative path fails or returns HTML
+    if (REMOTE_API_HOST) {
+        try {
+            const directUrl = `${REMOTE_API_HOST}${endpoint}`;
+            const response = await fetch(directUrl, { ...options, headers: defaultHeaders });
+            const contentType = response.headers.get('content-type') || '';
+            if (response.ok && contentType.includes('application/json')) {
+                const data = await response.json();
+                return { ok: true, data, status: response.status, source: 'DIRECT' };
+            }
+        } catch (err) {
+            console.warn(`Direct fetch failed for ${endpoint}:`, err);
+        }
+    }
+
+    return { ok: false, error: 'Không thể tải dữ liệu JSON từ API Backend' };
+}
+
+/**
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
  * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=500
  */
 export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 500) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const url = `${BASE_URL}/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
+    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
 
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            return { success: true, data, source: 'LIVE_API' };
-        } else {
-            return { success: false, error: `API Error (${response.status}): ${response.statusText}` };
-        }
-    } catch (err) {
-        console.warn(`Error fetching analysis for ${cleanSymbol}:`, err);
-        return { success: false, error: err.message };
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
+    if (res.ok) {
+        return { success: true, data: res.data, source: res.source };
     }
+    return { success: false, error: res.error || 'Lỗi kết nối API phân tích' };
 }
 
 /**
- * Hydrate and resolve analysis for a single symbol (executes missing prerequisites if needed)
+ * Hydrate and resolve analysis for a single symbol
  * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=500
  */
 export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 500) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const url = `${BASE_URL}/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
+    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
 
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            return { success: true, data, source: 'LIVE_API' };
-        }
-    } catch (err) {
-        console.warn(`Error resolving analysis for ${cleanSymbol}:`, err);
+    const res = await safeJsonFetch(endpoint, { method: 'POST' });
+    if (res.ok) {
+        return { success: true, data: res.data, source: res.source };
     }
     return fetchAnalysis(cleanSymbol, interval, limit);
 }
@@ -62,25 +87,15 @@ export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit
  * POST /api/v1/analysis/scan?interval=4h&limit=500
  */
 export async function fetchScanCandidates(interval = '4h', limit = 500) {
-    const url = `${BASE_URL}/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}`;
+    const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}`;
 
-    try {
-        let response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.status === 405) {
-            response = await fetch(url, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
-        }
-        if (response.ok) {
-            const data = await response.json();
-            return { data, source: 'LIVE_API', success: true };
-        }
-    } catch (err) {
-        console.warn('Backend /scan API unavailable:', err);
+    let res = await safeJsonFetch(endpoint, { method: 'POST' });
+    if (!res.ok) {
+        res = await safeJsonFetch(endpoint, { method: 'GET' });
+    }
+
+    if (res.ok && res.data) {
+        return { data: res.data, source: res.source, success: true };
     }
 
     return {
@@ -102,27 +117,17 @@ export async function fetchScanCandidates(interval = '4h', limit = 500) {
 }
 
 /**
- * Fetch open position for a symbol or all symbols
+ * Fetch open position for a symbol
  * GET /api/v1/positions?symbol=ETHUSDT
  */
 export async function fetchPositionsApi(symbol = 'ETHUSDT') {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/positions?symbol=${encodeURIComponent(cleanSymbol)}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const text = await response.text();
-            if (!text || text.trim() === '') {
-                return { success: true, data: null };
-            }
-            const data = JSON.parse(text);
-            return { success: true, data };
-        }
-    } catch (err) {
-        console.warn('Backend GET /api/v1/positions unavailable:', err);
+    const endpoint = `/api/v1/positions?symbol=${encodeURIComponent(cleanSymbol)}`;
+
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false, data: null };
 }
@@ -132,27 +137,23 @@ export async function fetchPositionsApi(symbol = 'ETHUSDT') {
  * POST /api/v1/positions
  */
 export async function createPositionApi(orderData) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/positions`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json' 
-            },
-            body: JSON.stringify({
-                symbol: orderData.symbol,
-                interval: orderData.interval || '4h',
-                direction: orderData.direction || 'LONG',
-                entryPrice: parseFloat(orderData.entry),
-                quoteAmount: parseFloat(orderData.risk || 200)
-            })
-        });
-        if (response.ok) {
-            const resJson = await response.json();
-            return { success: true, data: resJson };
-        }
-    } catch (err) {
-        console.warn('Backend POST /api/v1/positions error:', err);
+    const endpoint = '/api/v1/positions';
+    const body = JSON.stringify({
+        symbol: orderData.symbol,
+        interval: orderData.interval || '4h',
+        direction: orderData.direction || 'LONG',
+        entryPrice: parseFloat(orderData.entry),
+        quoteAmount: parseFloat(orderData.risk || 200)
+    });
+
+    const res = await safeJsonFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+    });
+
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false };
 }
@@ -162,44 +163,32 @@ export async function createPositionApi(orderData) {
  * POST /api/v1/positions/{id}/close
  */
 export async function closePositionApi(id, exitPrice, reason = 'MANUAL_CLOSE') {
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/positions/${id}/close`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json' 
-            },
-            body: JSON.stringify({
-                exitPrice: parseFloat(exitPrice),
-                reason: reason
-            })
-        });
-        if (response.ok) {
-            const resJson = await response.json();
-            return { success: true, data: resJson };
-        }
-    } catch (err) {
-        console.warn(`Backend POST /api/v1/positions/${id}/close error:`, err);
+    const endpoint = `/api/v1/positions/${id}/close`;
+    const body = JSON.stringify({
+        exitPrice: parseFloat(exitPrice),
+        reason: reason
+    });
+
+    const res = await safeJsonFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+    });
+
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false };
 }
 
 /**
- * Account Summary API (with local fallback if endpoint not implemented on backend)
+ * Account Summary API
  * GET /api/v1/account/summary
  */
 export async function fetchAccountSummaryApi() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/account/summary`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            return { success: true, data };
-        }
-    } catch (err) {
-        // Fallback gracefully
+    const res = await safeJsonFetch('/api/v1/account/summary', { method: 'GET' });
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false };
 }
@@ -209,17 +198,9 @@ export async function fetchAccountSummaryApi() {
  * GET /api/v1/account/transactions
  */
 export async function fetchCapitalTransactionsApi() {
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/account/transactions`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            return { success: true, data };
-        }
-    } catch (err) {
-        // Fallback gracefully
+    const res = await safeJsonFetch('/api/v1/account/transactions', { method: 'GET' });
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false, data: [] };
 }
@@ -229,25 +210,13 @@ export async function fetchCapitalTransactionsApi() {
  * POST /api/v1/account/transactions
  */
 export async function createCapitalTransactionApi(type, amount, note) {
-    try {
-        const response = await fetch(`${BASE_URL}/api/v1/account/transactions`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json' 
-            },
-            body: JSON.stringify({
-                type,
-                amount: parseFloat(amount),
-                note
-            })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            return { success: true, data };
-        }
-    } catch (err) {
-        console.warn('Backend POST /api/v1/account/transactions error:', err);
+    const res = await safeJsonFetch('/api/v1/account/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, amount: parseFloat(amount), note })
+    });
+    if (res.ok) {
+        return { success: true, data: res.data };
     }
     return { success: false };
 }
