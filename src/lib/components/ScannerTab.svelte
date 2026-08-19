@@ -199,15 +199,25 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                         <span class="price-label" style="color: var(--emerald); font-weight: 700;">🟢 VÙNG HỖ TRỢ (SUPPORT)</span>
                         <span class="badge badge-emerald">
-                            {singleAnalysisData.key_levels?.support?.relation === 'PRICE_ABOVE' ? 'Giá ở trên' : (singleAnalysisData.key_levels?.support?.relation === 'AT_ZONE' ? 'Đang tại vùng' : 'Giá ở dưới')}
+                            {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
+                                {singleAnalysisData.key_levels?.support?.relation === 'PRICE_ABOVE' ? 'Giá ở trên' : (singleAnalysisData.key_levels?.support?.relation === 'AT_ZONE' ? 'Đang tại vùng' : 'Giá ở dưới')}
+                            {:else}
+                                Chưa xác lập
+                            {/if}
                         </span>
                     </div>
-                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--emerald);">
-                        ${singleAnalysisData.key_levels?.support?.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels?.support?.upper?.toLocaleString('en-US')}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--emerald); margin-top: 0.35rem;">
-                        Cách mép gần nhất: <strong>${singleAnalysisData.key_levels?.support?.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels?.support?.distance_percent?.toFixed(2)}%)
-                    </div>
+                    {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
+                        <div style="font-size: 1.25rem; font-weight: 800; color: var(--emerald);">
+                            ${singleAnalysisData.key_levels.support.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels.support.upper?.toLocaleString('en-US')}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--emerald); margin-top: 0.35rem;">
+                            Cách mép gần nhất: <strong>${singleAnalysisData.key_levels.support.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(2)}%)
+                        </div>
+                    {:else}
+                        <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-muted); margin-top: 0.25rem;">
+                            🛡️ Đang dò đáy mới trong khung 500 nến
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Resistance Zone -->
@@ -215,15 +225,28 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                         <span class="price-label" style="color: var(--rose); font-weight: 700;">🔴 VÙNG KHÁNG CỰ (RESISTANCE)</span>
                         <span class="badge badge-rose">
-                            {singleAnalysisData.key_levels?.resistance?.relation === 'PRICE_BELOW' ? 'Giá ở dưới' : (singleAnalysisData.key_levels?.resistance?.relation === 'AT_ZONE' ? 'Đang tại vùng' : 'Giá ở trên')}
+                            {#if singleAnalysisData.key_levels?.resistance?.status === 'AVAILABLE'}
+                                {singleAnalysisData.key_levels?.resistance?.relation === 'PRICE_BELOW' ? 'Giá ở dưới' : (singleAnalysisData.key_levels?.resistance?.relation === 'AT_ZONE' ? 'Đang tại vùng' : 'Giá ở trên')}
+                            {:else}
+                                Không Gian Mở (Open Air)
+                            {/if}
                         </span>
                     </div>
-                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--rose);">
-                        ${singleAnalysisData.key_levels?.resistance?.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels?.resistance?.upper?.toLocaleString('en-US')}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.35rem;">
-                        Cách mép gần nhất: <strong>${singleAnalysisData.key_levels?.resistance?.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels?.resistance?.distance_percent?.toFixed(2)}%)
-                    </div>
+                    {#if singleAnalysisData.key_levels?.resistance?.status === 'AVAILABLE'}
+                        <div style="font-size: 1.25rem; font-weight: 800; color: var(--rose);">
+                            ${singleAnalysisData.key_levels.resistance.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels.resistance.upper?.toLocaleString('en-US')}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.35rem;">
+                            Cách mép gần nhất: <strong>${singleAnalysisData.key_levels.resistance.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(2)}%)
+                        </div>
+                    {:else}
+                        <div style="font-size: 1.05rem; font-weight: 700; color: var(--rose); margin-top: 0.25rem;">
+                            🚀 Đã phá toàn bộ Kháng cự (Price Discovery)
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.35rem;">
+                            Giá vượt đỉnh 500 nến 4H gần nhất, phía trên chưa có cản cũ.
+                        </div>
+                    {/if}
                 </div>
             </div>
 
