@@ -132,7 +132,7 @@
 
         {#if isSingleLoading}
             <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">⌛ Đang phân tích dữ liệu 360 nến 4H (2 tháng) cho {selectedSymbol}...</div>
+                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">⌛ Đang phân tích dữ liệu 600 nến 4H cho {selectedSymbol}...</div>
                 <div style="font-size: 0.85rem;">Kết nối trực tiếp tới <code>{BASE_URL}/api/v1/analysis?symbol={selectedSymbol}</code></div>
             </div>
         {:else if singleError}
@@ -214,7 +214,7 @@
                         </div>
                     {:else}
                         <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-muted); margin-top: 0.25rem;">
-                            🛡️ Đang dò đáy mới trong khung 360 nến (2 tháng)
+                            🛡️ Đang dò đáy mới trong khung 600 nến
                         </div>
                     {/if}
                 </div>
@@ -243,7 +243,7 @@
                             🚀 Đã phá toàn bộ Kháng cự (Price Discovery)
                         </div>
                         <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.35rem;">
-                            Giá vượt đỉnh 360 nến 4H gần nhất (2 tháng), phía trên chưa có cản cũ.
+                            Giá vượt đỉnh 600 nến 4H gần nhất, phía trên chưa có cản cũ.
                         </div>
                     {/if}
                 </div>

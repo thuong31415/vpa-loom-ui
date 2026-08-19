@@ -53,8 +53,9 @@
             }
         } catch (err) {
             console.warn('Error loading history:', err);
+        } finally {
+            isLoading = false;
         }
-        isLoading = false;
     }
 
     onMount(() => {
