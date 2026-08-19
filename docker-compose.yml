@@ -1,0 +1,11 @@
+services:
+  vpa-loom-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vpa-loom-ui
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
