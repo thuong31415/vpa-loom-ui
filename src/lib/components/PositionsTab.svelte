@@ -70,23 +70,27 @@
                     }
                 }
 
-                // Smart Position Advisory
-                let advisoryTitle = '🟢 TIẾP TỤC NẮM GIỮ (HOLD)';
-                let advisoryBadge = 'badge-emerald';
-                let advisoryDesc = 'Cấu trúc nến và vùng bảo vệ Stop Loss vẫn an toàn. Tiếp tục gồng theo kế hoạch.';
+                // Deterministic Algorithmic Position Actions (No Human Emotions)
+                let actionCode = 'HOLD';
+                let actionTitle = '🟢 LỆNH THUẬT TOÁN: TIẾP TỤC NẮM GIỮ (HOLD)';
+                let actionBadge = 'badge-emerald';
+                let actionDesc = 'Tất cả các điều kiện duy trì vị thế đều thỏa mãn. Không có tín hiệu vi phạm cấu trúc.';
 
                 if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
-                    advisoryTitle = '🚀 RUNNER: ĐÃ VƯỢT TARGET — TIẾP TỤC GỒNG LÃI';
-                    advisoryBadge = 'badge-emerald';
-                    advisoryDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ban đầu ($${tp.toFixed(3)}). Động lực tăng vẫn rất mạnh! Khuyến nghị dời Trailing Stop lên $${tp.toFixed(3)} để khóa chắc lợi nhuận tối thiểu và gồng tiếp trọn sóng lớn!`;
+                    actionCode = 'RUNNER_HOLD';
+                    actionTitle = '🚀 LỆNH THUẬT TOÁN: GỒNG LÃI RUNNER (TIẾP TỤC GIỮ)';
+                    actionBadge = 'badge-emerald';
+                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}). Thuật toán kích hoạt chế độ RUNNER: Dời Trailing Stop lên mốc $${tp.toFixed(3)} để khóa cứng lợi nhuận tối thiểu +9.1 R. Giữ lệnh cho đến khi có tín hiệu Dynamic Close.`;
                 } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
-                    advisoryTitle = '⚠️ CẢNH BÁO: XUẤT HIỆN LỰC BÁN CẢN (ABSORPTION)';
-                    advisoryBadge = 'badge-amber';
-                    advisoryDesc = 'Khối lượng giao dịch tăng cao nhưng nến bị rút râu (HIGH_EFFORT_LOW_RESULT). Có thể gặp áp lực chốt lời ngắn hạn, cân nhắc nâng Stop Loss bảo vệ lãi!';
-                } else if (rMultiple >= 5) {
-                    advisoryTitle = '💎 LÃI LỚN: TIẾP TỤC GỒNG XU HƯỚNG';
-                    advisoryBadge = 'badge-emerald';
-                    advisoryDesc = `Vị thế đang có hiệu suất rất cao (+${rMultiple.toFixed(2)} R). Xu hướng ${trend} duy trì tốt, chưa có tín hiệu phá vỡ cấu trúc giảm.`;
+                    actionCode = 'DYNAMIC_CLOSE_TRIGGERED';
+                    actionTitle = '🔴 LỆNH THUẬT TOÁN: KÍCH HOẠT ĐÓNG VỊ THẾ (DYNAMIC CLOSE)';
+                    actionBadge = 'badge-rose';
+                    actionDesc = 'Phát hiện lực cản xả hàng của Smart Money (HIGH_EFFORT_LOW_RESULT). Thuật toán kích hoạt tín hiệu THOÁT LỆNH DỨT KHOÁT để chốt lời toàn bộ!';
+                } else if (rMultiple >= 2.0 && sl < entry) {
+                    actionCode = 'TIGHTEN_STOP_BE';
+                    actionTitle = '🛡️ LỆNH THUẬT TOÁN: NÂNG STOP LOSS VỀ ENTRY (HÒA VỐN)';
+                    actionBadge = 'badge-amber';
+                    actionDesc = `Lợi nhuận đã đạt +${rMultiple.toFixed(2)} R (> 2.0R). Quy tắc quản lý rủi ro yêu cầu dời Stop Loss về giá Entry ($${entry.toFixed(3)}) để đưa rủi ro vị thế về 0%.`;
                 }
 
                 return {
@@ -108,10 +112,11 @@
                     pnlUsdt: pnlUsdt,
                     rMultiple: rMultiple,
                     rResult: `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`,
-                    advisoryTitle: advisoryTitle,
-                    advisoryBadge: advisoryBadge,
-                    advisoryDesc: advisoryDesc,
-                    actionBtnText: 'Chốt đóng vị thế',
+                    actionCode: actionCode,
+                    actionTitle: actionTitle,
+                    actionBadge: actionBadge,
+                    actionDesc: actionDesc,
+                    actionBtnText: actionCode === 'DYNAMIC_CLOSE_TRIGGERED' ? '🔴 Chốt đóng vị thế ngay' : 'Chốt đóng vị thế',
                     nextStatus: 'CLOSED'
                 };
             });
@@ -253,18 +258,18 @@
                     </div>
                 </div>
 
-                <!-- Smart Trade Advisory / Holding Recommendation -->
-                <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; background: {pos.advisoryBadge === 'badge-amber' ? 'var(--amber-bg)' : 'var(--emerald-bg)'}; border: 1px solid {pos.advisoryBadge === 'badge-amber' ? 'var(--amber-border)' : 'var(--emerald-border)'}; border-radius: 10px;">
+                <!-- Deterministic Algorithmic Position Actions -->
+                <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; background: {pos.actionBadge === 'badge-rose' ? 'var(--rose-bg)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber-bg)' : 'var(--emerald-bg)')}; border: 1px solid {pos.actionBadge === 'badge-rose' ? 'var(--rose-border)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber-border)' : 'var(--emerald-border)')}; border-radius: 10px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <span style="font-size: 0.85rem; font-weight: 800; color: {pos.advisoryBadge === 'badge-amber' ? 'var(--amber)' : 'var(--emerald)'};">
-                            {pos.advisoryTitle}
+                        <span style="font-size: 0.85rem; font-weight: 800; color: {pos.actionBadge === 'badge-rose' ? 'var(--rose)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber)' : 'var(--emerald)')};">
+                            {pos.actionTitle}
                         </span>
-                        <span class="badge {pos.advisoryBadge}" style="font-size: 0.75rem;">
-                            {pos.direction === 'LONG' && pos.tp > 0 && pos.currentPrice >= pos.tp ? '🚀 VƯỢT TARGET TP' : 'SÓNG TĂNG DUY TRÌ'}
+                        <span class="badge {pos.actionBadge}" style="font-size: 0.75rem;">
+                            {pos.actionCode === 'DYNAMIC_CLOSE_TRIGGERED' ? '🔴 ĐÓNG VỊ THẾ' : (pos.actionCode === 'RUNNER_HOLD' ? '🚀 RUNNER ACTIVE' : 'GIỮ VỊ THẾ')}
                         </span>
                     </div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45;">
-                        {pos.advisoryDesc}
+                        {pos.actionDesc}
                     </div>
                 </div>
 
