@@ -1,25 +1,33 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS } from '../api.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
-    let currentFilter = 'ALL';
     let isLoading = false;
-
     let positions = [];
+
+    let totalPnlUsdt = 0;
+    let totalPnlPercent = 0;
+    let totalR = 0;
+    let totalCapital = 0;
 
     export async function loadLivePositions() {
         isLoading = true;
         try {
-            const promises = UNIVERSE_COINS.map(sym => fetchPositionsApi(sym));
-            const results = await Promise.all(promises);
-            
-            const rawPositions = results
-                .filter(r => r.success && r.data && r.data.id)
-                .map(r => r.data);
+            const res = await fetchOpenPositionsApi();
+            const rawPositions = (res.success && Array.isArray(res.data)) ? res.data : [];
 
-            // Enrich each position with live current price from analysis API
+            if (rawPositions.length === 0) {
+                positions = [];
+                totalPnlUsdt = 0;
+                totalPnlPercent = 0;
+                totalR = 0;
+                totalCapital = 0;
+                return;
+            }
+
+            // Enrich each open position with live market price and analysis
             const enrichedPromises = rawPositions.map(async (p) => {
                 const sym = p.symbol || 'LINKUSDT';
                 const entry = parseFloat(p.entry_price ?? p.entryPrice ?? p.entry) || 0;
@@ -28,13 +36,14 @@
                 const risk = parseFloat(p.quote_amount ?? p.quoteAmount ?? p.notional_amount ?? p.risk) || 200;
                 const direction = (p.direction || 'LONG').toUpperCase();
 
-                // Fetch latest current price and market analysis
+                // Fetch latest current price and market analysis for this active open coin
                 let currentPrice = entry;
                 let effortType = 'NORMAL';
                 let trend = 'BULLISH';
+                let engineRec = null;
                 try {
                     const anaRes = await fetchAnalysis(sym);
-                    if (anaRes.success && anaRes.data) {
+                    if (anaRes && anaRes.success && anaRes.data) {
                         if (anaRes.data.reference_price) {
                             currentPrice = parseFloat(anaRes.data.reference_price);
                         }
@@ -44,9 +53,12 @@
                         if (anaRes.data.market_state?.trend) {
                             trend = anaRes.data.market_state.trend;
                         }
+                        if (anaRes.data.position?.recommendation) {
+                            engineRec = anaRes.data.position.recommendation;
+                        }
                     }
                 } catch (e) {
-                    console.warn(`Could not fetch live price for ${sym}:`, e);
+                    console.warn(`Could not fetch live analysis for ${sym}:`, e);
                 }
 
                 // Compute real-time PnL & R-Multiple
@@ -70,54 +82,31 @@
                     }
                 }
 
-                // Native Engine Position Management Decisions (Direct from VPA Loom Core)
-                let actionCode = 'HOLD';
-                let actionTitle = '🟢 LỆNH ENGINE: TIẾP TỤC NẮM GIỮ (HOLD)';
+                // Streamlined Binary Position Decision (HOLD vs BÁN)
+                let isSell = false;
+                let actionTitle = '🟢 HOLD (TIẾP TỤC GIỮ)';
                 let actionBadge = 'badge-emerald';
-                let actionDesc = 'Tất cả các điều kiện duy trì vị thế đều thỏa mãn. Cấu trúc sóng và SL an toàn.';
-
-                const engineRec = anaRes.data?.position?.recommendation;
+                let actionDesc = `Vị thế an toàn, cấu trúc sóng duy trì (+${rMultiple.toFixed(2)} R). Tiếp tục gồng theo sóng.`;
 
                 if (engineRec === 'STOP_LOSS') {
-                    actionCode = 'STOP_LOSS';
-                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (CHẠM STOP LOSS)';
+                    isSell = true;
+                    actionTitle = '🔴 BÁN (CHẠM STOP LOSS)';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Giá đã vi phạm ngưỡng cắt lỗ bảo vệ. Engine yêu cầu đóng vị thế dứt khoát.';
-                } else if (engineRec === 'TAKE_PROFIT') {
-                    actionCode = 'TAKE_PROFIT';
-                    actionTitle = '🟢 LỆNH ENGINE: CHỐT LỜI (TAKE PROFIT REACHED)';
-                    actionBadge = 'badge-emerald';
-                    actionDesc = 'Giá đã chạm mục tiêu lợi nhuận định lượng của kế hoạch giao dịch.';
-                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL') {
-                    actionCode = 'EXIT_ON_OPPOSITE_SIGNAL';
-                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (TÍN HIỆU ĐẢO CHIỀU ĐỐI NGHỊCH)';
+                    actionDesc = 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Đóng vị thế ngay.';
+                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
+                    isSell = true;
+                    actionTitle = '🔴 BÁN (ĐẢO CHIỀU CẤU TRÚC)';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Thị trường xuất hiện tín hiệu đảo chiều ngược hướng. Engine ra lệnh đóng vị thế ngay lập tức.';
-                } else if (engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS') {
-                    actionCode = 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS';
-                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (GÃY CẤU TRÚC SÓNG)';
-                    actionBadge = 'badge-rose';
-                    actionDesc = 'Gãy cấu trúc Swing đỡ giá. Engine kích hoạt đóng vị thế để bảo toàn vốn.';
-                } else if (engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
-                    actionCode = 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL';
-                    actionTitle = '🔴 LỆNH ENGINE: ĐÓNG VỊ THẾ (SÓNG RUNNER ĐẢO CHIỀU ĐỈNH)';
-                    actionBadge = 'badge-rose';
-                    actionDesc = 'Chu kỳ Runner hoàn tất và xác nhận đảo chiều đỉnh. Engine ra lệnh chốt lãi toàn bộ.';
-                } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
-                    actionCode = 'RUNNER_HOLD';
-                    actionTitle = '🚀 LỆNH ENGINE: GỒNG LÃI RUNNER (TIẾP TỤC GIỮ)';
-                    actionBadge = 'badge-emerald';
-                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}). Engine duy trì chế độ RUNNER: Dời Trailing Stop lên $${tp.toFixed(3)} để khóa cứng tối thiểu +9.1 R. Giữ lệnh cho tới khi Engine phát tín hiệu Dynamic Close.`;
+                    actionDesc = 'Cây nến đã đóng xác nhận tín hiệu đảo chiều / gãy cấu trúc. Đóng vị thế chốt lời ngay.';
                 } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
-                    actionCode = 'DYNAMIC_CLOSE_TRIGGERED';
-                    actionTitle = '🔴 LỆNH ENGINE: KÍCH HOẠT DYNAMIC CLOSE';
+                    isSell = true;
+                    actionTitle = '🔴 BÁN (XUẤT HIỆN LỰC XẢ)';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Phát hiện lực cản xả hàng của Smart Money (HIGH_EFFORT_LOW_RESULT). Engine kích hoạt thoát lệnh dứt khoát.';
-                } else if (rMultiple >= 2.0 && sl < entry) {
-                    actionCode = 'TIGHTEN_STOP_BE';
-                    actionTitle = '🛡️ LỆNH ENGINE: NÂNG STOP LOSS VỀ HÒA VỐN (BE)';
-                    actionBadge = 'badge-amber';
-                    actionDesc = `Lợi nhuận đã đạt +${rMultiple.toFixed(2)} R (> 2.0R). Quy tắc Engine yêu cầu dời Stop Loss về giá Entry ($${entry.toFixed(3)}) để đưa rủi ro về 0%.`;
+                    actionDesc = 'Nến đóng có lực xả hàng lớn của Smart Money (HIGH_EFFORT_LOW_RESULT). Đóng vị thế chốt lời ngay.';
+                } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
+                    actionTitle = '🟢 HOLD (GỒNG LÃI RUNNER)';
+                    actionBadge = 'badge-emerald';
+                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}), sóng vẫn đang mạnh (+${rMultiple.toFixed(2)} R). Tiếp tục HOLD theo sóng cho đến khi nến đóng đảo chiều.`;
                 }
 
                 return {
@@ -139,27 +128,29 @@
                     pnlUsdt: pnlUsdt,
                     rMultiple: rMultiple,
                     rResult: `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`,
-                    actionCode: actionCode,
+                    isSell: isSell,
                     actionTitle: actionTitle,
                     actionBadge: actionBadge,
                     actionDesc: actionDesc,
-                    actionBtnText: actionCode === 'DYNAMIC_CLOSE_TRIGGERED' ? '🔴 Chốt đóng vị thế ngay' : 'Chốt đóng vị thế',
+                    actionBtnText: isSell ? '🔴 BÁN NGAY' : 'Chốt đóng vị thế',
                     nextStatus: 'CLOSED'
                 };
             });
 
             const livePositions = await Promise.all(enrichedPromises);
+            positions = livePositions;
 
-            if (livePositions.length > 0) {
-                positions = livePositions;
-            } else if (positions.length === 0) {
-                // Keep empty state
-                positions = [];
-            }
+            // Summary Totals
+            totalPnlUsdt = positions.reduce((acc, curr) => acc + curr.pnlUsdt, 0);
+            totalCapital = positions.reduce((acc, curr) => acc + curr.risk, 0);
+            totalR = positions.reduce((acc, curr) => acc + curr.rMultiple, 0);
+            totalPnlPercent = totalCapital > 0 ? (totalPnlUsdt / totalCapital) * 100 : 0;
+
         } catch (err) {
             console.warn('Error loading live positions:', err);
+        } finally {
+            isLoading = false;
         }
-        isLoading = false;
     }
 
     onMount(() => {
@@ -186,43 +177,42 @@
         }
         positions = [...positions];
     }
-
-    $: filteredPositions = positions.filter(p => currentFilter === 'ALL' || p.status === currentFilter);
 </script>
 
 <div class="card" style="box-shadow: none; border: none; background: transparent; padding: 0;">
-    <div class="card-header" style="background: #FFFFFF; padding: 1.25rem 1.5rem; border-radius: 16px; border: 1px solid var(--border-card); margin-bottom: 1.25rem;">
-        <div>
-            <div class="card-title">Quản Lý Vị Thế Real-Time</div>
-            <div class="stat-sub" style="margin-top: 0.2rem;">
-                Tự động đồng bộ vị thế mở từ PostgreSQL DB & tính toán P&L theo giá thị trường
-            </div>
+    <!-- Compact, Clean Header with Summary Metrics -->
+    <div class="card-header" style="background: #FFFFFF; padding: 1.15rem 1.5rem; border-radius: 16px; border: 1px solid var(--border-card); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <div class="card-title" style="margin: 0; font-size: 1.15rem;">Vị Thế Đang Mở ({positions.length})</div>
+            {#if positions.length > 0}
+                <span class="badge {totalPnlUsdt >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; font-weight: 700;">
+                    P&L: {totalPnlPercent >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}% ({totalPnlUsdt >= 0 ? '+' : ''}${totalPnlUsdt.toFixed(2)})
+                </span>
+                <span class="badge badge-emerald" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; font-weight: 700;">
+                    {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)} R
+                </span>
+                <span class="badge badge-neutral" style="font-size: 0.8rem; padding: 0.35rem 0.65rem;">
+                    Vốn: ${totalCapital.toFixed(2)} USDT
+                </span>
+            {/if}
         </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <button class="btn btn-outline" on:click={loadLivePositions} disabled={isLoading}>
-                {isLoading ? '⌛ Đang tải...' : '🔄 Tải vị thế DB'}
+        <div style="display: flex; gap: 0.65rem;">
+            <button class="btn btn-outline" on:click={loadLivePositions} disabled={isLoading} style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
+                {isLoading ? '⌛ Đang tải...' : '🔄 Làm mới'}
             </button>
-            <button class="btn" on:click={() => onOpenOrderModal('', 'LONG', '', '', '')}>+ Thêm vị thế</button>
+            <button class="btn" on:click={() => onOpenOrderModal('', 'LONG', '', '', '')} style="padding: 0.45rem 1rem; font-size: 0.85rem;">+ Mở vị thế</button>
         </div>
     </div>
 
-    <div class="filter-pills">
-        <button class="pill-btn {currentFilter === 'ALL' ? 'active' : ''}" on:click={() => currentFilter = 'ALL'}>
-            Tất cả vị thế mở ({positions.length})
-        </button>
-        <button class="pill-btn {currentFilter === 'PROPOSED' ? 'active' : ''}" on:click={() => currentFilter = 'PROPOSED'}>Đề xuất</button>
-        <button class="pill-btn {currentFilter === 'ORDERED' ? 'active' : ''}" on:click={() => currentFilter = 'ORDERED'}>Đã đặt</button>
-        <button class="pill-btn {currentFilter === 'FILLED' ? 'active' : ''}" on:click={() => currentFilter = 'FILLED'}>Đã khớp ({positions.length})</button>
-    </div>
-
+    <!-- Active Positions List -->
     <div id="positions-list">
-        {#each filteredPositions as pos (pos.id)}
+        {#each positions as pos (pos.id)}
             <div class="position-card" data-status={pos.status} style="background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
                 <div class="position-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
                     <div class="position-title-group" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                        <span class="symbol-tag" style="font-size: 1rem; font-weight: 800;">{pos.symbol}</span>
-                        <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-weight: 700;">{pos.direction}</span>
-                        <span class="badge {pos.statusClass}">{pos.statusLabel}</span>
+                        <span class="symbol-tag" style="font-size: 1.05rem; font-weight: 800;">{pos.symbol}</span>
+                        <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-weight: 700; font-size: 0.85rem;">{pos.direction}</span>
+                        <span class="badge {pos.statusClass}" style="font-size: 0.8rem;">{pos.statusLabel}</span>
                         {#if pos.policyId}
                             <span class="badge badge-neutral" style="font-size: 0.75rem;">Setup: {pos.policyId}</span>
                         {/if}
@@ -285,19 +275,19 @@
                     </div>
                 </div>
 
-                <!-- Deterministic Algorithmic Position Actions -->
-                <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; background: {pos.actionBadge === 'badge-rose' ? 'var(--rose-bg)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber-bg)' : 'var(--emerald-bg)')}; border: 1px solid {pos.actionBadge === 'badge-rose' ? 'var(--rose-border)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber-border)' : 'var(--emerald-border)')}; border-radius: 10px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <span style="font-size: 0.85rem; font-weight: 800; color: {pos.actionBadge === 'badge-rose' ? 'var(--rose)' : (pos.actionBadge === 'badge-amber' ? 'var(--amber)' : 'var(--emerald)')};">
+                <!-- Streamlined HOLD / BÁN Action Banner -->
+                <div style="margin-top: 1rem; padding: 0.85rem 1.15rem; background: {pos.isSell ? 'var(--rose-bg)' : 'var(--emerald-bg)'}; border: 1px solid {pos.isSell ? 'var(--rose-border)' : 'var(--emerald-border)'}; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <div style="font-size: 0.95rem; font-weight: 800; color: {pos.isSell ? 'var(--rose)' : 'var(--emerald)'};">
                             {pos.actionTitle}
-                        </span>
-                        <span class="badge {pos.actionBadge}" style="font-size: 0.75rem;">
-                            {pos.actionCode === 'DYNAMIC_CLOSE_TRIGGERED' ? '🔴 ĐÓNG VỊ THẾ' : (pos.actionCode === 'RUNNER_HOLD' ? '🚀 RUNNER ACTIVE' : 'GIỮ VỊ THẾ')}
-                        </span>
+                        </div>
+                        <div style="font-size: 0.825rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                            {pos.actionDesc}
+                        </div>
                     </div>
-                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45;">
-                        {pos.actionDesc}
-                    </div>
+                    <span class="badge {pos.actionBadge}" style="font-size: 0.85rem; font-weight: 800; padding: 0.35rem 0.85rem;">
+                        {pos.isSell ? '🔴 BÁN' : '🟢 HOLD'}
+                    </span>
                 </div>
 
                 {#if pos.entryTime}
@@ -308,12 +298,12 @@
             </div>
         {/each}
 
-        {#if filteredPositions.length === 0}
-            <div class="position-card" style="text-align: center; color: var(--text-muted); padding: 3rem; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 14px;">
-                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📭</div>
-                <div style="font-weight: 600; color: var(--text-primary);">Chưa có vị thế mở nào</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
-                    Bấm nút "🔄 Tải vị thế DB" hoặc "+ Thêm vị thế" để theo dõi lệnh.
+        {#if positions.length === 0}
+            <div class="position-card" style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 14px;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">Hiện tại chưa có vị thế mở nào</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; max-width: 450px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                    Hệ thống đang quét thị trường. Khi xuất hiện setup hợp lệ hoặc bác mở vị thế thủ công, lệnh sẽ được quản lý real-time tại đây.
                 </div>
             </div>
         {/if}

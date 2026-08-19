@@ -53,7 +53,6 @@
 
     onMount(() => {
         loadSingleAnalysis('ETHUSDT');
-        loadScanData();
     });
 
     function selectSymbol(sym) {
@@ -74,9 +73,9 @@
         </button>
         <button 
             class="pill-btn {activeView === 'scan' ? 'active' : ''}" 
-            on:click={() => { activeView = 'scan'; if (!scanData) loadScanData(); }}
+            on:click={() => activeView = 'scan'}
         >
-            🎯 Quét Setup 12 Coin ({scanData?.actionable_count || 0} Khả thi)
+            🎯 Quét Setup 12 Coin {scanData ? `(${scanData.actionable_count} Khả thi)` : ''}
         </button>
     </div>
 
@@ -405,6 +404,20 @@
                     </div>
                 </div>
             {/each}
+        {:else if !scanData}
+            <!-- Empty state before scan is executed -->
+            <div style="background: var(--bg-main); border: 1px solid var(--border-card); border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                    Chưa quét danh mục 12 coin
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px; margin: 0 auto 1.25rem auto; line-height: 1.5;">
+                    Chỉ khi nào bác muốn quét đồng loạt 12 coin để tìm cơ hội vào lệnh, hãy bấm nút bên dưới để kích hoạt.
+                </div>
+                <button class="btn" on:click={loadScanData} style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">
+                    🚀 Bắt Đầu Quét 12 Coin
+                </button>
+            </div>
         {:else if scanData}
             <!-- NO ACTIONABLE CANDIDATE BANNER + UNIVERSE GRID -->
             <div style="background: var(--bg-main); border: 1px solid var(--border-card); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">

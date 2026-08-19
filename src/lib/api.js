@@ -23,24 +23,34 @@ async function safeJsonFetch(endpoint, options = {}) {
     const relativeUrl = `${BASE_URL}${endpoint}`;
     try {
         const response = await fetch(relativeUrl, { ...options, headers: defaultHeaders });
-        const contentType = response.headers.get('content-type') || '';
-        if (response.ok && contentType.includes('application/json')) {
-            const data = await response.json();
-            return { ok: true, data, status: response.status, source: 'PROXY' };
+        if (response.status === 204 || response.status === 205) {
+            return { ok: true, data: null, status: response.status, source: 'PROXY' };
+        }
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            return { ok: response.ok, data: null, status: response.status, source: 'PROXY' };
+        }
+        if (response.ok && (text.startsWith('{') || text.startsWith('['))) {
+            return { ok: true, data: JSON.parse(text), status: response.status, source: 'PROXY' };
         }
     } catch (err) {
         console.warn(`Relative proxy fetch failed for ${endpoint}:`, err);
     }
 
-    // 2. Direct fallback to remote host if relative path fails or returns HTML
+    // 2. Direct fallback to remote host if relative path fails
     if (REMOTE_API_HOST) {
         try {
             const directUrl = `${REMOTE_API_HOST}${endpoint}`;
             const response = await fetch(directUrl, { ...options, headers: defaultHeaders });
-            const contentType = response.headers.get('content-type') || '';
-            if (response.ok && contentType.includes('application/json')) {
-                const data = await response.json();
-                return { ok: true, data, status: response.status, source: 'DIRECT' };
+            if (response.status === 204 || response.status === 205) {
+                return { ok: true, data: null, status: response.status, source: 'DIRECT' };
+            }
+            const text = await response.text();
+            if (!text || text.trim() === '') {
+                return { ok: response.ok, data: null, status: response.status, source: 'DIRECT' };
+            }
+            if (response.ok && (text.startsWith('{') || text.startsWith('['))) {
+                return { ok: true, data: JSON.parse(text), status: response.status, source: 'DIRECT' };
             }
         } catch (err) {
             console.warn(`Direct fetch failed for ${endpoint}:`, err);
@@ -130,6 +140,27 @@ export async function fetchPositionsApi(symbol = 'ETHUSDT') {
         return { success: true, data: res.data };
     }
     return { success: false, data: null };
+}
+
+/**
+ * Fetch all open positions across the universe
+ * GET /api/v1/positions/open
+ */
+export async function fetchOpenPositionsApi() {
+    const res = await safeJsonFetch('/api/v1/positions/open');
+    if (res.ok && Array.isArray(res.data)) {
+        return { success: true, data: res.data };
+    }
+    // Targeted fallback: check priority coins without flooding server connections
+    const priorityCoins = ['LINKUSDT', 'ETHUSDT', 'BTCUSDT', 'SOLUSDT'];
+    const results = [];
+    for (const sym of priorityCoins) {
+        const r = await fetchPositionsApi(sym);
+        if (r.success && r.data && r.data.id) {
+            results.push(r.data);
+        }
+    }
+    return { success: true, data: results };
 }
 
 /**
