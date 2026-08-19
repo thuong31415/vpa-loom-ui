@@ -64,7 +64,7 @@ async function safeJsonFetch(endpoint, options = {}) {
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
  * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=500
  */
-export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 500) {
+export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 360) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
@@ -78,9 +78,9 @@ export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit =
 
 /**
  * Hydrate and resolve analysis for a single symbol
- * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=500
+ * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=360
  */
-export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 500) {
+export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 360) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
@@ -94,9 +94,9 @@ export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit
 
 /**
  * Fetch market scanner candidates across all 12 universe coins
- * POST /api/v1/analysis/scan?interval=4h&limit=500
+ * POST /api/v1/analysis/scan?interval=4h&limit=360
  */
-export async function fetchScanCandidates(interval = '4h', limit = 500) {
+export async function fetchScanCandidates(interval = '4h', limit = 360) {
     const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}`;
 
     let res = await safeJsonFetch(endpoint, { method: 'POST' });
@@ -111,7 +111,7 @@ export async function fetchScanCandidates(interval = '4h', limit = 500) {
     return {
         data: {
             interval: "4h",
-            limit: 500,
+            limit: 360,
             latest_evidence_cutoff: new Date().toISOString(),
             scanned_count: UNIVERSE_COINS.length,
             available_count: UNIVERSE_COINS.length,
