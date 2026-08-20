@@ -16,13 +16,21 @@ export const UNIVERSE_COINS = [
 async function safeJsonFetch(endpoint, options = {}) {
     const defaultHeaders = {
         'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
         ...(options.headers || {})
+    };
+
+    const fetchOptions = {
+        cache: 'no-store',
+        ...options,
+        headers: defaultHeaders
     };
 
     // 1. Try relative path first (through reverse proxy)
     const relativeUrl = `${BASE_URL}${endpoint}`;
     try {
-        const response = await fetch(relativeUrl, { ...options, headers: defaultHeaders });
+        const response = await fetch(relativeUrl, fetchOptions);
         if (response.status === 204 || response.status === 205) {
             return { ok: true, data: null, status: response.status, source: 'PROXY' };
         }
@@ -41,7 +49,7 @@ async function safeJsonFetch(endpoint, options = {}) {
     if (REMOTE_API_HOST) {
         try {
             const directUrl = `${REMOTE_API_HOST}${endpoint}`;
-            const response = await fetch(directUrl, { ...options, headers: defaultHeaders });
+            const response = await fetch(directUrl, fetchOptions);
             if (response.status === 204 || response.status === 205) {
                 return { ok: true, data: null, status: response.status, source: 'DIRECT' };
             }
@@ -62,14 +70,20 @@ async function safeJsonFetch(endpoint, options = {}) {
 
 /**
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
+ * Tries POST (auto-sync latest candles from exchange) then GET with cache-busting
  */
 export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
+    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
 
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
+    // 1. Try POST to auto-sync fresh candles into database
+    let res = await safeJsonFetch(endpoint, { method: 'POST' });
+    if (!res.ok) {
+        // 2. Fallback to GET
+        res = await safeJsonFetch(endpoint, { method: 'GET' });
+    }
+
     if (res.ok) {
         return { success: true, data: res.data, source: res.source };
     }
@@ -81,15 +95,7 @@ export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit =
  * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
 export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
-    const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
-    const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
-
-    const res = await safeJsonFetch(endpoint, { method: 'POST' });
-    if (res.ok) {
-        return { success: true, data: res.data, source: res.source };
-    }
-    return fetchAnalysis(cleanSymbol, interval, limit);
+    return fetchAnalysis(symbol, interval, limit);
 }
 
 /**
