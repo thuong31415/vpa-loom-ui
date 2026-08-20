@@ -70,20 +70,14 @@ async function safeJsonFetch(endpoint, options = {}) {
 
 /**
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
- * Tries POST (auto-sync latest candles from exchange) then GET with cache-busting
+ * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
 export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
 
-    // 1. Try POST to auto-sync fresh candles into database
-    let res = await safeJsonFetch(endpoint, { method: 'POST' });
-    if (!res.ok) {
-        // 2. Fallback to GET
-        res = await safeJsonFetch(endpoint, { method: 'GET' });
-    }
-
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
     if (res.ok) {
         return { success: true, data: res.data, source: res.source };
     }
@@ -92,7 +86,7 @@ export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit =
 
 /**
  * Hydrate and resolve analysis for a single symbol
- * POST /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
+ * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
 export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
     return fetchAnalysis(symbol, interval, limit);
@@ -100,16 +94,12 @@ export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit
 
 /**
  * Fetch market scanner candidates across all 12 universe coins
- * POST /api/v1/analysis/scan?interval=4h&limit=720
+ * GET /api/v1/analysis/scan?interval=4h&limit=720
  */
 export async function fetchScanCandidates(interval = '4h', limit = 720) {
-    const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}`;
+    const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
 
-    let res = await safeJsonFetch(endpoint, { method: 'POST' });
-    if (!res.ok) {
-        res = await safeJsonFetch(endpoint, { method: 'GET' });
-    }
-
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
     if (res.ok && res.data) {
         return { data: res.data, source: res.source, success: true };
     }
