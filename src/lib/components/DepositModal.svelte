@@ -62,7 +62,7 @@
                 <label for="capType">Loại Giao Dịch Dòng Tiền</label>
                 <select id="capType" bind:value={type}>
                     <option value="DEPOSIT">🟢 NẠP VỐN (DEPOSIT)</option>
-                    <option value="WITHDRAWAL">🔴 RÚT VỐN (WITHDRAWAL)</option>
+                    <option value="WITHDRAW">🔴 RÚT VỐN (WITHDRAW)</option>
                 </select>
             </div>
             <div class="form-group">

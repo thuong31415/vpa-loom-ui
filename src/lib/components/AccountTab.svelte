@@ -27,18 +27,19 @@
             // 1. Fetch live summary from Backend PostgreSQL
             const summaryRes = await fetchAccountSummaryApi();
             if (summaryRes.success && summaryRes.data) {
+                const d = summaryRes.data;
                 summary = {
-                    totalDeposited: parseFloat(summaryRes.data.totalDeposited) || 0,
-                    totalWithdrawn: parseFloat(summaryRes.data.totalWithdrawn) || 0,
-                    netCapital: parseFloat(summaryRes.data.netCapital) || 0,
-                    inPositions: parseFloat(summaryRes.data.inPositions) || 0,
-                    availableBalance: parseFloat(summaryRes.data.availableBalance) || 0,
-                    totalRealizedPnl: parseFloat(summaryRes.data.totalRealizedPnl) || 0,
-                    totalEquity: parseFloat(summaryRes.data.totalEquity) || 0,
-                    totalClosedTrades: parseInt(summaryRes.data.totalClosedTrades) || 0,
-                    winCount: parseInt(summaryRes.data.winCount) || 0,
-                    lossCount: parseInt(summaryRes.data.lossCount) || 0,
-                    winRate: parseFloat(summaryRes.data.winRate) || 0
+                    totalDeposited: parseFloat(d.total_deposited ?? d.totalDeposited) || 0,
+                    totalWithdrawn: parseFloat(d.total_withdrawn ?? d.totalWithdrawn) || 0,
+                    netCapital: parseFloat(d.net_capital ?? d.netCapital) || 0,
+                    inPositions: parseFloat(d.in_positions ?? d.inPositions) || 0,
+                    availableBalance: parseFloat(d.available_balance ?? d.availableBalance) || 0,
+                    totalRealizedPnl: parseFloat(d.total_realized_pnl ?? d.totalRealizedPnl) || 0,
+                    totalEquity: parseFloat(d.total_equity ?? d.totalEquity) || 0,
+                    totalClosedTrades: parseInt(d.total_closed_trades ?? d.totalClosedTrades) || 0,
+                    winCount: parseInt(d.win_count ?? d.winCount) || 0,
+                    lossCount: parseInt(d.loss_count ?? d.lossCount) || 0,
+                    winRate: parseFloat(d.win_rate ?? d.winRate) || 0
                 };
             }
 
@@ -88,8 +89,9 @@
         }
 
         const amt = parseFloat(t.amount) || 0;
-        const bal = parseFloat(t.balanceAfter) || 0;
-        const timeStr = t.createdAt ? t.createdAt.replace('T', ' ').substring(0, 16) : '';
+        const bal = parseFloat(t.balance_after ?? t.balanceAfter) || 0;
+        const rawTime = t.created_at || t.createdAt || '';
+        const timeStr = rawTime ? rawTime.replace('T', ' ').substring(0, 16) : '';
 
         return {
             id: t.id ? `#CAP-${String(t.id).padStart(3, '0')}` : '#CAP-000',
