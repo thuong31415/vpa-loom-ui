@@ -26,6 +26,11 @@
 
     function handleSelectTab(tab) {
         activeTab = tab;
+        if (tab === 'account' && accountTabRef && accountTabRef.loadAccountData) {
+            accountTabRef.loadAccountData();
+        } else if (tab === 'positions' && positionsTabRef && positionsTabRef.loadLivePositions) {
+            positionsTabRef.loadLivePositions();
+        }
     }
 
     function handleOpenOrderModal(symbol = 'SUIUSDT', direction = 'LONG', entry = '0.6756', sl = '0.6678', tp = '0.7010') {
