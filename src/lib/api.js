@@ -4,7 +4,8 @@ export const REMOTE_API_HOST = 'http://103.167.88.197:8081';
 // Supported Universe Coins
 export const UNIVERSE_COINS = [
     "ETHUSDT", "BTCUSDT", "SOLUSDT", "SUIUSDT", "UNIUSDT",
-    "LINKUSDT", "ZECUSDT", "LDOUSDT", "NEARUSDT", "BNBUSDT", "TAOUSDT", "ADAUSDT"
+    "LINKUSDT", "ZECUSDT", "LDOUSDT", "NEARUSDT", "BNBUSDT",
+    "TAOUSDT", "ADAUSDT", "ENAUSDT", "ZKUSDT"
 ];
 
 /**
