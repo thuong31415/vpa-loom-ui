@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, formatPrice } from '../api.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
@@ -227,7 +227,7 @@
                     <div class="p-metric-item">
                         <span class="p-metric-label" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Giá Entry</span>
                         <span class="p-metric-val" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-top: 0.15rem; display: block;">
-                            ${pos.entry.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                            ${formatPrice(pos.entry)}
                         </span>
                     </div>
 
@@ -235,7 +235,7 @@
                     <div class="p-metric-item">
                         <span class="p-metric-label" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Giá Hiện Tại</span>
                         <span class="p-metric-val" style="font-size: 1.15rem; font-weight: 800; color: {pos.pnlPercent >= 0 ? 'var(--emerald)' : 'var(--rose)'}; margin-top: 0.15rem; display: block;">
-                            ${pos.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                            ${formatPrice(pos.currentPrice)}
                         </span>
                     </div>
 
@@ -243,7 +243,7 @@
                     <div class="p-metric-item">
                         <span class="p-metric-label" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Stop Loss (SL)</span>
                         <span class="p-metric-val text-rose" style="font-size: 1.15rem; font-weight: 800; color: var(--rose); margin-top: 0.15rem; display: block;">
-                            ${pos.sl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                            ${formatPrice(pos.sl)}
                         </span>
                     </div>
 
@@ -251,7 +251,7 @@
                     <div class="p-metric-item">
                         <span class="p-metric-label" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Target TP</span>
                         <span class="p-metric-val text-emerald" style="font-size: 1.15rem; font-weight: 800; color: var(--emerald); margin-top: 0.15rem; display: block;">
-                            ${pos.tp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                            ${formatPrice(pos.tp)}
                         </span>
                     </div>
 

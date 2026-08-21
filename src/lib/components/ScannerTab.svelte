@@ -13,7 +13,8 @@
         translateDecisionStatus,
         translateAction,
         getFriendlyWyckoffTitle, 
-        getFriendlyVPADesc 
+        getFriendlyVPADesc,
+        formatPrice 
     } from '../api.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
@@ -146,7 +147,7 @@
                     <div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Giá Tham Chiếu Hiện Tại</div>
                         <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums;">
-                            ${singleAnalysisData.reference_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            ${formatPrice(singleAnalysisData.reference_price)}
                         </div>
                     </div>
 
@@ -207,10 +208,10 @@
                     </div>
                     {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
                         <div style="font-size: 1.25rem; font-weight: 800; color: var(--emerald);">
-                            ${singleAnalysisData.key_levels.support.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels.support.upper?.toLocaleString('en-US')}
+                            ${formatPrice(singleAnalysisData.key_levels.support.lower)} – ${formatPrice(singleAnalysisData.key_levels.support.upper)}
                         </div>
                         <div style="font-size: 0.8rem; color: var(--emerald); margin-top: 0.35rem;">
-                            Cách mép gần nhất: <strong>${singleAnalysisData.key_levels.support.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(2)}%)
+                            Cách mép gần nhất: <strong>${formatPrice(singleAnalysisData.key_levels.support.distance)} USDT</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(2)}%)
                         </div>
                     {:else}
                         <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-muted); margin-top: 0.25rem;">
@@ -233,10 +234,10 @@
                     </div>
                     {#if singleAnalysisData.key_levels?.resistance?.status === 'AVAILABLE'}
                         <div style="font-size: 1.25rem; font-weight: 800; color: var(--rose);">
-                            ${singleAnalysisData.key_levels.resistance.lower?.toLocaleString('en-US')} – ${singleAnalysisData.key_levels.resistance.upper?.toLocaleString('en-US')}
+                            ${formatPrice(singleAnalysisData.key_levels.resistance.lower)} – ${formatPrice(singleAnalysisData.key_levels.resistance.upper)}
                         </div>
                         <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.35rem;">
-                            Cách mép gần nhất: <strong>${singleAnalysisData.key_levels.resistance.distance?.toFixed(2)} USDT</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(2)}%)
+                            Cách mép gần nhất: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)} USDT</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(2)}%)
                         </div>
                     {:else}
                         <div style="font-size: 1.05rem; font-weight: 700; color: var(--rose); margin-top: 0.25rem;">
@@ -272,22 +273,22 @@
                                 singleAnalysisData.plan.target
                             )}
                         >
-                            📋 Đặt Lệnh Theo Dõi ({singleAnalysisData.plan.direction} @ ${singleAnalysisData.plan.entry})
+                            📋 Đặt Lệnh Theo Dõi ({singleAnalysisData.plan.direction} @ ${formatPrice(singleAnalysisData.plan.entry)})
                         </button>
                     </div>
 
                     <div class="price-grid" style="margin-top: 1rem; padding-top: 1rem; border-color: var(--emerald-border);">
                         <div class="price-box" style="background: #FFFFFF;">
                             <span class="price-label">Giá Entry</span>
-                            <span class="price-val">${singleAnalysisData.plan.entry}</span>
+                            <span class="price-val">${formatPrice(singleAnalysisData.plan.entry)}</span>
                         </div>
                         <div class="price-box" style="background: #FFFFFF;">
                             <span class="price-label">Stop Loss (SL)</span>
-                            <span class="price-val text-rose">${singleAnalysisData.plan.stop}</span>
+                            <span class="price-val text-rose">${formatPrice(singleAnalysisData.plan.stop)}</span>
                         </div>
                         <div class="price-box" style="background: #FFFFFF;">
                             <span class="price-label">Take Profit (TP)</span>
-                            <span class="price-val text-emerald">${singleAnalysisData.plan.target}</span>
+                            <span class="price-val text-emerald">${formatPrice(singleAnalysisData.plan.target)}</span>
                         </div>
                         <div class="price-box" style="background: #FFFFFF;">
                             <span class="price-label">Tỷ Lệ R:R</span>
@@ -306,8 +307,8 @@
                             selectedSymbol, 
                             'LONG',
                             singleAnalysisData.reference_price,
-                            singleAnalysisData.key_levels?.support?.lower || (singleAnalysisData.reference_price * 0.97).toFixed(2),
-                            singleAnalysisData.key_levels?.resistance?.upper || (singleAnalysisData.reference_price * 1.05).toFixed(2)
+                            singleAnalysisData.key_levels?.support?.lower || (singleAnalysisData.reference_price * 0.97).toFixed(4),
+                            singleAnalysisData.key_levels?.resistance?.upper || (singleAnalysisData.reference_price * 1.05).toFixed(4)
                         )}
                     >
                         + Tạo Vị Thế Theo Dõi {selectedSymbol}
@@ -324,7 +325,7 @@
     <div class="card" style="margin-bottom: 1.5rem;">
         <div class="card-header">
             <div>
-                <div class="card-title">Bộ Quét Thị Trường Tự Động (12 Cặp Coin)</div>
+                <div class="card-title">Bộ Quét Thị Trường Tự Động ({scanData?.scanned_count || 14} Cặp Coin)</div>
                 {#if scanData}
                     <div class="stat-sub" style="margin-top: 0.25rem;">
                         📊 Đã quét <strong>{scanData.scanned_count}</strong> coin · 
@@ -335,7 +336,7 @@
                 {/if}
             </div>
             <button class="btn btn-outline" on:click={loadScanData} disabled={isScanLoading}>
-                {isScanLoading ? '⌛ Đang quét...' : '🔍 Quét Lại 12 Coin'}
+                {isScanLoading ? '⌛ Đang quét...' : '🔍 Quét Lại Danh Mục'}
             </button>
         </div>
 
@@ -369,15 +370,15 @@
                     <div class="price-grid">
                         <div class="price-box">
                             <span class="price-label">Giá Entry (Limit)</span>
-                            <span class="price-val">${candidate.analysis?.plan?.entry}</span>
+                            <span class="price-val">${formatPrice(candidate.analysis?.plan?.entry)}</span>
                         </div>
                         <div class="price-box">
                             <span class="price-label">Stop Loss (SL)</span>
-                            <span class="price-val text-rose">${candidate.analysis?.plan?.stop}</span>
+                            <span class="price-val text-rose">${formatPrice(candidate.analysis?.plan?.stop)}</span>
                         </div>
                         <div class="price-box">
                             <span class="price-label">Mục tiêu (TP)</span>
-                            <span class="price-val text-emerald">${candidate.analysis?.plan?.target}</span>
+                            <span class="price-val text-emerald">${formatPrice(candidate.analysis?.plan?.target)}</span>
                         </div>
                         <div class="price-box" style="background: var(--emerald-bg); border-color: var(--emerald-border);">
                             <span class="price-label" style="color: var(--emerald);">Tỷ lệ R:R</span>
@@ -387,7 +388,7 @@
 
                     <div style="margin-top: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                         <span style="font-size: 0.8rem; color: var(--text-muted);">
-                            Giá tham chiếu: <strong>${candidate.analysis?.reference_price}</strong>
+                            Giá tham chiếu: <strong>${formatPrice(candidate.analysis?.reference_price)}</strong>
                         </span>
                         <button 
                             class="btn btn-emerald" 
@@ -399,7 +400,7 @@
                                 candidate.analysis?.plan?.target
                             )}
                         >
-                            📋 Theo dõi vị thế {candidate.analysis?.plan?.direction || 'LONG'} {candidate.symbol} (${candidate.analysis?.plan?.entry})
+                            📋 Theo dõi vị thế {candidate.analysis?.plan?.direction || 'LONG'} {candidate.symbol} (${formatPrice(candidate.analysis?.plan?.entry)})
                         </button>
                     </div>
                 </div>

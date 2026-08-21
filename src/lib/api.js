@@ -259,6 +259,27 @@ export async function createCapitalTransactionApi(type, amount, note) {
     return { success: false };
 }
 
+/**
+ * Format Price with dynamic decimal places:
+ * - >= 1000: 2 decimals ($65,420.50)
+ * - >= 1: 2 to 4 decimals ($2,450.25, $0.6756)
+ * - < 1: 4 to 6 decimals ($0.008650, $0.000012)
+ */
+export function formatPrice(val) {
+    if (val === null || val === undefined || val === '') return '-';
+    const num = parseFloat(val);
+    if (isNaN(num)) return String(val);
+    if (num >= 1000) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else if (num >= 1) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    } else if (num >= 0.0001) {
+        return num.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    } else {
+        return num.toFixed(8);
+    }
+}
+
 // -------------------------------------------------------------
 // Human-Friendly Vietnamese Translators for Wyckoff / VPA Domain
 // -------------------------------------------------------------

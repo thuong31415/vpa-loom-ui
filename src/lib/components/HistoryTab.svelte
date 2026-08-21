@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchPositionHistoryApi } from '../api.js';
+    import { fetchPositionHistoryApi, formatPrice } from '../api.js';
 
     let historyList = [];
     let isLoading = false;
@@ -128,10 +128,10 @@
                                 {item.policyId || 'MANUAL'}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-weight: 600;">
-                                ${item.entry.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                ${formatPrice(item.entry)}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-weight: 700; color: {item.realizedR >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
-                                ${item.exit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                ${formatPrice(item.exit)}
                             </td>
                             <td style="padding: 0.85rem 0.75rem;">
                                 <span class="badge badge-neutral" style="font-size: 0.75rem;">{formatExitReason(item.exitReason)}</span>
