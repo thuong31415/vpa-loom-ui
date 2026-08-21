@@ -1,5 +1,9 @@
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-export const REMOTE_API_HOST = 'http://103.167.88.197:8081';
+export const REMOTE_HOSTS = [
+    'http://103.167.88.197:8081',
+    'http://103.167.88.197:8080'
+];
+export const REMOTE_API_HOST = REMOTE_HOSTS[0];
 
 // Supported Universe Coins
 export const UNIVERSE_COINS = [
@@ -9,10 +13,11 @@ export const UNIVERSE_COINS = [
 ];
 
 /**
- * Robust JSON Fetcher:
- * 1. Tries relative path (Vite / Nginx proxy).
- * 2. If proxy returns HTML / 404 / fails, falls back directly to REMOTE_API_HOST (http://103.167.88.197:8081).
- * 3. Always validates Content-Type is JSON before parsing to prevent "Unexpected token '<'".
+ * Robust Multi-Target JSON Fetcher:
+ * Automatically rotates across candidate endpoints:
+ * 1. Direct Backend API hosts (bypasses static Caddy 405 Method Not Allowed)
+ * 2. Relative reverse proxy path
+ * 3. Handles non-2xx (404, 405, 502) by trying the next target seamlessly
  */
 async function safeJsonFetch(endpoint, options = {}) {
     const defaultHeaders = {
@@ -28,45 +33,52 @@ async function safeJsonFetch(endpoint, options = {}) {
         headers: defaultHeaders
     };
 
-    // 1. Try relative path first (through reverse proxy)
-    const relativeUrl = `${BASE_URL}${endpoint}`;
-    try {
-        const response = await fetch(relativeUrl, fetchOptions);
-        if (response.status === 204 || response.status === 205) {
-            return { ok: true, data: null, status: response.status, source: 'PROXY' };
-        }
-        const text = await response.text();
-        if (!text || text.trim() === '') {
-            return { ok: response.ok, data: null, status: response.status, source: 'PROXY' };
-        }
-        if (response.ok && (text.startsWith('{') || text.startsWith('['))) {
-            return { ok: true, data: JSON.parse(text), status: response.status, source: 'PROXY' };
-        }
-    } catch (err) {
-        console.warn(`Relative proxy fetch failed for ${endpoint}:`, err);
+    // Candidate URLs to try in order
+    const candidates = [];
+    if (BASE_URL) {
+        candidates.push(`${BASE_URL}${endpoint}`);
     }
+    // Direct remote hosts (CORS-enabled backend ports)
+    REMOTE_HOSTS.forEach(host => {
+        candidates.push(`${host}${endpoint}`);
+    });
+    // Relative fallback
+    candidates.push(endpoint);
 
-    // 2. Direct fallback to remote host if relative path fails
-    if (REMOTE_API_HOST) {
+    let lastStatus = 0;
+    let lastError = null;
+
+    for (const targetUrl of candidates) {
         try {
-            const directUrl = `${REMOTE_API_HOST}${endpoint}`;
-            const response = await fetch(directUrl, fetchOptions);
+            const response = await fetch(targetUrl, fetchOptions);
+            lastStatus = response.status;
+            
             if (response.status === 204 || response.status === 205) {
-                return { ok: true, data: null, status: response.status, source: 'DIRECT' };
+                return { ok: true, data: null, status: response.status, url: targetUrl };
+            }
+            if (!response.ok) {
+                // If 405 Method Not Allowed, 404, or 502, try next candidate
+                console.warn(`Target ${targetUrl} returned status ${response.status}, trying next candidate...`);
+                continue;
             }
             const text = await response.text();
             if (!text || text.trim() === '') {
-                return { ok: response.ok, data: null, status: response.status, source: 'DIRECT' };
+                return { ok: true, data: null, status: response.status, url: targetUrl };
             }
-            if (response.ok && (text.startsWith('{') || text.startsWith('['))) {
-                return { ok: true, data: JSON.parse(text), status: response.status, source: 'DIRECT' };
+            if (text.startsWith('{') || text.startsWith('[')) {
+                return { ok: true, data: JSON.parse(text), status: response.status, url: targetUrl };
             }
         } catch (err) {
-            console.warn(`Direct fetch failed for ${endpoint}:`, err);
+            console.warn(`Target ${targetUrl} failed with error:`, err.message);
+            lastError = err;
         }
     }
 
-    return { ok: false, error: 'Không thể tải dữ liệu JSON từ API Backend' };
+    return { 
+        ok: false, 
+        status: lastStatus, 
+        error: lastError?.message || `Không thể kết nối Backend API (Mã lỗi: ${lastStatus || 'Network'})` 
+    };
 }
 
 /**
