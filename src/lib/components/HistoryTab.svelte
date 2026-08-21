@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchPositionHistoryApi, formatPrice } from '../api.js';
+    import { fetchPositionHistoryApi, formatPrice, formatVNTime } from '../api.js';
 
     let historyList = [];
     let isLoading = false;
@@ -147,7 +147,7 @@
                                 {/if}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                                {item.exitTime ? new Date(item.exitTime).toLocaleString('vi-VN') : '—'}
+                                {formatVNTime(item.exitTime)}
                             </td>
                         </tr>
                     {/each}

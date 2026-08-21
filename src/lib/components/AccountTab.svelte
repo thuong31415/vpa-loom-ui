@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchAccountSummaryApi, fetchCapitalTransactionsApi, fetchPositionHistoryApi } from '../api.js';
+    import { fetchAccountSummaryApi, fetchCapitalTransactionsApi, fetchPositionHistoryApi, formatVNTime } from '../api.js';
 
     export let onOpenDepositModal = () => {};
 
@@ -91,7 +91,6 @@
         const amt = parseFloat(t.amount) || 0;
         const bal = parseFloat(t.balance_after ?? t.balanceAfter) || 0;
         const rawTime = t.created_at || t.createdAt || '';
-        const timeStr = rawTime ? rawTime.replace('T', ' ').substring(0, 16) : '';
 
         return {
             id: t.id ? `#CAP-${String(t.id).padStart(3, '0')}` : '#CAP-000',
@@ -100,7 +99,7 @@
             amount: `${amountPrefix}$${Math.abs(amt).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             amountClass: amountClass,
             balanceAfter: `$${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            time: timeStr,
+            time: formatVNTime(rawTime),
             note: t.note || ''
         };
     }

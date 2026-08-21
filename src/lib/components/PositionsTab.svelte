@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, formatPrice } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, formatPrice, formatVNTime } from '../api.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
@@ -292,7 +292,7 @@
 
                 {#if pos.entryTime}
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">
-                        📅 Thời gian mở lệnh: <strong>{new Date(pos.entryTime).toLocaleString('vi-VN')}</strong> · Vốn phân bổ: <strong>${pos.risk.toFixed(2)} USDT</strong>
+                        📅 Thời gian mở lệnh: <strong>{formatVNTime(pos.entryTime)}</strong> · Vốn phân bổ: <strong>${pos.risk.toFixed(2)} USDT</strong>
                     </div>
                 {/if}
             </div>

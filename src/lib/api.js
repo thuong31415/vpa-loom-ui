@@ -292,6 +292,35 @@ export function formatPrice(val) {
     }
 }
 
+/**
+ * Format timestamp to Vietnam Time (UTC+7):
+ * Example: 2026-08-21 19:13
+ */
+export function formatVNTime(val) {
+    if (!val) return '—';
+    try {
+        const d = (typeof val === 'string' && !val.endsWith('Z') && !val.includes('+')) 
+            ? new Date(`${val}Z`) 
+            : new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).formatToParts(d);
+
+        const getPart = (type) => parts.find(p => p.type === type)?.value || '';
+        return `${getPart('year')}-${getPart('month')}-${getPart('day')} ${getPart('hour')}:${getPart('minute')}`;
+    } catch (e) {
+        return String(val);
+    }
+}
+
 // -------------------------------------------------------------
 // Human-Friendly Vietnamese Translators for Wyckoff / VPA Domain
 // -------------------------------------------------------------

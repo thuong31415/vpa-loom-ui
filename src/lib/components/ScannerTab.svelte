@@ -14,7 +14,8 @@
         translateAction,
         getFriendlyWyckoffTitle, 
         getFriendlyVPADesc,
-        formatPrice 
+        formatPrice,
+        formatVNTime 
     } from '../api.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
@@ -122,7 +123,7 @@
                         {act.text}
                     </span>
                     <span style="font-size: 0.8rem; color: var(--text-muted);">
-                        Khung nến: <strong>4H</strong> · Chốt lúc: {singleAnalysisData.as_of ? new Date(singleAnalysisData.as_of).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : 'Vừa xong'}
+                        Khung nến: <strong>4H</strong> · Chốt lúc: {singleAnalysisData.as_of ? `${formatVNTime(singleAnalysisData.as_of)} (Giờ VN)` : 'Vừa xong'}
                     </span>
                 {/if}
             </div>
