@@ -1,12 +1,19 @@
 <script>
+    import CandleCountdown from './CandleCountdown.svelte';
+
     export let activeTab = 'scanner';
     export let onSelectTab = (tab) => {};
 </script>
 
 <header>
-    <div class="logo-area">
-        <div class="logo-icon">V</div>
-        <div class="logo-title">VPA Loom</div>
+    <div class="header-left">
+        <button class="logo-area" on:click={() => onSelectTab('scanner')} style="background: none; border: none; cursor: pointer; text-align: left; padding: 0;">
+            <div class="logo-icon">V</div>
+            <div class="logo-title">VPA Loom</div>
+        </button>
+        <div class="countdown-desktop">
+            <CandleCountdown />
+        </div>
     </div>
 
     <nav class="nav-tabs">
@@ -17,19 +24,56 @@
         <button 
             class="tab-btn {activeTab === 'positions' ? 'active' : ''}" 
             on:click={() => onSelectTab('positions')}
-        >⚡ Vị Thế Theo Dõi</button>
+        >⚡ Vị Thế</button>
         <button 
             class="tab-btn {activeTab === 'history' ? 'active' : ''}" 
             on:click={() => onSelectTab('history')}
-        >📜 Lịch Sử Lệnh</button>
+        >📜 Lịch Sử</button>
         <button 
             class="tab-btn {activeTab === 'account' ? 'active' : ''}" 
             on:click={() => onSelectTab('account')}
         >💼 Sổ Vốn</button>
     </nav>
 
-    <div class="status-badge" title="Kết nối Backend Live: http://103.167.88.197:8081">
-        <div class="status-dot"></div>
-        <span>Live API (103.167.88.197:8081)</span>
+    <div class="header-right">
+        <div class="status-badge" title="Kết nối Backend Live: http://103.167.88.197:8081">
+            <div class="status-dot"></div>
+            <span>Live API (8081)</span>
+        </div>
     </div>
 </header>
+
+<div class="countdown-mobile">
+    <CandleCountdown />
+</div>
+
+<style>
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .countdown-desktop {
+        display: block;
+    }
+    .countdown-mobile {
+        display: none;
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--border-card);
+        padding: 0.5rem 1rem;
+        justify-content: center;
+    }
+    @media (max-width: 900px) {
+        .countdown-desktop {
+            display: none;
+        }
+        .countdown-mobile {
+            display: flex;
+        }
+    }
+</style>

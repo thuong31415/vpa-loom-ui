@@ -14,6 +14,10 @@
     let isLoading = false;
     let slWarning = '';
 
+    function setQuickRisk(val) {
+        risk = val;
+    }
+
     $: {
         validateSL();
     }
@@ -32,7 +36,9 @@
     }
 
     $: slDist = (entry && sl) ? Math.abs(parseFloat(entry) - parseFloat(sl)).toFixed(4) : '0.0000';
-    $: rr = (entry && sl && tp) ? (Math.abs(parseFloat(tp) - parseFloat(entry)) / Math.abs(parseFloat(entry) - parseFloat(sl))).toFixed(2) : '3.26';
+    $: rr = (entry && sl && tp && Math.abs(parseFloat(entry) - parseFloat(sl)) > 0) 
+        ? (Math.abs(parseFloat(tp) - parseFloat(entry)) / Math.abs(parseFloat(entry) - parseFloat(sl))).toFixed(2) 
+        : '3.00';
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -50,22 +56,20 @@
             id: res?.data?.id ? `pos-${res.data.id}` : `pos-${Date.now()}`,
             symbol: symbol || 'SUIUSDT',
             direction: direction || 'LONG',
-            status: 'ORDERED',
-            statusLabel: 'Đã đặt thủ công',
-            statusClass: 'badge-amber',
+            status: 'OPEN',
+            statusLabel: 'Đang mở',
+            statusClass: 'badge-emerald',
             entry: parseFloat(entry) || 0.6756,
             sl: parseFloat(sl) || 0.6678,
             tp: parseFloat(tp) || 0.7010,
             risk: parseFloat(risk) || 200,
-            rResult: 'Chờ khớp',
-            actionBtnText: 'Đã khớp lệnh sàn',
-            nextStatus: 'FILLED'
+            rResult: '0.00 R',
+            actionBtnText: 'Chốt đóng vị thế',
+            nextStatus: 'CLOSED'
         };
 
         if (res.success) {
-            alert(`✅ Đã gửi lệnh lên API /api/v1/positions! Vị thế ${direction} ${symbol} @ $${entry} đã được ghi nhận.`);
-        } else {
-            alert(`🚀 Đã lưu vị thế ${direction} ${symbol} @ $${entry} vào Sổ Giám Sát!`);
+            alert(`✅ Vị thế ${direction} ${symbol} @ $${entry} đã được ghi nhận trực tiếp vào PostgreSQL!`);
         }
 
         onSubmitOrderSuccess(newPos);
@@ -74,12 +78,12 @@
 </script>
 
 {#if isOpen}
-<div class="modal-overlay active">
-    <div class="modal-card" style="max-width: 440px; padding: 1.75rem; border-radius: 20px;">
-        <div class="card-header" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem;">
+<div class="modal-overlay active" on:click|self={onClose} on:keydown={(e) => e.key === 'Escape' && onClose()} role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-card" style="max-width: 480px; padding: 1.75rem; border-radius: 20px;">
+        <div class="card-header" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="symbol-tag" style="font-size: 0.95rem;">{symbol || 'SUIUSDT'}</span>
-                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; font-weight: 600;">
+                <span class="symbol-tag" style="font-size: 1rem; font-weight: 800;">{symbol || 'SUIUSDT'}</span>
+                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; font-weight: 700;">
                     {direction === 'LONG' ? '🟢 MUA (LONG)' : '🔴 BÁN (SHORT)'}
                 </span>
             </div>
@@ -87,27 +91,60 @@
         </div>
 
         <form on:submit={handleSubmit}>
-            <!-- Ultra Minimal 2 Input Cards (Giá Mua & Stop Loss) -->
+            <!-- Giá Vào Lệnh & Vốn Ký Quỹ -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="entry-price" style="font-size: 0.8rem; color: var(--text-muted);">Giá Mua (Entry Limit)</label>
+                    <label for="entry-price">Giá Mua (Entry)</label>
                     <input 
                         type="number" 
                         step="any" 
                         id="entry-price" 
                         bind:value={entry} 
-                        style="font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0.75rem 0.9rem;" 
+                        style="font-size: 1.1rem; font-weight: 700; font-family: monospace;" 
                         required
                     />
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="sl-price" style="font-size: 0.8rem; color: var(--text-muted);">Cắt Lỗ (Stop Loss)</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="risk-amount">Vốn ($ USDT)</label>
+                        <div style="display: flex; gap: 0.2rem;">
+                            <button type="button" class="quick-btn" on:click={() => setQuickRisk(100)}>100</button>
+                            <button type="button" class="quick-btn" on:click={() => setQuickRisk(200)}>200</button>
+                            <button type="button" class="quick-btn" on:click={() => setQuickRisk(500)}>500</button>
+                        </div>
+                    </div>
+                    <input 
+                        type="number" 
+                        step="any" 
+                        id="risk-amount" 
+                        bind:value={risk} 
+                        style="font-size: 1.1rem; font-weight: 700; font-family: monospace;" 
+                        required
+                    />
+                </div>
+            </div>
+
+            <!-- Stop Loss & Take Profit -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="sl-price">Cắt Lỗ (Stop Loss)</label>
                     <input 
                         type="number" 
                         step="any" 
                         id="sl-price" 
                         bind:value={sl} 
-                        style="font-size: 1.1rem; font-weight: 700; color: var(--rose); font-variant-numeric: tabular-nums; padding: 0.75rem 0.9rem;" 
+                        style="font-size: 1.1rem; font-weight: 700; color: var(--rose); font-family: monospace;" 
+                        required
+                    />
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="tp-price">Chốt Lời (Take Profit)</label>
+                    <input 
+                        type="number" 
+                        step="any" 
+                        id="tp-price" 
+                        bind:value={tp} 
+                        style="font-size: 1.1rem; font-weight: 700; color: var(--emerald); font-family: monospace;" 
                         required
                     />
                 </div>
@@ -120,21 +157,41 @@
             {/if}
 
             <!-- Summary metrics pill -->
-            <div style="background: var(--bg-main); padding: 0.75rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: 0.825rem; display: flex; justify-content: space-between; border: 1px solid var(--border-subtle);">
-                <span>Tỷ lệ R:R mong đợi: <strong class="text-emerald">{rr} R</strong></span>
+            <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: 0.825rem; display: flex; justify-content: space-between; border: 1px solid var(--border-card);">
+                <span>Tỷ lệ R:R: <strong class="text-emerald">{rr} R</strong></span>
                 <span>Khoảng cách SL: <strong>{slDist} USDT</strong></span>
             </div>
 
-            <!-- Single Clean Action Button -->
-            <button 
-                type="submit" 
-                class="btn {direction === 'LONG' ? 'btn-emerald' : ''}" 
-                style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 600; border-radius: 10px;"
-                disabled={isLoading}
-            >
-                {isLoading ? '⌛ Đang gửi API...' : `🟢 Xác Nhận Đặt Lệnh ${direction === 'LONG' ? 'Mua' : 'Bán'} ($${entry || '0.6756'})`}
-            </button>
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" on:click={onClose}>Hủy bỏ</button>
+                <button 
+                    type="submit" 
+                    class="btn {direction === 'LONG' ? 'btn-emerald' : ''}" 
+                    style="flex: 2; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;"
+                    disabled={isLoading}
+                >
+                    {isLoading ? '⌛ Đang gửi...' : `🟢 Xác Nhận Mở Vị Thế ($${risk || 200} USDT)`}
+                </button>
+            </div>
         </form>
     </div>
 </div>
 {/if}
+
+<style>
+    .quick-btn {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-card);
+        border-radius: 4px;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.35rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    .quick-btn:hover {
+        background: var(--btn-primary);
+        color: #FFFFFF;
+    }
+</style>

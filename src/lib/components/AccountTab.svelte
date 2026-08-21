@@ -20,6 +20,16 @@
 
     let capitalLogs = [];
     let isLoading = false;
+    let selectedFilter = 'ALL'; // 'ALL', 'CAPITAL', 'TRADE'
+
+    $: roiPercent = summary.netCapital > 0 
+        ? ((summary.totalEquity - summary.netCapital) / summary.netCapital) * 100 
+        : 0;
+
+    $: filteredLogs = capitalLogs.filter(log => {
+        if (selectedFilter === 'ALL') return true;
+        return log.category === selectedFilter;
+    });
 
     export async function loadAccountData() {
         isLoading = true;
@@ -48,7 +58,6 @@
             if (txRes.success && Array.isArray(txRes.data) && txRes.data.length > 0) {
                 capitalLogs = txRes.data.map(t => formatTransaction(t));
             } else {
-                // Fallback to localStorage if server is offline or empty
                 loadFallbackLocalData();
             }
         } catch (err) {
@@ -60,32 +69,37 @@
     }
 
     function formatTransaction(t) {
-        const type = t.type || 'DEPOSIT';
-        let typeLabel = 'NẠP VỐN';
+        const type = (t.type || t.transaction_type || t.transactionType || '').toUpperCase();
+        let typeLabel = type;
         let typeBadge = 'badge-emerald';
         let amountClass = 'text-emerald';
         let amountPrefix = '+';
+        let category = 'CAPITAL';
 
         if (type === 'DEPOSIT') {
             typeLabel = 'NẠP VỐN';
             typeBadge = 'badge-emerald';
             amountClass = 'text-emerald';
             amountPrefix = '+';
+            category = 'CAPITAL';
         } else if (type === 'WITHDRAW' || type === 'WITHDRAWAL') {
             typeLabel = 'RÚT VỐN';
             typeBadge = 'badge-rose';
             amountClass = 'text-rose';
             amountPrefix = '';
+            category = 'CAPITAL';
         } else if (type === 'POSITION_BUY') {
             typeLabel = 'VÀO LỆNH (MUA)';
             typeBadge = 'badge-neutral';
             amountClass = 'text-rose';
             amountPrefix = '';
+            category = 'TRADE';
         } else if (type === 'POSITION_CLOSE') {
             typeLabel = 'CHỐT LỆNH';
             typeBadge = (parseFloat(t.amount) || 0) >= 0 ? 'badge-emerald' : 'badge-rose';
             amountClass = (parseFloat(t.amount) || 0) >= 0 ? 'text-emerald' : 'text-rose';
             amountPrefix = (parseFloat(t.amount) || 0) >= 0 ? '+' : '';
+            category = 'TRADE';
         }
 
         const amt = parseFloat(t.amount) || 0;
@@ -100,7 +114,8 @@
             amountClass: amountClass,
             balanceAfter: `$${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             time: formatVNTime(rawTime),
-            note: t.note || ''
+            note: t.note || '',
+            category
         };
     }
 
@@ -169,11 +184,9 @@
     <div class="card" style="grid-column: span 3; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
         <div class="card-header" style="margin-bottom: 0.5rem;">
             <span class="card-title" style="font-size: 0.9rem; color: var(--text-muted);">Tổng Tài Sản (Equity)</span>
-            {#if summary.totalRealizedPnl !== 0}
-                <span class="badge {summary.totalRealizedPnl >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.7rem;">
-                    {summary.totalRealizedPnl >= 0 ? '+' : ''}${summary.totalRealizedPnl.toFixed(2)}
-                </span>
-            {/if}
+            <span class="badge {roiPercent >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.75rem; font-weight: 700;">
+                ROI: {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(1)}%
+            </span>
         </div>
         <div class="stat-val {summary.totalEquity >= summary.netCapital ? 'text-emerald' : 'text-rose'}" style="font-size: 1.65rem; font-weight: 800;">
             ${summary.totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -185,12 +198,12 @@
 
     <!-- Table: Sổ Cái Biến Động Số Dư (Ledger) -->
     <div class="card" style="grid-column: span 12; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <div>
                 <div class="card-title" style="margin: 0; font-size: 1.1rem; font-weight: 800;">Sổ Cái Tài Chính & Biến Động Nguồn Vốn</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Hạch toán tự động Nạp, Rút, Mua coin và Chốt lời/Cắt lỗ theo thời gian thực</div>
             </div>
-            <div style="display: flex; gap: 0.65rem;">
+            <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
                 <button class="btn btn-outline" on:click={loadAccountData} disabled={isLoading} style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
                     {isLoading ? '⌛ Đang tải...' : '🔄 Làm mới'}
                 </button>
@@ -198,21 +211,43 @@
             </div>
         </div>
 
-        {#if capitalLogs.length > 0}
-            <div class="table-responsive">
-                <table style="width: 100%; border-collapse: collapse;">
+        <!-- Quick Filters for Ledger -->
+        <div class="filter-pills" style="margin-bottom: 1rem;">
+            <button 
+                class="pill-btn {selectedFilter === 'ALL' ? 'active' : ''}" 
+                on:click={() => selectedFilter = 'ALL'}
+            >
+                📋 Tất Cả ({capitalLogs.length})
+            </button>
+            <button 
+                class="pill-btn {selectedFilter === 'CAPITAL' ? 'active' : ''}" 
+                on:click={() => selectedFilter = 'CAPITAL'}
+            >
+                💵 Nạp & Rút Vốn
+            </button>
+            <button 
+                class="pill-btn {selectedFilter === 'TRADE' ? 'active' : ''}" 
+                on:click={() => selectedFilter = 'TRADE'}
+            >
+                ⚡ Vào Lệnh & Chốt Lời
+            </button>
+        </div>
+
+        {#if filteredLogs.length > 0}
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 650px;">
                     <thead>
                         <tr style="border-bottom: 1px solid var(--border-card); text-align: left;">
                             <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Mã GD</th>
                             <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Loại Giao Dịch</th>
                             <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Số Tiền</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Số Dư Khả Dụng Sau GD</th>
+                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Số Dư Khả Dụng</th>
                             <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian</th>
                             <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Chi Tiết / Ghi Chú</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {#each capitalLogs as log (log.id)}
+                        {#each filteredLogs as log (log.id)}
                             <tr style="border-bottom: 1px solid var(--border-card);">
                                 <td style="padding: 0.85rem 0.75rem; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">{log.id}</td>
                                 <td style="padding: 0.85rem 0.75rem;"><span class="badge {log.typeClass}">{log.type}</span></td>
@@ -227,10 +262,10 @@
             </div>
         {:else}
             <div style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
-                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📖</div>
-                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">Chưa có giao dịch nào trong Sổ Cái</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; max-width: 450px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-                    Bấm nút <strong>"+ Ghi chép nạp/rút vốn"</strong> ở trên để nạp vốn ban đầu (ví dụ: $1,000 USDT). Khi bạn vào lệnh mua hoặc chốt lời, hệ thống sẽ tự động hạch toán vào đây.
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💳</div>
+                <div style="font-weight: 600; color: var(--text-primary);">Chưa có biến động vốn nào phù hợp bộ lọc</div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">
+                    Bấm nút <strong>"+ Ghi chép nạp/rút vốn"</strong> hoặc mở lệnh giao dịch để bắt đầu hạch toán.
                 </div>
             </div>
         {/if}

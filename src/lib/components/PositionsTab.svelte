@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, formatPrice, formatVNTime } from '../api.js';
+    import ClosePositionModal from './ClosePositionModal.svelte';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
@@ -157,25 +158,32 @@
         loadLivePositions();
     });
 
+    let isCloseModalOpen = false;
+    let selectedClosePosition = null;
+
     export function addPosition(newPos) {
         positions = [newPos, ...positions];
     }
 
-    async function changeStatus(pos, nextStatus) {
-        if (nextStatus === 'CLOSED') {
-            if (pos.rawId) {
-                const exitPrice = prompt(`Nhập giá chốt đóng vị thế ${pos.symbol} (Giá hiện tại: $${pos.currentPrice.toFixed(4)}, Entry: $${pos.entry}):`, String(pos.currentPrice || pos.entry));
-                if (exitPrice === null) return;
-                const res = await closePositionApi(pos.rawId, parseFloat(exitPrice) || pos.currentPrice, 'MANUAL_DASHBOARD_CLOSE');
-                if (res.success) {
-                    alert(`✅ Đã đóng vị thế ${pos.symbol} thành công trên backend!`);
-                }
+    function handleOpenCloseModal(pos) {
+        selectedClosePosition = pos;
+        isCloseModalOpen = true;
+    }
+
+    function handleCloseModal() {
+        isCloseModalOpen = false;
+        selectedClosePosition = null;
+    }
+
+    async function handleConfirmClose(pos, exitPrice) {
+        if (pos.rawId) {
+            const res = await closePositionApi(pos.rawId, exitPrice, 'MANUAL_DASHBOARD_CLOSE');
+            if (!res.success) {
+                console.warn('Backend close failed:', res.error);
             }
-            positions = positions.filter(p => p.id !== pos.id);
-            alert('✅ Vị thế đã được chốt đóng!');
-            return;
         }
-        positions = [...positions];
+        positions = positions.filter(p => p.id !== pos.id);
+        await loadLivePositions();
     }
 </script>
 
@@ -217,7 +225,7 @@
                             <span class="badge badge-neutral" style="font-size: 0.75rem;">Setup: {pos.policyId}</span>
                         {/if}
                     </div>
-                    <button class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;" on:click={() => changeStatus(pos, pos.nextStatus)}>
+                    <button class="btn btn-outline" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;" on:click={() => handleOpenCloseModal(pos)}>
                         {pos.actionBtnText}
                     </button>
                 </div>
@@ -309,3 +317,10 @@
         {/if}
     </div>
 </div>
+
+<ClosePositionModal 
+    isOpen={isCloseModalOpen} 
+    position={selectedClosePosition} 
+    onClose={handleCloseModal} 
+    onConfirmClose={handleConfirmClose} 
+/>

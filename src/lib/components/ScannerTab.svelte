@@ -17,6 +17,7 @@
         formatPrice,
         formatVNTime 
     } from '../api.js';
+    import PriceLocationGauge from './PriceLocationGauge.svelte';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
@@ -77,7 +78,7 @@
             class="pill-btn {activeView === 'scan' ? 'active' : ''}" 
             on:click={() => activeView = 'scan'}
         >
-            🎯 Quét Setup 12 Coin {scanData ? `(${scanData.actionable_count} Khả thi)` : ''}
+            🎯 Quét Setup {UNIVERSE_COINS.length} Coin {scanData ? `(${scanData.actionable_count} Khả thi)` : ''}
         </button>
     </div>
 
@@ -250,6 +251,13 @@
                     {/if}
                 </div>
             </div>
+
+            <!-- Price Location Visual Gauge -->
+            <PriceLocationGauge 
+                price={singleAnalysisData.reference_price} 
+                support={singleAnalysisData.key_levels?.support} 
+                resistance={singleAnalysisData.key_levels?.resistance} 
+            />
 
             <!-- 4. Active Plan Section (if available) -->
             {#if singleAnalysisData.plan}
