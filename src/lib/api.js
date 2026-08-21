@@ -222,24 +222,20 @@ export async function fetchPositionHistoryApi(limit = 50) {
 }
 
 /**
- * Account Summary API
+ * Fetch Capital Account Summary API
  * GET /api/v1/account/summary
  */
 export async function fetchAccountSummaryApi() {
     const res = await safeJsonFetch('/api/v1/account/summary', { method: 'GET' });
-    if (res.ok) {
+    if (res.ok && res.data) {
         return { success: true, data: res.data };
     }
-    return { success: false };
+    return { success: false, data: null };
 }
 
-/**
- * Account Transactions API
- * GET /api/v1/account/transactions
- */
-export async function fetchCapitalTransactionsApi() {
-    const res = await safeJsonFetch('/api/v1/account/transactions', { method: 'GET' });
-    if (res.ok) {
+export async function fetchCapitalTransactionsApi(limit = 50) {
+    const res = await safeJsonFetch(`/api/v1/account/transactions?limit=${limit}`, { method: 'GET' });
+    if (res.ok && Array.isArray(res.data)) {
         return { success: true, data: res.data };
     }
     return { success: false, data: [] };
@@ -250,10 +246,11 @@ export async function fetchCapitalTransactionsApi() {
  * POST /api/v1/account/transactions
  */
 export async function createCapitalTransactionApi(type, amount, note) {
+    const cleanType = type === 'WITHDRAWAL' ? 'WITHDRAW' : type;
     const res = await safeJsonFetch('/api/v1/account/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, amount: parseFloat(amount), note })
+        body: JSON.stringify({ type: cleanType, amount: parseFloat(amount), note })
     });
     if (res.ok) {
         return { success: true, data: res.data };
