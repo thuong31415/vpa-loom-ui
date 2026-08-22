@@ -327,30 +327,30 @@ export function formatVNTime(val) {
 export function translateTrend(trend) {
     if (!trend || trend === 'UNAVAILABLE') return 'Chưa xác định';
     switch (trend.toUpperCase()) {
-        case 'BULLISH': return '📈 Xu hướng Tăng (Bullish)';
-        case 'BEARISH': return '📉 Xu hướng Giảm (Bearish)';
-        case 'MIXED': return '↔️ Đi ngang / Hỗn hợp (Mixed)';
+        case 'BULLISH': return '📈 Xu hướng Tăng';
+        case 'BEARISH': return '📉 Xu hướng Giảm';
+        case 'MIXED': return '↔️ Đi ngang / Hỗn hợp';
         case 'MIXED_BULLISH': return '↗️ Hỗn hợp nghiêng Tăng';
         case 'MIXED_BEARISH': return '↘️ Hỗn hợp nghiêng Giảm';
-        case 'CONFLICTING': return '⚠️ Xung đột cấu trúc (Conflicting)';
+        case 'CONFLICTING': return '⚠️ Xung đột đa khung';
         default: return trend;
     }
 }
 
 export function translateStructureBreak(msb) {
     if (!msb || msb === 'NO_CONFIRMED_BREAK' || msb === 'UNAVAILABLE' || msb.startsWith('NOT_DETECTED')) {
-        return 'Chưa có Phá vỡ Cấu trúc (No MSB)';
+        return 'Chưa có Phá vỡ Cấu trúc';
     }
-    if (msb.includes('UP') || msb.includes('BULLISH')) return '⚡ Phá vỡ Cấu trúc Tăng (Bullish MSB)';
-    if (msb.includes('DOWN') || msb.includes('BEARISH')) return '⚡ Phá vỡ Cấu trúc Giảm (Bearish MSB)';
+    if (msb.includes('UP') || msb.includes('BULLISH')) return '⚡ Phá vỡ Cấu trúc Tăng';
+    if (msb.includes('DOWN') || msb.includes('BEARISH')) return '⚡ Phá vỡ Cấu trúc Giảm';
     return msb;
 }
 
 export function translateLocation(loc) {
     if (!loc) return 'Chưa xác định';
     switch (loc.toUpperCase()) {
-        case 'AT_SUPPORT': return '🛡️ Tại Vùng Hỗ Trợ (Support)';
-        case 'AT_RESISTANCE': return '🚧 Tại Vùng Kháng Cự (Resistance)';
+        case 'AT_SUPPORT': return '🛡️ Tại Vùng Hỗ Trợ';
+        case 'AT_RESISTANCE': return '🚧 Tại Vùng Kháng Cự';
         case 'BETWEEN_SUPPORT_AND_RESISTANCE': return '⚖️ Lưng chừng giữa Hỗ trợ & Kháng cự';
         case 'ABOVE_RESISTANCE': return '🚀 Đột phá trên Kháng cự';
         case 'BELOW_SUPPORT': return '⚠️ Thủng dưới Hỗ trợ';
@@ -362,15 +362,63 @@ export function translateEffort(type) {
     if (!type) return 'Bình thường';
     switch (type.toUpperCase()) {
         case 'HIGH_EFFORT_LOW_RESULT':
-            return 'Volume Cao nhưng Nến Nhỏ (Lực cản / Hấp thụ mạnh)';
+            return 'Cá mập hấp thụ (Bẫy thanh khoản)';
         case 'HIGH_EFFORT_HIGH_RESULT':
-            return 'Volume Cao + Nến Lớn (Đẩy giá quyết liệt)';
+            return 'Dòng tiền bùng nổ (Đẩy giá mạnh)';
         case 'LOW_EFFORT_HIGH_RESULT':
-            return 'Volume Thấp nhưng Nến Lớn (Cung/Cầu cạn kiệt)';
+            return 'Cạn kiệt cản (Giá bay nhẹ)';
         case 'LOW_EFFORT_LOW_RESULT':
-            return 'Volume Thấp + Nến Nhỏ (Thị trường trầm lắng)';
+            return 'Thị trường cạn cung (Tích lũy)';
         default:
             return type;
+    }
+}
+
+export function getFriendlyVPAStatus(effortResult) {
+    if (!effortResult) {
+        return {
+            headline: 'Thanh khoản bình thường',
+            detail: 'Volume ổn định quanh trung bình',
+            badgeClass: 'text-secondary'
+        };
+    }
+    const type = (effortResult.type || '').toUpperCase();
+    const vol = effortResult.relative_volume || 1.0;
+    const spread = effortResult.spread_atr || 1.0;
+    const isCandidate = effortResult.status === 'CANDIDATE';
+    const candleState = isCandidate ? '(Đang chạy)' : '(Đã đóng)';
+
+    switch (type) {
+        case 'HIGH_EFFORT_HIGH_RESULT':
+            return {
+                headline: '💥 Dòng tiền bùng nổ',
+                detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
+                badgeClass: 'text-emerald'
+            };
+        case 'HIGH_EFFORT_LOW_RESULT':
+            return {
+                headline: '🧲 Cá mập hấp thụ',
+                detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
+                badgeClass: 'text-amber'
+            };
+        case 'LOW_EFFORT_HIGH_RESULT':
+            return {
+                headline: '🚀 Giá lướt nhẹ cạn cản',
+                detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
+                badgeClass: 'text-emerald'
+            };
+        case 'LOW_EFFORT_LOW_RESULT':
+            return {
+                headline: '💤 Thị trường cạn cung',
+                detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
+                badgeClass: 'text-secondary'
+            };
+        default:
+            return {
+                headline: `Thanh khoản ${vol.toFixed(1)}x trung bình`,
+                detail: `Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
+                badgeClass: 'text-secondary'
+            };
     }
 }
 

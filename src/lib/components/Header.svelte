@@ -1,6 +1,4 @@
 <script>
-    import CandleCountdown from './CandleCountdown.svelte';
-
     export let activeTab = 'scanner';
     export let onSelectTab = (tab) => {};
 </script>
@@ -11,9 +9,6 @@
             <div class="logo-icon">V</div>
             <div class="logo-title">VPA Loom</div>
         </button>
-        <div class="countdown-desktop">
-            <CandleCountdown />
-        </div>
     </div>
 
     <nav class="nav-tabs">
@@ -43,10 +38,6 @@
     </div>
 </header>
 
-<div class="countdown-mobile">
-    <CandleCountdown />
-</div>
-
 <style>
     .header-left {
         display: flex;
@@ -57,23 +48,5 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-    }
-    .countdown-desktop {
-        display: block;
-    }
-    .countdown-mobile {
-        display: none;
-        background: #FFFFFF;
-        border-bottom: 1px solid var(--border-card);
-        padding: 0.5rem 1rem;
-        justify-content: center;
-    }
-    @media (max-width: 900px) {
-        .countdown-desktop {
-            display: none;
-        }
-        .countdown-mobile {
-            display: flex;
-        }
     }
 </style>

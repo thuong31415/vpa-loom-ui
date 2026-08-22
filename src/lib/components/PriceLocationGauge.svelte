@@ -29,25 +29,25 @@
         let zoneTip = '';
 
         if (p <= supUpper) {
-            zoneLabel = '🟢 Sát Vùng Hỗ Trợ Đáy (Vùng Mua Tối Ưu)';
+            zoneLabel = '🟢 Sát Vùng Hỗ Trợ Đáy';
             zoneClass = 'text-emerald';
-            zoneTip = 'Giá đang ở vùng hỗ trợ, tỷ lệ R:R rất đẹp nếu có tín hiệu nến đảo chiều.';
+            zoneTip = 'Đang ở hỗ trợ';
         } else if (p >= resLower) {
-            zoneLabel = '⚡ Sát Vùng Kháng Cự Đỉnh (Cẩn Trọng Kháng Cự)';
+            zoneLabel = '⚡ Sát Vùng Kháng Cự Đỉnh';
             zoneClass = 'text-rose';
-            zoneTip = 'Giá đang ép sát kháng cự, cần chờ nến đóng phá hẳn cản hoặc nhịp retest.';
+            zoneTip = 'Đang ở kháng cự';
         } else if (clampedPercent <= 30) {
             zoneLabel = '↗️ Vùng Thấp Nghiêng Hỗ Trợ';
             zoneClass = 'text-emerald';
-            zoneTip = 'Giá gần hỗ trợ, khoảng cách cắt lỗ ngắn.';
+            zoneTip = 'Nghiêng hỗ trợ';
         } else if (clampedPercent >= 70) {
             zoneLabel = '⚠️ Vùng Cao Cận Kháng Cự';
             zoneClass = 'text-rose';
-            zoneTip = 'Giá đang áp sát cản trên, không nên mua đuổi khi R:R bất lợi.';
+            zoneTip = 'Nghiêng kháng cự';
         } else {
             zoneLabel = '↔️ Vùng Lưng Chừng Giữa 2 Cản';
             zoneClass = 'text-amber';
-            zoneTip = 'Giá đang ở giữa range, cần kiên nhẫn chờ giá tiếp cận 1 trong 2 biên.';
+            zoneTip = 'Lưng chừng biên';
         }
 
         return {
@@ -64,12 +64,7 @@
 
 {#if gauge}
     <div class="gauge-container">
-        <div class="gauge-header">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
-                    Vị Trí Giá So Với 2 Vùng Cản
-                </span>
-            </div>
+        <div class="gauge-header" style="justify-content: flex-end; margin-bottom: 1.1rem;">
             <span class="{gauge.zoneClass}" style="font-size: 0.8rem; font-weight: 700;">
                 {gauge.zoneLabel}
             </span>
@@ -79,9 +74,9 @@
         <div class="track-wrapper">
             <div class="gauge-track">
                 <!-- Zone markers -->
-                <div class="zone-segment zone-sup" style="width: 25%;" title="Vùng Mua An Toàn"></div>
+                <div class="zone-segment zone-sup" style="width: 25%;" title="Vùng Hỗ Trợ"></div>
                 <div class="zone-segment zone-mid" style="width: 50%;" title="Vùng Lưng Chừng"></div>
-                <div class="zone-segment zone-res" style="width: 25%;" title="Vùng Cận Kháng Cự"></div>
+                <div class="zone-segment zone-res" style="width: 25%;" title="Vùng Kháng Cự"></div>
 
                 <!-- Current Price Needle / Dot -->
                 <div 
@@ -89,7 +84,7 @@
                     style="left: {gauge.percent}%;"
                 >
                     <div class="pointer-bubble">
-                        ${formatPrice(price)} ({gauge.percent.toFixed(0)}%)
+                        ${formatPrice(price)}
                     </div>
                     <div class="pointer-dot"></div>
                 </div>
@@ -98,18 +93,18 @@
 
         <!-- Labels at edges -->
         <div class="gauge-labels">
-            <div style="text-align: left;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">HỖ TRỢ ĐÁY</div>
-                <div style="font-size: 0.8rem; font-weight: 700; font-family: monospace; color: var(--emerald);">
+            <div style="text-align: left; white-space: nowrap;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">HỖ TRỢ ĐÁY</div>
+                <div style="font-size: 0.85rem; font-weight: 700; font-family: monospace; color: var(--emerald);">
                     ${formatPrice(gauge.supUpper)}
                 </div>
             </div>
-            <div style="text-align: center; font-size: 0.725rem; color: var(--text-muted); padding: 0 0.5rem;">
+            <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 0 0.5rem;">
                 {gauge.zoneTip}
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">KHÁNG CỰ ĐỈNH</div>
-                <div style="font-size: 0.8rem; font-weight: 700; font-family: monospace; color: var(--rose);">
+            <div style="text-align: right; white-space: nowrap;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">KHÁNG CỰ ĐỈNH</div>
+                <div style="font-size: 0.85rem; font-weight: 700; font-family: monospace; color: var(--rose);">
                     ${formatPrice(gauge.resLower)}
                 </div>
             </div>
@@ -122,8 +117,8 @@
         background: #FFFFFF;
         border: 1px solid var(--border-card);
         border-radius: 12px;
-        padding: 1rem 1.25rem;
-        margin-top: 1rem;
+        padding: 0.95rem 1.15rem;
+        margin: 0.75rem 0;
     }
     .gauge-header {
         display: flex;
@@ -131,7 +126,7 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 0.5rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
     .track-wrapper {
         position: relative;
@@ -150,7 +145,7 @@
         height: 100%;
     }
     .zone-sup {
-        background: rgba(22, 101, 52, 0.2);
+        background: rgba(22, 101, 52, 0.22);
         border-top-left-radius: 999px;
         border-bottom-left-radius: 999px;
     }
@@ -158,7 +153,7 @@
         background: rgba(154, 52, 18, 0.1);
     }
     .zone-res {
-        background: rgba(153, 27, 27, 0.2);
+        background: rgba(153, 27, 27, 0.22);
         border-top-right-radius: 999px;
         border-bottom-right-radius: 999px;
     }
@@ -178,7 +173,7 @@
         height: 16px;
         background: var(--btn-primary);
         border: 3px solid #FFFFFF;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
         border-radius: 50%;
     }
     .pointer-bubble {
@@ -189,7 +184,7 @@
         font-size: 0.725rem;
         font-weight: 700;
         font-family: monospace;
-        padding: 0.2rem 0.5rem;
+        padding: 0.2rem 0.55rem;
         border-radius: 6px;
         white-space: nowrap;
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
@@ -205,10 +200,10 @@
         border-color: var(--btn-primary) transparent transparent transparent;
     }
     .gauge-labels {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        margin-top: 0.85rem;
         gap: 0.5rem;
     }
 </style>
