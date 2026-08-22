@@ -273,7 +273,7 @@
                                 🚀 KẾ HOẠCH VÀO LỆNH ({singleAnalysisData.plan.direction})
                             </span>
                             <div class="subtype-desc" style="margin-top: 0.35rem;">
-                                Setup: <strong>{singleAnalysisData.plan.policy_id}</strong> (v{singleAnalysisData.plan.policy_version})
+                                Setup: <strong>{getFriendlyWyckoffTitle(singleAnalysisData.plan.policy_id, singleAnalysisData.plan.direction)}</strong> (v{singleAnalysisData.plan.policy_version})
                             </div>
                         </div>
 

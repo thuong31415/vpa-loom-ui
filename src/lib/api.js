@@ -397,22 +397,64 @@ export function translateAction(action) {
     }
 }
 
-export function getFriendlyWyckoffTitle(policyId, direction) {
-    if (policyId === 'SC_SPRING_RECOVERY_V1') return 'Wyckoff Spring Phase C — Bẫy dụ bán & gom hàng';
-    if (policyId === 'SHORT_BREAK_CONTINUATION_V1') return 'Wyckoff Breakdown Phase D — Sập tiếp diễn phá hỗ trợ';
-    if (policyId === 'SC_MARKDOWN_RECOVERY_V1') return 'Wyckoff Markdown Retest — Chốt lời nhịp rũ hàng';
-    if (policyId === 'POST_BREAK_RETEST_V2') return 'Retest Vùng Phá Vỡ — Kiểm tra lại cản';
-    if (policyId === 'RANGE_BREAK_IMPULSE_V1') return 'Phá vỡ biên Range tích lũy — Momentum nổ Volume';
-    return direction === 'LONG' ? 'Setup Mua Tích Lũy Wyckoff' : 'Setup Bán Phân Phối Wyckoff';
+export function getFriendlyWyckoffTitle(policyId, direction = 'LONG') {
+    if (!policyId) return direction === 'LONG' ? 'Setup Mua Tích Lũy Wyckoff' : 'Setup Bán Phân Phối Wyckoff';
+    
+    switch (policyId.toUpperCase()) {
+        case 'WYCKOFF_CLIMAX_BASE_ACCUMULATION_V1':
+            return 'Wyckoff Schematic 2: Climax Base — Gom Hàng Đáy Cạn Cung (Springless)';
+        case 'SC_SPRING_RECOVERY_V1':
+        case 'SC_MARGINAL_SPRING_RECOVERY_V1':
+            return 'Wyckoff Spring Phase C — Bẫy Rũ Bỏ & Gom Hàng (Spring Recovery)';
+        case 'SC_SECONDARY_TEST_ABSORPTION_V1':
+            return 'Wyckoff Secondary Test Phase B — Hấp Thụ Cung Đáy (ST Absorption)';
+        case 'SC_TERMINAL_ABSORPTION_REVERSAL_V1':
+            return 'Wyckoff Terminal Absorption — Đảo Chiều Hấp Thụ Cực Đại';
+        case 'SC_MARKUP_RECOVERY_V2':
+            return 'Wyckoff Markup Role Flip — Xác Nhận Đổi Vai Hỗ Trợ';
+        case 'SC_MARKDOWN_RECOVERY_V1':
+            return 'Wyckoff Markdown Retest — Chốt Lời Nhịp Rũ Hàng';
+        case 'SHORT_BREAK_CONTINUATION_V1':
+            return 'Wyckoff Breakdown Phase D — Sập Tiếp Diễn Phá Hỗ Trợ';
+        case 'POST_BREAK_RETEST_V2':
+            return 'Retest Vùng Phá Vỡ — Kiểm Tra Lại Cản (Post-Break Retest)';
+        case 'POST_BREAK_LOW_SUPPLY_ACCEPTANCE_V1':
+            return 'Wyckoff Post-Break Low Supply — Chấp Nhận Giá Cạn Cung';
+        case 'RANGE_BREAK_IMPULSE_V1':
+            return 'Phá Vỡ Biên Range Tích Lũy — Xung Lực Bùng Nổ Volume (RBI)';
+        case 'RANGE_BREAK_CONTINUATION_V1':
+            return 'Phá Vỡ Biên Range Tiếp Diễn — Mở Rộng Biên Độ Sóng';
+        case 'DIRECTIONAL_OPEN_SURFACE_V1':
+        case 'DIRECTIONAL_OPEN_SURFACE_ACCEPTANCE_V1':
+            return 'Directional Open Surface — Bứt Phá Không Gian Mở (Khám Phá Giá)';
+        case 'MICRO_SPRING_UPTHRUST_V1':
+            return 'Micro Spring / Upthrust — Bẫy Thanh Khoản Khung Nhỏ';
+        default:
+            return direction === 'LONG' ? `Setup Mua Wyckoff (${policyId})` : `Setup Bán Wyckoff (${policyId})`;
+    }
 }
 
 export function getFriendlyVPADesc(candidate) {
-    const vol = candidate?.analysis?.volume?.relative_volume || 2.0;
-    const effort = candidate?.analysis?.volume?.effort_type;
-    const support = candidate?.analysis?.trade_safe_support?.lower || 0.6678;
+    const vol = candidate?.analysis?.market_state?.effort_result?.relative_volume 
+        || candidate?.analysis?.volume?.relative_volume 
+        || 1.5;
+    const effort = candidate?.analysis?.market_state?.effort_result?.type 
+        || candidate?.analysis?.volume?.effort_type;
+    const support = candidate?.analysis?.key_levels?.support?.lower 
+        || candidate?.analysis?.trade_safe_support?.lower 
+        || 0;
+    const resistance = candidate?.analysis?.key_levels?.resistance?.upper 
+        || candidate?.analysis?.trade_safe_resistance?.upper 
+        || 0;
     
     if (effort === 'HIGH_EFFORT_LOW_RESULT') {
-        return `"Khối lượng bán tăng cao (gấp ${vol.toFixed(2)} lần trung bình) nhưng giá không thể thủng vùng hỗ trợ $${support}. Lực bán bị cá voi hấp thụ hoàn toàn (HIGH_EFFORT_LOW_RESULT), xác nhận bẫy dụ Short và sẵn sàng cho đà tăng."`;
+        return `"Khối lượng giao dịch tăng cao (gấp ${vol.toFixed(2)}x SMA20) nhưng biên độ nến bị nén chặt. Lực đối ứng bị cá mập hấp thụ hoàn toàn (HIGH_EFFORT_LOW_RESULT), xác nhận bẫy thanh khoản và sẵn sàng cho nhịp đảo chiều."`;
     }
-    return `"Nguồn cung kiệt sức ở chân sóng tích lũy, khối lượng nén chặt ở vùng cản an toàn, mở ra cơ hội giao dịch với tỷ lệ R:R cao."`;
+    if (effort === 'HIGH_EFFORT_HIGH_RESULT') {
+        return `"Khối lượng bùng nổ (gấp ${vol.toFixed(2)}x SMA20) đồng pha với thân nến mở rộng quyết liệt (HIGH_EFFORT_HIGH_RESULT). Dòng tiền lớn tham gia xác nhận xu hướng bứt phá."`;
+    }
+    if (effort === 'LOW_EFFORT_HIGH_RESULT') {
+        return `"Nguồn cung/cầu đối nghịch cạn kiệt hoàn toàn, giá di chuyển thanh thoát mà không cần nhiều khối lượng (LOW_EFFORT_HIGH_RESULT / Ease of Movement)."`;
+    }
+    return `"Cấu trúc nén chặt tại vùng cản trọng yếu ($${support ? formatPrice(support) : 'Support'} - $${resistance ? formatPrice(resistance) : 'Resistance'}), khối lượng kiểm định đạt chuẩn VPA, mở ra cơ hội giao dịch với tỷ lệ R:R tối ưu."`;
 }
