@@ -8,7 +8,7 @@ export const REMOTE_API_HOST = REMOTE_HOSTS[0];
 export const UNIVERSE_COINS = [
     "ETHUSDT", "BTCUSDT", "SOLUSDT", "SUIUSDT", "UNIUSDT",
     "LINKUSDT", "ZECUSDT", "LDOUSDT", "NEARUSDT", "BNBUSDT",
-    "TAOUSDT", "ADAUSDT", "ENAUSDT", "ZKUSDT"
+    "PEPEUSDT", "TAOUSDT", "ADAUSDT", "ENAUSDT", "ZKUSDT"
 ];
 
 /**
@@ -325,23 +325,24 @@ export function formatVNTime(val) {
 // -------------------------------------------------------------
 
 export function translateTrend(trend) {
-    if (!trend) return 'Chưa xác định';
+    if (!trend || trend === 'UNAVAILABLE') return 'Chưa xác định';
     switch (trend.toUpperCase()) {
         case 'BULLISH': return '📈 Xu hướng Tăng (Bullish)';
         case 'BEARISH': return '📉 Xu hướng Giảm (Bearish)';
         case 'MIXED': return '↔️ Đi ngang / Hỗn hợp (Mixed)';
         case 'MIXED_BULLISH': return '↗️ Hỗn hợp nghiêng Tăng';
         case 'MIXED_BEARISH': return '↘️ Hỗn hợp nghiêng Giảm';
+        case 'CONFLICTING': return '⚠️ Xung đột cấu trúc (Conflicting)';
         default: return trend;
     }
 }
 
 export function translateStructureBreak(msb) {
-    if (!msb || msb === 'NO_CONFIRMED_BREAK' || msb.startsWith('NOT_DETECTED')) {
+    if (!msb || msb === 'NO_CONFIRMED_BREAK' || msb === 'UNAVAILABLE' || msb.startsWith('NOT_DETECTED')) {
         return 'Chưa có Phá vỡ Cấu trúc (No MSB)';
     }
-    if (msb.includes('BULLISH')) return '⚡ Phá vỡ Cấu trúc Tăng (Bullish MSB)';
-    if (msb.includes('BEARISH')) return '⚡ Phá vỡ Cấu trúc Giảm (Bearish MSB)';
+    if (msb.includes('UP') || msb.includes('BULLISH')) return '⚡ Phá vỡ Cấu trúc Tăng (Bullish MSB)';
+    if (msb.includes('DOWN') || msb.includes('BEARISH')) return '⚡ Phá vỡ Cấu trúc Giảm (Bearish MSB)';
     return msb;
 }
 

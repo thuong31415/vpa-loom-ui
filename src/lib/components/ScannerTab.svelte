@@ -187,8 +187,13 @@
                 </div>
                 <div class="price-box">
                     <span class="price-label">Khối Lượng VPA (Relative Vol)</span>
-                    <span class="price-val text-emerald" style="font-size: 0.875rem;">
+                    <span class="price-val text-emerald" style="font-size: 0.875rem;" title="{singleAnalysisData.market_state?.effort_result?.type || ''}">
                         x{singleAnalysisData.market_state?.effort_result?.relative_volume?.toFixed(2) || '1.00'} · {singleAnalysisData.market_state?.effort_result?.spread_atr?.toFixed(2) || '1.00'} ATR
+                        {#if singleAnalysisData.market_state?.effort_result?.status === 'CANDIDATE'}
+                            <span style="font-size: 0.725rem; color: var(--amber); font-weight: 500;"> (Đang chạy)</span>
+                        {:else if singleAnalysisData.market_state?.effort_result?.status === 'CONFIRMED'}
+                            <span style="font-size: 0.725rem; color: var(--emerald); font-weight: 500;"> (Đã đóng)</span>
+                        {/if}
                     </span>
                 </div>
             </div>
