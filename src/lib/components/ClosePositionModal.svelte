@@ -1,5 +1,5 @@
 <script>
-    import { formatPrice } from '../api.js';
+    import { cleanSymbol, formatPrice } from '../api.js';
 
     export let isOpen = false;
     export let position = null;
@@ -83,7 +83,7 @@
             <div style="background: var(--bg-subtle); border: 1px solid var(--border-card); border-radius: 10px; padding: 1rem; margin-top: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-weight: 800; font-size: 1.05rem;">{position.symbol}</span>
+                        <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">{cleanSymbol(position.symbol)}</span>
                         <span class="badge {position.direction === 'LONG' || position.direction === 'BUY' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.75rem;">
                             {position.direction}
                         </span>

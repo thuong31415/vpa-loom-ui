@@ -12,9 +12,11 @@
         translateEffort,
         getFriendlyVPAStatus,
         translateDecisionStatus,
+        formatDecisionExplanation,
         translateAction,
         getFriendlyWyckoffTitle, 
         getFriendlyVPADesc,
+        cleanSymbol,
         formatPrice,
         formatVNTime 
     } from '../api.js';
@@ -73,13 +75,13 @@
             class="pill-btn {activeView === 'single' ? 'active' : ''}" 
             on:click={() => activeView = 'single'}
         >
-            🔍 Phân Tích ({selectedSymbol.replace('USDT', '')})
+            Phân Tích ({selectedSymbol.replace('USDT', '')})
         </button>
         <button 
             class="pill-btn {activeView === 'scan' ? 'active' : ''}" 
             on:click={() => { activeView = 'scan'; if (!scanData) loadScanData(); }}
         >
-            🎯 Quét 15 Coin {scanData ? `(${scanData.actionable_count})` : ''}
+            Quét 15 Coin {scanData ? `(${scanData.actionable_count})` : ''}
         </button>
     </div>
 
@@ -120,10 +122,11 @@
             <!-- ==================================================== -->
             <div class="card cockpit-card">
                 <!-- Header Info -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span class="symbol-tag" style="font-size: 1.05rem; padding: 0.25rem 0.65rem;">{selectedSymbol}</span>
-                        <span class="badge {act.class}" style="font-size: 0.825rem; font-weight: 700; padding: 0.25rem 0.65rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span class="symbol-tag">{cleanSymbol(selectedSymbol)}</span>
+                        <span class="status-pill {act.class}">
+                            <span class="dot"></span>
                             {act.text}
                         </span>
                     </div>
@@ -151,13 +154,13 @@
                 <div class="meta-grid" style="margin-top: 1rem;">
                     <!-- Support -->
                     <div class="price-box" style="background: var(--emerald-bg); border-color: var(--emerald-border); padding: 0.85rem 1rem;">
-                        <span class="price-label" style="color: var(--emerald); font-weight: 700; font-size: 0.75rem;">🟢 HỖ TRỢ</span>
+                        <span class="price-label" style="color: var(--emerald); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">HỖ TRỢ</span>
                         {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
-                            <div style="font-size: 1.15rem; font-weight: 800; color: var(--emerald); margin: 0.25rem 0;">
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--emerald); margin: 0.25rem 0; white-space: nowrap; font-variant-numeric: tabular-nums;">
                                 ${formatPrice(singleAnalysisData.key_levels.support.lower)} – ${formatPrice(singleAnalysisData.key_levels.support.upper)}
                             </div>
                             <div style="font-size: 0.775rem; color: var(--emerald);">
-                                Cách mép: <strong>${formatPrice(singleAnalysisData.key_levels.support.distance)}</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(2)}%)
+                                Cách: <strong>${formatPrice(singleAnalysisData.key_levels.support.distance)}</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(1)}%)
                             </div>
                         {:else}
                             <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-top: 0.25rem;">
@@ -168,13 +171,13 @@
 
                     <!-- Resistance -->
                     <div class="price-box" style="background: var(--rose-bg); border-color: var(--rose-border); padding: 0.85rem 1rem;">
-                        <span class="price-label" style="color: var(--rose); font-weight: 700; font-size: 0.75rem;">🔴 KHÁNG CỰ</span>
+                        <span class="price-label" style="color: var(--rose); font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">KHÁNG CỰ</span>
                         {#if singleAnalysisData.key_levels?.resistance?.status === 'AVAILABLE'}
-                            <div style="font-size: 1.15rem; font-weight: 800; color: var(--rose); margin: 0.25rem 0;">
+                            <div style="font-size: 0.95rem; font-weight: 700; color: var(--rose); margin: 0.25rem 0; white-space: nowrap; font-variant-numeric: tabular-nums;">
                                 ${formatPrice(singleAnalysisData.key_levels.resistance.lower)} – ${formatPrice(singleAnalysisData.key_levels.resistance.upper)}
                             </div>
                             <div style="font-size: 0.775rem; color: var(--rose);">
-                                Cách mép: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)}</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(2)}%)
+                                Cách: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)}</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(1)}%)
                             </div>
                         {:else}
                             <div style="font-size: 0.9rem; font-weight: 600; color: var(--rose); margin-top: 0.25rem;">
@@ -192,32 +195,32 @@
                 <div>
                     <!-- 2x2 Grid Trạng Thái Thị Trường -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
-                            📊 Trạng Thái & Động Lực (VPA / Wyckoff)
+                        <span style="font-size: 0.825rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
+                            Trạng Thái & Động Lực (VPA / Wyckoff)
                         </span>
                     </div>
 
                     <div class="price-grid" style="margin-bottom: 1rem;">
                         <div class="price-box">
-                            <span class="price-label">🧭 Xu Hướng</span>
+                            <span class="price-label">Xu Hướng</span>
                             <span class="price-val" style="font-size: 0.875rem;">
                                 {translateTrend(singleAnalysisData.market_state?.trend)}
                             </span>
                         </div>
                         <div class="price-box">
-                            <span class="price-label">⚡ Cấu Trúc</span>
+                            <span class="price-label">Cấu Trúc</span>
                             <span class="price-val" style="font-size: 0.875rem;">
                                 {translateStructureBreak(singleAnalysisData.market_state?.structure_break)}
                             </span>
                         </div>
                         <div class="price-box">
-                            <span class="price-label">📍 Vị Trí Hiện Tại</span>
+                            <span class="price-label">Vị Trí Cản</span>
                             <span class="price-val" style="font-size: 0.875rem;">
                                 {translateLocation(singleAnalysisData.market_state?.location)}
                             </span>
                         </div>
                         <div class="price-box">
-                            <span class="price-label">⛽ Động Lực VPA</span>
+                            <span class="price-label">Động Lực VPA</span>
                             <div style="font-weight: 700; font-size: 0.875rem; color: var(--text-primary);">
                                 {vpa.headline}
                             </div>
@@ -231,14 +234,14 @@
                     <div style="background: var(--bg-subtle); border: 1px solid var(--border-card); border-radius: 12px; padding: 0.95rem 1.15rem; margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <span style="font-size: 0.775rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-                                🎯 Quyết Định Thuật Toán
+                                Quyết Định Thuật Toán
                             </span>
                             <span class="badge badge-neutral" style="font-size: 0.75rem; font-weight: 600;">
                                 {translateDecisionStatus(singleAnalysisData.decision?.status)}
                             </span>
                         </div>
                         <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55;">
-                            {singleAnalysisData.decision?.waiting_for || singleAnalysisData.reason || 'Đang quan sát thị trường.'}
+                            {formatDecisionExplanation(singleAnalysisData)}
                         </div>
                     </div>
                 </div>
@@ -299,7 +302,7 @@
                                 singleAnalysisData.key_levels?.resistance?.upper || (singleAnalysisData.reference_price * 1.05).toFixed(4)
                             )}
                         >
-                            + Tạo Vị Thế Theo Dõi Cho {selectedSymbol}
+                            + Tạo Vị Thế Theo Dõi Cho {cleanSymbol(selectedSymbol)}
                         </button>
                     {/if}
                 </div>
@@ -340,7 +343,7 @@
                     <div class="subtype-card" style="margin-bottom: 0; padding: 1.15rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="symbol-tag" style="font-size: 0.9rem;">{candidate.symbol}</span>
+                                <span class="symbol-tag" style="font-size: 1rem;">{cleanSymbol(candidate.symbol)}</span>
                                 <span class="badge badge-emerald" style="font-size: 0.775rem;">🟢 Sẵn sàng ({candidate.analysis?.plan?.direction || 'LONG'})</span>
                             </div>
                             <span class="badge badge-neutral" style="font-size: 0.75rem;">

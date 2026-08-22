@@ -64,12 +64,6 @@
 
 {#if gauge}
     <div class="gauge-container">
-        <div class="gauge-header" style="justify-content: flex-end; margin-bottom: 1.1rem;">
-            <span class="{gauge.zoneClass}" style="font-size: 0.8rem; font-weight: 700;">
-                {gauge.zoneLabel}
-            </span>
-        </div>
-
         <!-- Gauge Visual Track -->
         <div class="track-wrapper">
             <div class="gauge-track">
@@ -99,7 +93,7 @@
                     ${formatPrice(gauge.supUpper)}
                 </div>
             </div>
-            <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 0 0.5rem;">
+            <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 0 0.5rem; font-weight: 500;">
                 {gauge.zoneTip}
             </div>
             <div style="text-align: right; white-space: nowrap;">
@@ -117,20 +111,12 @@
         background: #FFFFFF;
         border: 1px solid var(--border-card);
         border-radius: 12px;
-        padding: 0.95rem 1.15rem;
+        padding: 0.85rem 1.15rem 0.95rem 1.15rem;
         margin: 0.75rem 0;
-    }
-    .gauge-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1.25rem;
     }
     .track-wrapper {
         position: relative;
-        padding: 0.5rem 0.75rem 0.25rem 0.75rem;
+        padding: 1.65rem 0.75rem 0.25rem 0.75rem;
     }
     .gauge-track {
         height: 10px;

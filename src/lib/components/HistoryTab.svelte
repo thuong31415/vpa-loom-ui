@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchPositionHistoryApi, formatPrice, formatVNTime } from '../api.js';
+    import { fetchPositionHistoryApi, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
 
     let historyList = [];
     let isLoading = false;
@@ -119,7 +119,7 @@
                     {#each historyList as item (item.id)}
                         <tr style="border-bottom: 1px solid var(--border-card);">
                             <td style="padding: 0.85rem 0.75rem;">
-                                <strong style="font-weight: 800; color: var(--text-primary);">{item.symbol}</strong>
+                                <strong style="font-weight: 800; color: var(--text-primary);">{cleanSymbol(item.symbol)}</strong>
                             </td>
                             <td style="padding: 0.85rem 0.75rem;">
                                 <span class="badge {item.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{item.direction}</span>

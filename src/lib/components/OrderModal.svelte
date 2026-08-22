@@ -1,5 +1,5 @@
 <script>
-    import { createPositionApi } from '../api.js';
+    import { createPositionApi, cleanSymbol } from '../api.js';
 
     export let isOpen = false;
     export let symbol = 'SUIUSDT';
@@ -81,10 +81,10 @@
 <div class="modal-overlay active" on:click|self={onClose} on:keydown={(e) => e.key === 'Escape' && onClose()} role="dialog" aria-modal="true" tabindex="-1">
     <div class="modal-card" style="max-width: 480px; padding: 1.75rem; border-radius: 20px;">
         <div class="card-header" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="symbol-tag" style="font-size: 1rem; font-weight: 800;">{symbol || 'SUIUSDT'}</span>
-                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; font-weight: 700;">
-                    {direction === 'LONG' ? '🟢 MUA (LONG)' : '🔴 BÁN (SHORT)'}
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <span class="symbol-tag" style="font-size: 1.2rem; font-weight: 800;">{cleanSymbol(symbol) || 'SUI'}</span>
+                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; font-weight: 700;">
+                    {direction === 'LONG' ? 'MUA (LONG)' : 'BÁN (SHORT)'}
                 </span>
             </div>
             <button class="btn btn-outline" style="padding: 0.2rem 0.55rem; border-radius: 50%;" on:click={onClose}>✕</button>

@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, formatPrice, formatVNTime } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
     import ClosePositionModal from './ClosePositionModal.svelte';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
@@ -217,8 +217,8 @@
         {#each positions as pos (pos.id)}
             <div class="position-card" data-status={pos.status} style="background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
                 <div class="position-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
-                    <div class="position-title-group" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                        <span class="symbol-tag" style="font-size: 1.05rem; font-weight: 800;">{pos.symbol}</span>
+                    <div class="position-title-group" style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                        <span class="symbol-tag">{cleanSymbol(pos.symbol)}</span>
                         <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-weight: 700; font-size: 0.85rem;">{pos.direction}</span>
                         <span class="badge {pos.statusClass}" style="font-size: 0.8rem;">{pos.statusLabel}</span>
                         {#if pos.policyId}

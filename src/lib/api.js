@@ -271,6 +271,15 @@ export async function createCapitalTransactionApi(type, amount, note) {
 }
 
 /**
+ * Clean Symbol name by stripping USDT suffix:
+ * ETHUSDT -> ETH, BTCUSDT -> BTC
+ */
+export function cleanSymbol(sym) {
+    if (!sym) return '';
+    return String(sym).replace(/USDT$/i, '').trim();
+}
+
+/**
  * Format Price with dynamic decimal places:
  * - >= 1000: 2 decimals ($65,420.50)
  * - >= 1: 2 to 4 decimals ($2,450.25, $0.6756)
@@ -327,33 +336,33 @@ export function formatVNTime(val) {
 export function translateTrend(trend) {
     if (!trend || trend === 'UNAVAILABLE') return 'Chưa xác định';
     switch (trend.toUpperCase()) {
-        case 'BULLISH': return '📈 Xu hướng Tăng';
-        case 'BEARISH': return '📉 Xu hướng Giảm';
-        case 'MIXED': return '↔️ Đi ngang / Hỗn hợp';
-        case 'MIXED_BULLISH': return '↗️ Hỗn hợp nghiêng Tăng';
-        case 'MIXED_BEARISH': return '↘️ Hỗn hợp nghiêng Giảm';
-        case 'CONFLICTING': return '⚠️ Xung đột đa khung';
+        case 'BULLISH': return 'Tăng';
+        case 'BEARISH': return 'Giảm';
+        case 'MIXED': return 'Đi ngang';
+        case 'MIXED_BULLISH': return 'Nghiêng Tăng';
+        case 'MIXED_BEARISH': return 'Nghiêng Giảm';
+        case 'CONFLICTING': return 'Xung đột đa khung';
         default: return trend;
     }
 }
 
 export function translateStructureBreak(msb) {
     if (!msb || msb === 'NO_CONFIRMED_BREAK' || msb === 'UNAVAILABLE' || msb.startsWith('NOT_DETECTED')) {
-        return 'Chưa có Phá vỡ Cấu trúc';
+        return 'Chưa Phá Vỡ';
     }
-    if (msb.includes('UP') || msb.includes('BULLISH')) return '⚡ Phá vỡ Cấu trúc Tăng';
-    if (msb.includes('DOWN') || msb.includes('BEARISH')) return '⚡ Phá vỡ Cấu trúc Giảm';
+    if (msb.includes('UP') || msb.includes('BULLISH')) return 'Phá Vỡ Tăng';
+    if (msb.includes('DOWN') || msb.includes('BEARISH')) return 'Phá Vỡ Giảm';
     return msb;
 }
 
 export function translateLocation(loc) {
     if (!loc) return 'Chưa xác định';
     switch (loc.toUpperCase()) {
-        case 'AT_SUPPORT': return '🛡️ Tại Vùng Hỗ Trợ';
-        case 'AT_RESISTANCE': return '🚧 Tại Vùng Kháng Cự';
-        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return '⚖️ Lưng chừng giữa Hỗ trợ & Kháng cự';
-        case 'ABOVE_RESISTANCE': return '🚀 Đột phá trên Kháng cự';
-        case 'BELOW_SUPPORT': return '⚠️ Thủng dưới Hỗ trợ';
+        case 'AT_SUPPORT': return 'Tại Hỗ Trợ';
+        case 'AT_RESISTANCE': return 'Tại Kháng Cự';
+        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return 'Giữa 2 Cản';
+        case 'ABOVE_RESISTANCE': return 'Phá Trên Kháng Cự';
+        case 'BELOW_SUPPORT': return 'Thủng Dưới Hỗ Trợ';
         default: return loc;
     }
 }
@@ -391,25 +400,25 @@ export function getFriendlyVPAStatus(effortResult) {
     switch (type) {
         case 'HIGH_EFFORT_HIGH_RESULT':
             return {
-                headline: '💥 Dòng tiền bùng nổ',
+                headline: 'Dòng tiền bùng nổ',
                 detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-emerald'
             };
         case 'HIGH_EFFORT_LOW_RESULT':
             return {
-                headline: '🧲 Cá mập hấp thụ',
+                headline: 'Cá mập hấp thụ',
                 detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-amber'
             };
         case 'LOW_EFFORT_HIGH_RESULT':
             return {
-                headline: '🚀 Giá lướt nhẹ cạn cản',
+                headline: 'Giá lướt cạn cản',
                 detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-emerald'
             };
         case 'LOW_EFFORT_LOW_RESULT':
             return {
-                headline: '💤 Thị trường cạn cung',
+                headline: 'Thị trường cạn cung',
                 detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };
@@ -425,23 +434,79 @@ export function getFriendlyVPAStatus(effortResult) {
 export function translateDecisionStatus(status) {
     if (!status) return 'Chưa rõ';
     switch (status.toUpperCase()) {
-        case 'PROPOSED': return '🟢 ĐÃ CÓ SETUP HỢP LỆ';
-        case 'WAITING_CONFIRMATION': return '⏳ Đang Chờ Xác Nhận Tín Hiệu';
-        case 'REJECTED': return '⏸️ Tạm Dừng / Chưa Đủ Điều Kiện';
+        case 'PROPOSED': return 'Có Kèo Hợp Lệ';
+        case 'WAITING_CONFIRMATION': return 'Chờ Xác Nhận';
+        case 'REJECTED': return 'Chưa Đủ Điều Kiện';
         default: return status;
     }
 }
 
+/**
+ * Concise, actionable human-friendly Decision synthesizer.
+ * Eliminates redundant metric dumps and explains clearly what the system is waiting for.
+ */
+export function formatDecisionExplanation(data) {
+    if (!data) return 'Đang quan sát thị trường.';
+
+    // 1. If actionable trade plan is available
+    if (data.plan) {
+        const dir = data.plan.direction === 'SHORT' ? 'Bán (Short)' : 'Mua (Long)';
+        const setup = getFriendlyWyckoffTitle(data.plan.policy_id, data.plan.direction);
+        const rr = data.plan.reward_risk ? data.plan.reward_risk.toFixed(2) : '2.0';
+        return `Kích hoạt kế hoạch ${dir} với tỷ lệ R:R = ${rr}R. Đã xác nhận ${setup}.`;
+    }
+
+    // 2. If holding an open position
+    if (data.position && data.position.status === 'OPEN') {
+        const dir = data.position.direction || 'LONG';
+        return `Đang nắm giữ vị thế ${dir}. Hệ thống theo dõi trailing stop và tín hiệu đảo chiều để tối ưu hóa lợi nhuận.`;
+    }
+
+    // 3. If in Waiting / No-Trade state
+    const sup = data.key_levels?.support;
+    const res = data.key_levels?.resistance;
+    const isSupAvail = sup && sup.status === 'AVAILABLE';
+    const isResAvail = res && res.status === 'AVAILABLE';
+
+    // Case 3a: Price discovery / Open air above resistance
+    if (!isResAvail && isSupAvail) {
+        return 'Giá vừa bứt phá vào vùng không gian mở (Open Air). Chờ nhịp Retest hoặc tích lũy cạn cung để thiết lập điểm vào lệnh an toàn.';
+    }
+
+    // Case 3b: Price discovery / Dò đáy mới below support
+    if (!isSupAvail && isResAvail) {
+        return 'Giá đang dò đáy mới. Chờ xuất hiện nến bán cao trào và cấu trúc tái tích lũy trước khi xem xét mở vị thế.';
+    }
+
+    // Case 3c: Close to Support (distance <= 2.5%)
+    if (isSupAvail && sup.distance_percent != null && sup.distance_percent <= 2.5) {
+        return `Giá đang phản ứng gần vùng Hỗ Trợ ($${formatPrice(sup.lower)} – $${formatPrice(sup.upper)}). Chờ nến 4H đóng xác nhận tín hiệu cạn cung/đảo chiều để kích hoạt Long.`;
+    }
+
+    // Case 3d: Close to Resistance (distance <= 2.5%)
+    if (isResAvail && res.distance_percent != null && res.distance_percent <= 2.5) {
+        return `Giá đang tiếp cận vùng Kháng Cự ($${formatPrice(res.lower)} – $${formatPrice(res.upper)}). Chờ nến 4H đóng xác nhận tín hiệu từ chối giá hoặc cạn cầu để kích hoạt Short.`;
+    }
+
+    // Case 3e: Between Support and Resistance (Lưng chừng biên)
+    if (isSupAvail && isResAvail) {
+        return `Giá đang dao động lưng chừng giữa 2 cản ($${formatPrice(sup.upper)} – $${formatPrice(res.lower)}). Kiên nhẫn quan sát, không mở vị thế ở vùng giá bất lợi.`;
+    }
+
+    // Fallback: If backend provides a custom concise string or default
+    return data.decision?.waiting_for || data.reason || 'Chưa đủ điều kiện kích hoạt setup Wyckoff. Chờ nến 4H đóng tiếp theo để xác nhận.';
+}
+
 export function translateAction(action) {
-    if (!action) return { text: 'CHƯA CÓ LỆNH', class: 'badge-neutral' };
+    if (!action) return { text: 'Chưa có lệnh', class: 'badge-neutral' };
     switch (action.toUpperCase()) {
         case 'BUY_READY':
-            return { text: '🟢 SẴN SÀNG MUA (LONG)', class: 'badge-emerald' };
+            return { text: 'Mua (Long)', class: 'badge-emerald' };
         case 'SHORT_READY':
-            return { text: '🔴 SẴN SÀNG BÁN (SHORT)', class: 'badge-rose' };
+            return { text: 'Bán (Short)', class: 'badge-rose' };
         case 'NO_TRADE':
         default:
-            return { text: '⏸️ QUAN SÁT (NO TRADE)', class: 'badge-neutral' };
+            return { text: 'Quan sát', class: 'badge-neutral' };
     }
 }
 
