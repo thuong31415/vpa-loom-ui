@@ -544,8 +544,8 @@
                     <div class="weather-meta">
                         <span class="weather-icon-badge">{marketWeather.weatherEmoji}</span>
                         <div>
-                            <div class="weather-status-heading" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                                <span class="weather-status-name">{marketWeather.weatherTitle}</span>
+                            <div class="weather-status-name">{marketWeather.weatherTitle}</div>
+                            <div class="weather-tags-row" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.35rem;">
                                 <span class="weather-phase-tag">{marketWeather.phaseBadge}</span>
                                 {#if marketWeather.stageVi}
                                     <span class="weather-phase-tag" style="background: rgba(14, 165, 233, 0.08); border-color: rgba(14, 165, 233, 0.25); color: #0284c7;">
@@ -557,9 +557,6 @@
                                         {marketWeather.strengthVi}
                                     </span>
                                 {/if}
-                            </div>
-                            <div class="weather-forecast-narrative">
-                                {marketWeather.weatherSummary}
                             </div>
                         </div>
                     </div>
