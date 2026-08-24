@@ -127,8 +127,8 @@
             return {
                 phaseId: 'MARKUP',
                 phaseStep: 2,
-                phaseName: `Pha 2: Đẩy Giá (Markup Uptrend) · ${stageVi}`,
-                phaseBadge: 'MARKUP (ĐẨY GIÁ)',
+                phaseName: `Pha 2: Đẩy Giá · ${stageVi}`,
+                phaseBadge: 'ĐẨY GIÁ',
                 typedPhase: 'MARKUP',
                 stage,
                 stageVi,
@@ -141,10 +141,10 @@
                 version,
                 rangeState,
                 weatherEmoji: '☀️',
-                weatherTitle: `Trời Trong · Xu Hướng Đẩy Giá (${stageVi})`,
+                weatherTitle: `Trời Trong · Xu Hướng Đẩy Giá`,
                 weatherClass: 'weather-sunny',
                 weatherSummary: `Cấu trúc thị trường tăng đồng thuận${patternVi ? ` (${patternVi})` : ''}. Phe Mua kiểm soát hoàn toàn đà giá, không gian phía trên mở rộng.`,
-                pressure: '⚡ Lực Cầu Kiểm Soát (High Demand)'
+                pressure: '⚡ Lực Cầu Hoàn Toàn Kiểm Soát'
             };
         }
 
@@ -153,8 +153,8 @@
             return {
                 phaseId: 'MARKDOWN',
                 phaseStep: 4,
-                phaseName: `Pha 4: Giảm Giá (Markdown Downtrend) · ${stageVi}`,
-                phaseBadge: 'MARKDOWN (GIẢM GIÁ)',
+                phaseName: `Pha 4: Giảm Giá · ${stageVi}`,
+                phaseBadge: 'GIẢM GIÁ',
                 typedPhase: 'MARKDOWN',
                 stage,
                 stageVi,
@@ -167,10 +167,10 @@
                 version,
                 rangeState,
                 weatherEmoji: '⛈️',
-                weatherTitle: `Mưa Giông · Xu Hướng Giảm Giá (${stageVi})`,
+                weatherTitle: `Mưa Giông · Xu Hướng Giảm Giá`,
                 weatherClass: 'weather-storm',
                 weatherSummary: `Cấu trúc thị trường suy thoái${patternVi ? ` (${patternVi})` : ''}. Cản hỗ trợ bị phá vỡ, phe Bán hoàn toàn áp đảo thị trường.`,
-                pressure: '⛈️ Lực Cung Áp Đảo (Heavy Supply)'
+                pressure: '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
             };
         }
 
@@ -180,7 +180,7 @@
                 phaseId: 'ACCUMULATION',
                 phaseStep: 1,
                 phaseName: `Pha 1: Tích Lũy · ${stageVi}`,
-                phaseBadge: 'ACCUMULATION (TÍCH LŨY)',
+                phaseBadge: 'TÍCH LŨY',
                 typedPhase: 'ACCUMULATION',
                 stage,
                 stageVi,
@@ -193,10 +193,10 @@
                 version,
                 rangeState,
                 weatherEmoji: '🌊',
-                weatherTitle: `Sóng Êm · Vùng Tích Lũy Gom Hàng (${stageVi})`,
+                weatherTitle: `Sóng Êm · Vùng Tích Lũy Gom Hàng`,
                 weatherClass: 'weather-calm',
                 weatherSummary: `Thị trường đang trong pha Tích Lũy${patternVi ? ` · Mô hình ${patternVi}` : ''}${reasonVi ? ` · ${reasonVi}` : ''}. Lực cung đáy đang được hấp thụ.`,
-                pressure: strength === 'CONFIRMED' ? '🌊 Hấp Thụ Cung Đáy (Confirmed)' : '🌊 Đang Hấp Thụ Cung Đáy (Provisional)'
+                pressure: strength === 'CONFIRMED' ? '🌊 Hấp Thụ Cung Đáy Hoàn Tất' : '🌊 Đang Hấp Thụ Cung Đáy'
             };
         }
 
@@ -206,7 +206,7 @@
                 phaseId: 'DISTRIBUTION',
                 phaseStep: 3,
                 phaseName: `Pha 3: Phân Phối · ${stageVi}`,
-                phaseBadge: 'DISTRIBUTION (PHÂN PHỐI)',
+                phaseBadge: 'PHÂN PHỐI',
                 typedPhase: 'DISTRIBUTION',
                 stage,
                 stageVi,
@@ -219,10 +219,10 @@
                 version,
                 rangeState,
                 weatherEmoji: '⚠️',
-                weatherTitle: `Cảnh Báo Giông · Vùng Phân Phối Đỉnh (${stageVi})`,
+                weatherTitle: `Cảnh Báo Giông · Vùng Phân Phối Đỉnh`,
                 weatherClass: 'weather-warning',
                 weatherSummary: `Thị trường đang trong pha Phân Phối${patternVi ? ` · Mô hình ${patternVi}` : ''}${reasonVi ? ` · ${reasonVi}` : ''}. Áp lực bán xả hàng vùng đỉnh.`,
-                pressure: strength === 'CONFIRMED' ? '⚠️ Cung Xả Đỉnh Xác Nhận (Confirmed)' : '⚠️ Áp Lực Cung Xả Đỉnh (Provisional)'
+                pressure: strength === 'CONFIRMED' ? '⚠️ Cung Xả Đỉnh Xác Nhận' : '⚠️ Áp Lực Cung Xả Đỉnh'
             };
         }
 
@@ -236,8 +236,8 @@
         return {
             phaseId: 'UNRESOLVED_RANGE',
             phaseStep: isAtResistance ? 3 : isAtSupport ? 1 : 0,
-            phaseName: `Range: ${rangeState} · Phase: UNRESOLVED`,
-            phaseBadge: 'UNRESOLVED (CHƯA CHỐT PHASE)',
+            phaseName: `Range: ${rangeState} · Pha: Chưa Chốt`,
+            phaseBadge: 'CHƯA CHỐT PHA',
             typedPhase: 'UNRESOLVED',
             stage,
             stageVi,
@@ -587,8 +587,8 @@
                                 <span class="node-badge-testing">● TIẾP CẬN HỖ TRỢ</span>
                             {/if}
                         </div>
-                        <div class="node-title">🧱 Tích Lũy (Gom Hàng)</div>
-                        <div class="node-desc">Phase A – C: Dò đáy, hấp thụ cạn cung</div>
+                        <div class="node-title">🧱 Tích Lũy Gom Hàng</div>
+                        <div class="node-desc">Giai đoạn A – C: Dò đáy, hấp thụ cạn cung</div>
                         <div class="node-points">
                             {#if marketWeather.phaseId === 'ACCUMULATION' && (marketWeather.patternVi || marketWeather.reasonVi)}
                                 <span>• {marketWeather.patternVi || 'Đi ngang trong range'}</span>
@@ -607,11 +607,11 @@
                         <div class="node-header">
                             <span class="node-step">PHA 2</span>
                             {#if marketWeather.phaseId === 'MARKUP'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN UPTREND' : 'TẠM THỜI'}</span>
+                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'ĐẨY GIÁ'}</span>
                             {/if}
                         </div>
-                        <div class="node-title">🚀 Đẩy Giá (Uptrend)</div>
-                        <div class="node-desc">Phase D – E: Vượt Creek, mở rộng sóng</div>
+                        <div class="node-title">🚀 Xu Hướng Đẩy Giá</div>
+                        <div class="node-desc">Giai đoạn D – E: Vượt cản, mở rộng sóng</div>
                         <div class="node-points">
                             <span>• Phe Mua kiểm soát</span>
                             <span>• Bầu trời mở rộng đà tăng</span>
@@ -625,20 +625,20 @@
                         <div class="node-header">
                             <span class="node-step">PHA 3</span>
                             {#if marketWeather.phaseId === 'DISTRIBUTION'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN ĐỈNH' : 'TẠM THỜI'} · {marketWeather.stageVi || 'PHÂN PHỐI'}</span>
+                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'PHÂN PHỐI'}</span>
                             {:else if marketWeather.phaseId === 'UNRESOLVED_RANGE' && marketWeather.phaseStep === 3}
                                 <span class="node-badge-testing">● TIẾP CẬN KHÁNG CỰ</span>
                             {/if}
                         </div>
-                        <div class="node-title">⚠️ Phân Phối (Tạo Đỉnh)</div>
-                        <div class="node-desc">Phase A – C: Kiệt sức mua, xả hàng</div>
+                        <div class="node-title">⚠️ Phân Phối Tạo Đỉnh</div>
+                        <div class="node-desc">Giai đoạn A – C: Kiệt sức mua, xả hàng</div>
                         <div class="node-points">
                             {#if marketWeather.phaseId === 'DISTRIBUTION' && (marketWeather.patternVi || marketWeather.reasonVi)}
                                 <span>• {marketWeather.patternVi || 'Lực cầu suy yếu đỉnh'}</span>
-                                <span>• {marketWeather.reasonVi || 'Bẫy tăng giá (UTAD)'}</span>
+                                <span>• {marketWeather.reasonVi || 'Bẫy tăng giá'}</span>
                             {:else}
                                 <span>• Lực cầu suy yếu đỉnh</span>
-                                <span>• Bẫy tăng giá (UTAD)</span>
+                                <span>• Bẫy tăng giá</span>
                             {/if}
                         </div>
                     </div>
@@ -650,11 +650,11 @@
                         <div class="node-header">
                             <span class="node-step">PHA 4</span>
                             {#if marketWeather.phaseId === 'MARKDOWN'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN DOWNTREND' : 'TẠM THỜI'}</span>
+                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'GIẢM GIÁ'}</span>
                             {/if}
                         </div>
-                        <div class="node-title">📉 Giảm Giá (Downtrend)</div>
-                        <div class="node-desc">Phase D – E: Vỡ sàn hỗ trợ, rơi tự do</div>
+                        <div class="node-title">📉 Xu Hướng Giảm Giá</div>
+                        <div class="node-desc">Giai đoạn D – E: Thủng hỗ trợ, giảm sâu</div>
                         <div class="node-points">
                             <span>• Phe Bán áp đảo</span>
                             <span>• Tuyệt đối không bắt dao</span>

@@ -390,11 +390,11 @@ export function translateLocation(loc) {
 export function translateCyclePhase(phase) {
     if (!phase) return 'Chưa xác định';
     switch (phase.toUpperCase()) {
-        case 'ACCUMULATION': return 'Tích Lũy (Accumulation)';
-        case 'MARKUP': return 'Đẩy Giá (Markup Uptrend)';
-        case 'DISTRIBUTION': return 'Phân Phối (Distribution)';
-        case 'MARKDOWN': return 'Giảm Giá (Markdown Downtrend)';
-        case 'UNRESOLVED': return 'Chưa Chốt Phase';
+        case 'ACCUMULATION': return 'Tích Lũy';
+        case 'MARKUP': return 'Đẩy Giá';
+        case 'DISTRIBUTION': return 'Phân Phối';
+        case 'MARKDOWN': return 'Giảm Giá';
+        case 'UNRESOLVED': return 'Chưa Chốt Pha';
         default: return phase;
     }
 }
@@ -402,12 +402,12 @@ export function translateCyclePhase(phase) {
 export function translateCycleStage(stage) {
     if (!stage) return '';
     switch (stage.toUpperCase()) {
-        case 'EARLY': return 'Giai Đoạn Đầu (Early)';
+        case 'EARLY': return 'Giai Đoạn Đầu';
         case 'MIDDLE':
-        case 'MID': return 'Giai Đoạn Giữa (Middle)';
-        case 'LATE': return 'Giai Đoạn Cuối (Late)';
-        case 'MATURE': return 'Trưởng Thành (Mature)';
-        case 'TRANSITION': return 'Chuyển Tiếp (Transition)';
+        case 'MID': return 'Giai Đoạn Giữa';
+        case 'LATE': return 'Giai Đoạn Cuối';
+        case 'MATURE': return 'Trưởng Thành';
+        case 'TRANSITION': return 'Chuyển Tiếp';
         default: return stage;
     }
 }
@@ -415,8 +415,8 @@ export function translateCycleStage(stage) {
 export function translateStrength(strength) {
     if (!strength) return '';
     switch (strength.toUpperCase()) {
-        case 'CONFIRMED': return 'Đã Xác Nhận (Confirmed)';
-        case 'PROVISIONAL': return 'Tạm Thời (Provisional)';
+        case 'CONFIRMED': return 'Đã Xác Nhận';
+        case 'PROVISIONAL': return 'Tạm Thời';
         default: return strength;
     }
 }
@@ -426,16 +426,16 @@ export function translateCycleReason(reason) {
     switch (reason.toUpperCase()) {
         case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
         case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
-        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Đồng thuận cấu trúc & chuỗi nến';
-        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng (CHoCH)';
-        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Chuỗi nến có hướng (Chưa đủ cấu trúc)';
-        case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Cân bằng sau sóng giảm trước đó';
-        case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Cân bằng sau sóng tăng trước đó';
-        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Cân bằng giằng co biên độ';
-        case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Đầy đủ chuỗi tích lũy (SC ➔ Spring ➔ LPS)';
-        case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Đầy đủ chuỗi phân phối (BC ➔ UTAD ➔ LPSY)';
-        case 'BREAKOUT_CONFIRMED': return 'Bứt phá cản xác nhận';
-        case 'BREAKDOWN_CONFIRMED': return 'Thủng hỗ trợ xác nhận';
+        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc & dòng tiền đồng thuận';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng';
+        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền có hướng (chưa bứt cản)';
+        case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Cân bằng hấp thụ sau đà giảm';
+        case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Cân bằng tích tụ sau đà tăng';
+        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Cân bằng giằng co trong biên độ';
+        case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Đầy đủ chuỗi tích lũy';
+        case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Đầy đủ chuỗi phân phối';
+        case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận';
+        case 'BREAKDOWN_CONFIRMED': return 'Thủng đáy hỗ trợ xác nhận';
         default: return reason;
     }
 }
