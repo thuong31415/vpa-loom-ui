@@ -110,16 +110,16 @@
     .gauge-container {
         background: #FFFFFF;
         border: 1px solid var(--border-card);
-        border-radius: 12px;
-        padding: 0.85rem 1.15rem 0.95rem 1.15rem;
-        margin: 0.75rem 0;
+        border-radius: 10px;
+        padding: 0.4rem 0.85rem 0.45rem 0.85rem;
+        margin: 0.35rem 0;
     }
     .track-wrapper {
         position: relative;
-        padding: 1.65rem 0.75rem 0.25rem 0.75rem;
+        padding: 1.15rem 0.5rem 0.15rem 0.5rem;
     }
     .gauge-track {
-        height: 10px;
+        height: 8px;
         background: var(--bg-subtle);
         border-radius: 999px;
         position: relative;
@@ -155,25 +155,25 @@
         transition: left 0.3s ease;
     }
     .pointer-dot {
-        width: 16px;
-        height: 16px;
+        width: 13px;
+        height: 13px;
         background: var(--btn-primary);
-        border: 3px solid #FFFFFF;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
         border-radius: 50%;
     }
     .pointer-bubble {
         position: absolute;
-        bottom: 18px;
+        bottom: 13px;
         background: var(--btn-primary);
         color: #FFFFFF;
-        font-size: 0.725rem;
+        font-size: 0.675rem;
         font-weight: 700;
         font-family: monospace;
-        padding: 0.2rem 0.55rem;
-        border-radius: 6px;
+        padding: 0.12rem 0.45rem;
+        border-radius: 5px;
         white-space: nowrap;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
     .pointer-bubble::after {
         content: '';
@@ -181,7 +181,7 @@
         top: 100%;
         left: 50%;
         transform: translateX(-50%);
-        border-width: 4px;
+        border-width: 3px;
         border-style: solid;
         border-color: var(--btn-primary) transparent transparent transparent;
     }
@@ -189,7 +189,7 @@
         display: grid;
         grid-template-columns: auto 1fr auto;
         align-items: center;
-        margin-top: 0.85rem;
-        gap: 0.5rem;
+        margin-top: 0.35rem;
+        gap: 0.4rem;
     }
 </style>

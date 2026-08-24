@@ -97,6 +97,26 @@ export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit =
 }
 
 /**
+ * Fetch live ticker price directly from Binance public API
+ * GET https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT
+ */
+export async function fetchBinanceLivePrice(symbol = 'BTCUSDT') {
+    try {
+        const raw = (symbol || 'BTCUSDT').trim().toUpperCase();
+        const cleanSym = raw.endsWith('USDT') ? raw : `${raw}USDT`;
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${cleanSym}`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const price = parseFloat(json.price);
+        return { ok: true, price: isNaN(price) ? null : price };
+    } catch (err) {
+        return { ok: false, price: null, error: err.message };
+    }
+}
+
+/**
  * Hydrate and resolve analysis for a single symbol
  * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
  */
@@ -364,6 +384,76 @@ export function translateLocation(loc) {
         case 'ABOVE_RESISTANCE': return 'Phá Trên Kháng Cự';
         case 'BELOW_SUPPORT': return 'Thủng Dưới Hỗ Trợ';
         default: return loc;
+    }
+}
+
+export function translateCyclePhase(phase) {
+    if (!phase) return 'Chưa xác định';
+    switch (phase.toUpperCase()) {
+        case 'ACCUMULATION': return 'Tích Lũy (Accumulation)';
+        case 'MARKUP': return 'Đẩy Giá (Markup Uptrend)';
+        case 'DISTRIBUTION': return 'Phân Phối (Distribution)';
+        case 'MARKDOWN': return 'Giảm Giá (Markdown Downtrend)';
+        case 'UNRESOLVED': return 'Chưa Chốt Phase';
+        default: return phase;
+    }
+}
+
+export function translateCycleStage(stage) {
+    if (!stage) return '';
+    switch (stage.toUpperCase()) {
+        case 'EARLY': return 'Giai Đoạn Đầu (Early)';
+        case 'MIDDLE':
+        case 'MID': return 'Giai Đoạn Giữa (Middle)';
+        case 'LATE': return 'Giai Đoạn Cuối (Late)';
+        case 'MATURE': return 'Trưởng Thành (Mature)';
+        case 'TRANSITION': return 'Chuyển Tiếp (Transition)';
+        default: return stage;
+    }
+}
+
+export function translateStrength(strength) {
+    if (!strength) return '';
+    switch (strength.toUpperCase()) {
+        case 'CONFIRMED': return 'Đã Xác Nhận (Confirmed)';
+        case 'PROVISIONAL': return 'Tạm Thời (Provisional)';
+        default: return strength;
+    }
+}
+
+export function translateCycleReason(reason) {
+    if (!reason) return '';
+    switch (reason.toUpperCase()) {
+        case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
+        case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
+        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Đồng thuận cấu trúc & chuỗi nến';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng (CHoCH)';
+        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Chuỗi nến có hướng (Chưa đủ cấu trúc)';
+        case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Cân bằng sau sóng giảm trước đó';
+        case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Cân bằng sau sóng tăng trước đó';
+        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Cân bằng giằng co biên độ';
+        case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Đầy đủ chuỗi tích lũy (SC ➔ Spring ➔ LPS)';
+        case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Đầy đủ chuỗi phân phối (BC ➔ UTAD ➔ LPSY)';
+        case 'BREAKOUT_CONFIRMED': return 'Bứt phá cản xác nhận';
+        case 'BREAKDOWN_CONFIRMED': return 'Thủng hỗ trợ xác nhận';
+        default: return reason;
+    }
+}
+
+export function translateSequencePattern(pattern) {
+    if (!pattern) return '';
+    switch (pattern.toUpperCase()) {
+        case 'UP_CONTINUATION': return 'Tiếp Diễn Tăng';
+        case 'DOWN_CONTINUATION': return 'Tiếp Diễn Giảm';
+        case 'UP_REVERSAL': return 'Đảo Chiều Tăng';
+        case 'DOWN_REVERSAL': return 'Đảo Chiều Giảm';
+        case 'UP_MIXED': return 'Nghiêng Tăng Giằng Co';
+        case 'DOWN_MIXED': return 'Nghiêng Giảm Giằng Co';
+        case 'FLAT_MIXED': return 'Đi Ngang Giằng Co';
+        case 'CONTINUATION_UP': return 'Tiếp Diễn Tăng';
+        case 'CONTINUATION_DOWN': return 'Tiếp Diễn Giảm';
+        case 'RANGE_BOUND': return 'Dao Động Trong Biên';
+        default: return pattern;
     }
 }
 
