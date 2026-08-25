@@ -151,11 +151,12 @@
 
         // 2. Confirmed Markdown (typed cycle_phase.phase === 'MARKDOWN' or fallback indicators when unresolved)
         if (typedPhase === 'MARKDOWN' || (typedPhase === 'UNRESOLVED' && (action === 'SHORT_READY' || location === 'BELOW_SUPPORT' || rangeState === 'BROKEN_DOWN' || structureBreak === 'DOWN_BREAK_CONFIRMED'))) {
+            const isAbsorbing = location === 'BETWEEN_SUPPORT_AND_RESISTANCE' || location === 'AT_SUPPORT' || trend === 'MIXED_BULLISH' || (vpa && vpa.type === 'HIGH_EFFORT_LOW_RESULT');
             return {
                 phaseId: 'MARKDOWN',
                 phaseStep: 4,
-                phaseName: `Pha 4: Giảm Giá · ${stageVi}`,
-                phaseBadge: 'GIẢM GIÁ',
+                phaseName: isAbsorbing ? `Pha 4: Hãm Đà Giảm · ${stageVi}` : `Pha 4: Giảm Giá · ${stageVi}`,
+                phaseBadge: isAbsorbing ? 'HÃM ĐÀ GIẢM' : 'GIẢM GIÁ',
                 typedPhase: 'MARKDOWN',
                 stage,
                 stageVi,
@@ -167,11 +168,14 @@
                 patternVi,
                 version,
                 rangeState,
-                weatherEmoji: '⛈️',
-                weatherTitle: `Mưa Giông · Xu Hướng Giảm Giá`,
-                weatherClass: 'weather-storm',
-                weatherSummary: `Cấu trúc thị trường suy thoái${patternVi ? ` (${patternVi})` : ''}. Cản hỗ trợ bị phá vỡ, phe Bán hoàn toàn áp đảo thị trường.`,
-                pressure: '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
+                isAbsorbing,
+                weatherEmoji: isAbsorbing ? '⛅' : '⛈️',
+                weatherTitle: isAbsorbing ? `Mây Mù Tan Dần · Dò Đáy Hấp Thụ Cung` : `Mưa Giông · Xu Hướng Giảm Giá`,
+                weatherClass: isAbsorbing ? 'weather-warning' : 'weather-storm',
+                weatherSummary: isAbsorbing
+                    ? `Xu hướng giảm vĩ mô đang chững lại trong vùng biên hỗ trợ${patternVi ? ` (${patternVi})` : ''}. Lực cầu cá mập đang hấp thụ cung tạo đáy cân bằng.`
+                    : `Cấu trúc thị trường suy thoái${patternVi ? ` (${patternVi})` : ''}. Cản hỗ trợ bị phá vỡ, phe Bán hoàn toàn áp đảo thị trường.`,
+                pressure: isAbsorbing ? '⛅ Cung Vĩ Mô Đang Bị Hấp Thụ Tại Hỗ Trợ' : '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
             };
         }
 
@@ -651,14 +655,19 @@
                         <div class="node-header">
                             <span class="node-step">PHA 4</span>
                             {#if marketWeather.phaseId === 'MARKDOWN'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'GIẢM GIÁ'}</span>
+                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.phaseBadge}</span>
                             {/if}
                         </div>
-                        <div class="node-title">📉 Xu Hướng Giảm Giá</div>
-                        <div class="node-desc">Giai đoạn D – E: Thủng hỗ trợ, giảm sâu</div>
+                        <div class="node-title">{marketWeather.isAbsorbing ? '⛅ Dò Đáy Hấp Thụ' : '📉 Xu Hướng Giảm Giá'}</div>
+                        <div class="node-desc">{marketWeather.isAbsorbing ? 'Giai đoạn A – B: Hãm đà, hấp thụ lực bán đáy' : 'Giai đoạn D – E: Thủng hỗ trợ, giảm sâu'}</div>
                         <div class="node-points">
-                            <span>• Phe Bán áp đảo</span>
-                            <span>• Tuyệt đối không bắt dao</span>
+                            {#if marketWeather.isAbsorbing}
+                                <span>• Nén trong biên hỗ trợ</span>
+                                <span>• Xuất hiện lực hấp thụ đáy</span>
+                            {:else}
+                                <span>• Phe Bán áp đảo</span>
+                                <span>• Chờ cấu trúc cân bằng mới</span>
+                            {/if}
                         </div>
                     </div>
                 </div>
