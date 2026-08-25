@@ -122,8 +122,8 @@
         const reasonVi = translateCycleReason(reason);
         const patternVi = translateSequencePattern(pattern);
 
-        // 1. Confirmed Markup (either typed cycle_phase.phase === 'MARKUP' or action === 'BUY_READY' or location === 'ABOVE_RESISTANCE' or rangeState === 'BROKEN_UP')
-        if (typedPhase === 'MARKUP' || action === 'BUY_READY' || location === 'ABOVE_RESISTANCE' || rangeState === 'BROKEN_UP' || structureBreak === 'UP_BREAK_CONFIRMED') {
+        // 1. Confirmed Markup (typed cycle_phase.phase === 'MARKUP' or fallback indicators when unresolved)
+        if (typedPhase === 'MARKUP' || (typedPhase === 'UNRESOLVED' && (action === 'BUY_READY' || location === 'ABOVE_RESISTANCE' || rangeState === 'BROKEN_UP' || structureBreak === 'UP_BREAK_CONFIRMED'))) {
             return {
                 phaseId: 'MARKUP',
                 phaseStep: 2,
@@ -148,8 +148,8 @@
             };
         }
 
-        // 2. Confirmed Markdown (either typed cycle_phase.phase === 'MARKDOWN' or action === 'SHORT_READY' or location === 'BELOW_SUPPORT' or rangeState === 'BROKEN_DOWN')
-        if (typedPhase === 'MARKDOWN' || action === 'SHORT_READY' || location === 'BELOW_SUPPORT' || rangeState === 'BROKEN_DOWN' || structureBreak === 'DOWN_BREAK_CONFIRMED') {
+        // 2. Confirmed Markdown (typed cycle_phase.phase === 'MARKDOWN' or fallback indicators when unresolved)
+        if (typedPhase === 'MARKDOWN' || (typedPhase === 'UNRESOLVED' && (action === 'SHORT_READY' || location === 'BELOW_SUPPORT' || rangeState === 'BROKEN_DOWN' || structureBreak === 'DOWN_BREAK_CONFIRMED'))) {
             return {
                 phaseId: 'MARKDOWN',
                 phaseStep: 4,
