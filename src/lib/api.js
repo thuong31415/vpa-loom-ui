@@ -32,17 +32,22 @@ async function safeJsonFetch(endpoint, options = {}) {
         headers: defaultHeaders
     };
 
-    // Candidate URLs to try in order
+    // Candidate URLs to try in order:
+    // 1. Explicit BASE_URL if set
+    // 2. Relative endpoint (works with Vite proxy or same-origin production deployment)
+    // 3. Localhost in development mode
+    // 4. Remote fallbacks
     const candidates = [];
     if (BASE_URL) {
         candidates.push(`${BASE_URL}${endpoint}`);
     }
-    // Direct remote hosts (CORS-enabled backend ports)
+    candidates.push(endpoint);
+    if (import.meta.env.DEV) {
+        candidates.push(`http://localhost:8080${endpoint}`);
+    }
     REMOTE_HOSTS.forEach(host => {
         candidates.push(`${host}${endpoint}`);
     });
-    // Relative fallback
-    candidates.push(endpoint);
 
     let lastStatus = 0;
     let lastError = null;
