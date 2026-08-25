@@ -108,14 +108,15 @@
         const vpa = data.market_state?.effort_result;
         const rangeState = data.market_state?.range_state || 'ACTIVE';
         
-        // Typed cycle_phase object from backend
-        const cycle = data.market_state?.cycle_phase;
+        // Typed cycle_phase object from backend (v2 state machine takes precedence)
+        const cycleV2 = data.market_state?.cycle_phase_v2;
+        const cycle = cycleV2 || data.market_state?.cycle_phase;
         const typedPhase = (cycle?.phase || data.market_state?.wyckoff_phase || data.market_state?.range_phase || 'UNRESOLVED').toUpperCase();
         const stage = cycle?.stage || 'MID';
-        const strength = cycle?.strength || 'PROVISIONAL';
+        const strength = cycleV2?.authority || cycle?.strength || 'PROVISIONAL';
         const reason = cycle?.reason || '';
-        const pattern = cycle?.sequence_pattern || '';
-        const version = cycle?.version || '1.0.0';
+        const pattern = data.market_state?.cycle_phase?.sequence_pattern || '';
+        const version = cycle?.version || '2.0.0';
 
         const stageVi = translateCycleStage(stage);
         const strengthVi = translateStrength(strength);

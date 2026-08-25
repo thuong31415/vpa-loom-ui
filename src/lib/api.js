@@ -426,6 +426,12 @@ export function translateCycleReason(reason) {
     switch (reason.toUpperCase()) {
         case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
         case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
+        case 'TRANSITION_CONFIRMED': return 'Chuyển pha bứt phá xác nhận';
+        case 'MARKDOWN_CONTINUATION': return 'Tiếp diễn xu hướng Giảm giá';
+        case 'MARKUP_CONTINUATION': return 'Tiếp diễn xu hướng Đẩy giá';
+        case 'CLIMAX_STOPPING_CONFIRMED': return 'Cao trào hãm đà xác nhận';
+        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ & lấy lại hỗ trợ (Spring)';
+        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá đỉnh (UTAD)';
         case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc & dòng tiền đồng thuận';
         case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng';
         case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền có hướng (chưa bứt cản)';
@@ -436,6 +442,9 @@ export function translateCycleReason(reason) {
         case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Đầy đủ chuỗi phân phối';
         case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận';
         case 'BREAKDOWN_CONFIRMED': return 'Thủng đáy hỗ trợ xác nhận';
+        case 'STAGE_ADVANCED': return 'Tiến trình giai đoạn hoàn tất';
+        case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Xung đột bằng chứng chuyển pha';
+        case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên cấu trúc';
         default: return reason;
     }
 }
