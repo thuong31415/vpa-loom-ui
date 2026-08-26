@@ -4,11 +4,11 @@ export const REMOTE_HOSTS = [
 ];
 export const REMOTE_API_HOST = REMOTE_HOSTS[0];
 
-// Supported Universe Coins
+// Supported Universe Coins (Sorted by Market Cap & Pillar status)
 export const UNIVERSE_COINS = [
-    "ETHUSDT", "BTCUSDT", "SOLUSDT", "SUIUSDT", "UNIUSDT",
-    "LINKUSDT", "ZECUSDT", "LDOUSDT", "NEARUSDT", "BNBUSDT",
-    "PEPEUSDT", "TAOUSDT", "ADAUSDT", "ENAUSDT", "ZKUSDT"
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "LINKUSDT",
+    "UNIUSDT", "SUIUSDT", "NEARUSDT", "ADAUSDT", "LDOUSDT",
+    "TAOUSDT", "PEPEUSDT", "ZECUSDT", "ENAUSDT", "ZKUSDT"
 ];
 
 /**
@@ -119,6 +119,54 @@ export async function fetchBinanceLivePrice(symbol = 'BTCUSDT') {
     } catch (err) {
         return { ok: false, price: null, error: err.message };
     }
+}
+
+/**
+ * Fetch 24h ticker prices and price change percentages for Universe coins from Binance in 1 call
+ */
+export async function fetchBinanceUniverse24hTickers() {
+    try {
+        const symbolsParam = JSON.stringify(UNIVERSE_COINS);
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsParam)}`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const list = await res.json();
+        const map = {};
+        if (Array.isArray(list)) {
+            for (const item of list) {
+                map[item.symbol] = {
+                    price: parseFloat(item.lastPrice),
+                    priceChangePercent: parseFloat(item.priceChangePercent),
+                    highPrice: parseFloat(item.highPrice),
+                    lowPrice: parseFloat(item.lowPrice),
+                    volume: parseFloat(item.volume)
+                };
+            }
+        }
+        return { ok: true, data: map };
+    } catch (err) {
+        return { ok: false, data: {}, error: err.message };
+    }
+}
+
+/**
+ * Fetch full radar analysis across all Universe coins in parallel
+ */
+export async function fetchUniverseRadar(interval = '4h', limit = 720) {
+    const results = await Promise.allSettled(
+        UNIVERSE_COINS.map(sym => fetchAnalysis(sym, interval, limit))
+    );
+    const radar = [];
+    UNIVERSE_COINS.forEach((sym, idx) => {
+        const res = results[idx];
+        if (res.status === 'fulfilled' && res.value.success && res.value.data) {
+            radar.push({ symbol: sym, success: true, analysis: res.value.data });
+        } else {
+            radar.push({ symbol: sym, success: false, analysis: null });
+        }
+    });
+    return radar;
 }
 
 /**

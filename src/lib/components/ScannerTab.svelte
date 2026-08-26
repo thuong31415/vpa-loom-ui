@@ -7,6 +7,8 @@
         fetchAnalysis,
         fetchScanCandidates, 
         fetchBinanceLivePrice,
+        fetchBinanceUniverse24hTickers,
+        fetchUniverseRadar,
         translateTrend,
         translateStructureBreak,
         translateLocation,
@@ -32,6 +34,16 @@
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
 
+    // Navigation state: 'radar' (default) | 'single' | 'scan'
+    let activeView = 'radar';
+
+    // Radar Market Matrix state
+    let radarData = [];
+    let isRadarLoading = false;
+    let radarTickers = {};
+    let radarFilter = 'ALL'; // 'ALL' | 'MARKUP' | 'ACCUMULATION' | 'DISTRIBUTION' | 'MARKDOWN' | 'ACTIONABLE'
+    let radarTickerTimer = null;
+
     // Single Analysis state
     let selectedSymbol = 'ETHUSDT';
     let singleAnalysisData = null;
@@ -48,7 +60,23 @@
     let scanData = null;
     let dataSource = 'LOADING';
     let isScanLoading = false;
-    let activeView = 'single'; // 'single' | 'scan'
+
+    async function loadRadarData() {
+        isRadarLoading = true;
+        try {
+            const [analyses, tickers] = await Promise.all([
+                fetchUniverseRadar('4h', 720),
+                fetchBinanceUniverse24hTickers()
+            ]);
+            radarData = analyses;
+            if (tickers.ok && tickers.data) {
+                radarTickers = tickers.data;
+            }
+        } catch (e) {
+            console.error("Failed to load radar data", e);
+        }
+        isRadarLoading = false;
+    }
 
     async function updateLivePrice() {
         if (!selectedSymbol) return;
@@ -93,6 +121,32 @@
         dataSource = res.source;
         isScanLoading = false;
     }
+
+    function selectSymbol(sym) {
+        selectedSymbol = sym;
+        loadSingleAnalysis(sym);
+        activeView = 'single';
+    }
+
+    $: phaseCounts = radarData.reduce((acc, item) => {
+        if (!item.analysis) return acc;
+        const phase = (item.analysis.market_state?.cycle_phase?.phase || 'UNRESOLVED').toUpperCase();
+        acc[phase] = (acc[phase] || 0) + 1;
+        if (item.analysis.action === 'BUY_READY' || item.analysis.action === 'SHORT_READY') {
+            acc.ACTIONABLE = (acc.ACTIONABLE || 0) + 1;
+        }
+        return acc;
+    }, { MARKUP: 0, ACCUMULATION: 0, DISTRIBUTION: 0, MARKDOWN: 0, UNRESOLVED: 0, ACTIONABLE: 0 });
+
+    $: filteredRadarList = radarData.filter(item => {
+        if (radarFilter === 'ALL') return true;
+        if (!item.analysis) return false;
+        if (radarFilter === 'ACTIONABLE') {
+            return item.analysis.action === 'BUY_READY' || item.analysis.action === 'SHORT_READY';
+        }
+        const phase = (item.analysis.market_state?.cycle_phase?.phase || 'UNRESOLVED').toUpperCase();
+        return phase === radarFilter;
+    });
 
     $: refPriceNum = singleAnalysisData && singleAnalysisData.reference_price ? parseFloat(singleAnalysisData.reference_price) : 0;
     $: currentDisplayPrice = livePrice || refPriceNum;
@@ -304,50 +358,217 @@
     $: marketWeather = computeMarketWeather(singleAnalysisData);
 
     onMount(() => {
+        loadRadarData();
         loadSingleAnalysis('ETHUSDT');
+        radarTickerTimer = setInterval(async () => {
+            const t = await fetchBinanceUniverse24hTickers();
+            if (t.ok && t.data) {
+                radarTickers = { ...radarTickers, ...t.data };
+            }
+        }, 3000);
     });
 
     onDestroy(() => {
         if (livePriceTimer) clearInterval(livePriceTimer);
+        if (radarTickerTimer) clearInterval(radarTickerTimer);
     });
-
-    function selectSymbol(sym) {
-        selectedSymbol = sym;
-        loadSingleAnalysis(sym);
-        activeView = 'single';
-    }
 </script>
 
 <!-- Top Control Strip (View Selector + Coin Quick Pills) -->
 <div class="top-control-bar">
     <div class="view-toggle-group">
         <button 
+            class="pill-btn {activeView === 'radar' ? 'active' : ''}" 
+            on:click={() => { activeView = 'radar'; if (radarData.length === 0) loadRadarData(); }}
+        >
+            🌐 Toàn Cảnh (15 Coin)
+        </button>
+        <button 
             class="pill-btn {activeView === 'single' ? 'active' : ''}" 
             on:click={() => activeView = 'single'}
         >
-            Phân Tích ({selectedSymbol.replace('USDT', '')})
+            🔍 Phân Tích ({cleanSymbol(selectedSymbol)})
         </button>
         <button 
             class="pill-btn {activeView === 'scan' ? 'active' : ''}" 
             on:click={() => { activeView = 'scan'; if (!scanData) loadScanData(); }}
         >
-            Quét 15 Coin {scanData ? `(${scanData.actionable_count})` : ''}
+            🎯 Setup Sẵn Sàng {scanData ? `(${scanData.actionable_count})` : ''}
         </button>
     </div>
 
-    <div class="coin-selector-strip">
-        {#each UNIVERSE_COINS as sym}
-            <button 
-                class="coin-pill-btn {selectedSymbol === sym ? 'selected' : ''}"
-                on:click={() => selectSymbol(sym)}
-            >
-                {sym.replace('USDT', '')}
-            </button>
-        {/each}
-    </div>
+    {#if activeView === 'single'}
+        <div class="coin-selector-strip">
+            {#each UNIVERSE_COINS as sym}
+                <button 
+                    class="coin-pill-btn {selectedSymbol === sym ? 'selected' : ''}"
+                    on:click={() => selectSymbol(sym)}
+                >
+                    {cleanSymbol(sym)}
+                </button>
+            {/each}
+        </div>
+    {/if}
 </div>
 
-{#if activeView === 'single'}
+{#if activeView === 'radar'}
+    <!-- ======================================================== -->
+    <!-- RADAR VIEW: TOÀN CẢNH KHÍ TƯỢNG 15 COIN WYCKOFF V2        -->
+    <!-- ======================================================== -->
+    <div class="radar-container">
+        <!-- Top Radar Stats & Filter Banner -->
+        <div class="card radar-summary-card">
+            <div class="radar-summary-left">
+                <div class="radar-title-group">
+                    <span class="radar-title-badge">🌐 BẢN ĐỒ KHÍ TƯỢNG WYCKOFF V2</span>
+                    <h2 class="radar-headline">Toàn Cảnh 15 Đồng Coin (Khung 4H)</h2>
+                </div>
+                <div class="radar-filters-row">
+                    <button 
+                        class="filter-pill {radarFilter === 'ALL' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'ALL'}
+                    >
+                        Tất Cả ({radarData.length})
+                    </button>
+                    <button 
+                        class="filter-pill pill-markup {radarFilter === 'MARKUP' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'MARKUP'}
+                    >
+                        ☀️ Đẩy Giá ({phaseCounts.MARKUP})
+                    </button>
+                    <button 
+                        class="filter-pill pill-accum {radarFilter === 'ACCUMULATION' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'ACCUMULATION'}
+                    >
+                        🌊 Tích Lũy ({phaseCounts.ACCUMULATION})
+                    </button>
+                    <button 
+                        class="filter-pill pill-dist {radarFilter === 'DISTRIBUTION' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'DISTRIBUTION'}
+                    >
+                        ⚠️ Phân Phối ({phaseCounts.DISTRIBUTION})
+                    </button>
+                    <button 
+                        class="filter-pill pill-markd {radarFilter === 'MARKDOWN' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'MARKDOWN'}
+                    >
+                        ⛈️ Giảm Giá ({phaseCounts.MARKDOWN})
+                    </button>
+                    {#if phaseCounts.ACTIONABLE > 0}
+                        <button 
+                            class="filter-pill pill-actionable {radarFilter === 'ACTIONABLE' ? 'active' : ''}"
+                            on:click={() => radarFilter = 'ACTIONABLE'}
+                        >
+                            🟢 Có Setup ({phaseCounts.ACTIONABLE})
+                        </button>
+                    {/if}
+                </div>
+            </div>
+
+            <div class="radar-summary-right">
+                <button 
+                    class="btn btn-outline" 
+                    style="padding: 0.45rem 0.85rem; font-size: 0.825rem;"
+                    on:click={loadRadarData} 
+                    disabled={isRadarLoading}
+                >
+                    {isRadarLoading ? '⌛ Đang tải...' : '🔄 Làm Mới Dữ Liệu'}
+                </button>
+            </div>
+        </div>
+
+        {#if isRadarLoading && radarData.length === 0}
+            <div class="card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 600;">⌛ Đang nạp radar khí tượng 15 đồng coin...</div>
+                <div style="font-size: 0.85rem;">Phân tích song song mô hình Wyckoff V2 & kết nối giá Binance Realtime</div>
+            </div>
+        {:else}
+            <!-- 15-Coin Matrix Grid -->
+            <div class="radar-matrix-grid">
+                {#each filteredRadarList as item (item.symbol)}
+                    {@const sym = cleanSymbol(item.symbol)}
+                    {@const analysis = item.analysis}
+                    {@const ticker = radarTickers[item.symbol]}
+                    {@const liveP = ticker?.price || (analysis?.reference_price ? parseFloat(analysis.reference_price) : 0)}
+                    {@const changePct = ticker?.priceChangePercent || 0}
+                    {@const weather = computeMarketWeather(analysis)}
+                    {@const act = translateAction(analysis?.action)}
+                    {@const supDistPct = analysis?.key_levels?.support?.distance_percent}
+                    {@const resDistPct = analysis?.key_levels?.resistance?.distance_percent}
+
+                    <div 
+                        class="card radar-tile {weather ? weather.weatherClass : ''} {analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY' ? 'tile-actionable' : ''}"
+                        role="button"
+                        tabindex="0"
+                        on:click={() => selectSymbol(item.symbol)}
+                        on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSymbol(item.symbol); }}
+                    >
+                        <!-- Tile Header -->
+                        <div class="tile-header">
+                            <div class="tile-symbol-group">
+                                <span class="tile-symbol-tag">{sym}</span>
+                                <div class="tile-price-group">
+                                    <span class="tile-price">${formatPrice(liveP)}</span>
+                                    {#if ticker}
+                                        <span class="tile-change {changePct >= 0 ? 'up' : 'down'}">
+                                            {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
+                                        </span>
+                                    {/if}
+                                </div>
+                            </div>
+                            
+                            {#if weather}
+                                <span class="tile-phase-badge {weather.weatherClass}">
+                                    {weather.weatherEmoji} {weather.phaseBadge}
+                                </span>
+                            {/if}
+                        </div>
+
+                        <!-- Tile Wyckoff Stage & Progress Row -->
+                        {#if weather}
+                            <div class="tile-meta-row">
+                                <span class="tile-subtext">
+                                    {weather.stageVi || 'Giai đoạn giữa'} · {weather.strengthVi || 'Xác nhận'}
+                                </span>
+                                {#if weather.progressVi}
+                                    <span class="tile-progress-text">{weather.progressVi}</span>
+                                {/if}
+                            </div>
+                        {/if}
+
+                        <!-- Tile Mini Range Bar -->
+                        <div class="tile-range-box">
+                            <div class="tile-range-labels">
+                                <span class="range-lbl-sup">
+                                    Hỗ trợ: {supDistPct !== null && supDistPct !== undefined ? `${Math.abs(supDistPct).toFixed(1)}%` : 'Đang dò đáy'}
+                                </span>
+                                <span class="range-lbl-res">
+                                    Kháng cự: {resDistPct !== null && resDistPct !== undefined ? `${Math.abs(resDistPct).toFixed(1)}%` : 'Open Air'}
+                                </span>
+                            </div>
+                            <div class="tile-range-track">
+                                <div 
+                                    class="tile-range-fill {weather ? weather.weatherClass : ''}" 
+                                    style="width: {supDistPct !== null && resDistPct !== null && (Math.abs(supDistPct) + Math.abs(resDistPct)) > 0 ? Math.min(100, Math.max(10, (Math.abs(supDistPct) / (Math.abs(supDistPct) + Math.abs(resDistPct))) * 100)) : 50}%;"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <!-- Tile Action Footer -->
+                        <div class="tile-footer">
+                            <span class="status-pill {act.class}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+                                <span class="dot"></span>
+                                {act.text}
+                            </span>
+                            <span class="tile-view-link">Chi tiết ➔</span>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    </div>
+
+{:else if activeView === 'single'}
     <!-- ======================================================== -->
     <!-- AIRY & SPACIOUS 2-COLUMN COCKPIT VIEW                     -->
     <!-- ======================================================== -->
@@ -1210,5 +1431,257 @@
             max-width: 100%;
             width: 100%;
         }
+    }
+
+    /* ======================================================== */
+    /* RADAR TOÀN CẢNH STYLING                                  */
+    /* ======================================================== */
+    .radar-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .radar-summary-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.15rem 1.35rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+    }
+    .radar-title-badge {
+        font-size: 0.675rem;
+        font-weight: 800;
+        color: var(--emerald);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .radar-headline {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0.2rem 0 0.5rem 0;
+    }
+    .radar-filters-row {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .filter-pill {
+        padding: 0.28rem 0.65rem;
+        border-radius: 9999px;
+        font-size: 0.725rem;
+        font-weight: 600;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-pill:hover {
+        background: var(--border-subtle);
+        color: var(--text-primary);
+    }
+    .filter-pill.active {
+        background: var(--text-primary);
+        color: var(--bg-primary);
+        border-color: var(--text-primary);
+    }
+    .pill-markup.active {
+        background: var(--emerald) !important;
+        color: #FFFFFF !important;
+        border-color: var(--emerald) !important;
+    }
+    .pill-accum.active {
+        background: #0284c7 !important;
+        color: #FFFFFF !important;
+        border-color: #0284c7 !important;
+    }
+    .pill-dist.active {
+        background: var(--amber) !important;
+        color: #FFFFFF !important;
+        border-color: var(--amber) !important;
+    }
+    .pill-markd.active {
+        background: var(--rose) !important;
+        color: #FFFFFF !important;
+        border-color: var(--rose) !important;
+    }
+    .pill-actionable {
+        border-color: var(--emerald);
+        color: var(--emerald);
+    }
+    .pill-actionable.active {
+        background: var(--emerald) !important;
+        color: #FFFFFF !important;
+    }
+    .radar-matrix-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+        gap: 0.85rem;
+    }
+    .radar-tile {
+        padding: 0.95rem 1.05rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0.65rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        position: relative;
+    }
+    .radar-tile:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+        border-color: var(--text-muted);
+    }
+    .tile-actionable {
+        border: 1.5px solid var(--emerald) !important;
+        box-shadow: 0 0 14px rgba(16, 185, 129, 0.18);
+    }
+    .tile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .tile-symbol-group {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+    .tile-symbol-tag {
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+    }
+    .tile-price-group {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3rem;
+    }
+    .tile-price {
+        font-size: 0.875rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-primary);
+    }
+    .tile-change {
+        font-size: 0.675rem;
+        font-weight: 700;
+    }
+    .tile-change.up {
+        color: var(--emerald);
+    }
+    .tile-change.down {
+        color: var(--rose);
+    }
+    .tile-phase-badge {
+        font-size: 0.675rem;
+        font-weight: 700;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+    }
+    .tile-phase-badge.weather-sunny {
+        background: var(--emerald-bg);
+        border: 1px solid var(--emerald-border);
+        color: var(--emerald);
+    }
+    .tile-phase-badge.weather-calm {
+        background: rgba(2, 132, 199, 0.1);
+        border: 1px solid rgba(2, 132, 199, 0.25);
+        color: #0284c7;
+    }
+    .tile-phase-badge.weather-warning {
+        background: var(--amber-bg);
+        border: 1px solid var(--amber-border);
+        color: var(--amber);
+    }
+    .tile-phase-badge.weather-storm {
+        background: var(--rose-bg);
+        border: 1px solid var(--rose-border);
+        color: var(--rose);
+    }
+    .tile-meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.725rem;
+        color: var(--text-secondary);
+    }
+    .tile-progress-text {
+        font-size: 0.675rem;
+        color: #9333ea;
+        font-weight: 600;
+    }
+    .tile-range-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        background: var(--bg-tertiary);
+        padding: 0.45rem 0.6rem;
+        border-radius: 6px;
+    }
+    .tile-range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.675rem;
+        font-weight: 500;
+    }
+    .range-lbl-sup {
+        color: var(--emerald);
+    }
+    .range-lbl-res {
+        color: var(--rose);
+    }
+    .tile-range-track {
+        height: 4px;
+        width: 100%;
+        background: var(--border-subtle);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .tile-range-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: var(--emerald);
+        transition: width 0.3s ease;
+    }
+    .tile-range-fill.weather-storm {
+        background: var(--rose);
+    }
+    .tile-range-fill.weather-warning {
+        background: var(--amber);
+    }
+    .tile-range-fill.weather-calm {
+        background: #0284c7;
+    }
+    .tile-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 0.45rem;
+        margin-top: 0.1rem;
+    }
+    .tile-view-link {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: color 0.2s;
+    }
+    .radar-tile:hover .tile-view-link {
+        color: var(--text-primary);
     }
 </style>
