@@ -151,17 +151,33 @@ export async function fetchBinanceUniverse24hTickers() {
 }
 
 /**
- * Fetch full radar analysis across all Universe coins in parallel
+ * Fetch full radar analysis across all Universe coins via single fast bulk endpoint
+ * GET /api/v1/analysis/radar?interval=4h&limit=720
  */
 export async function fetchUniverseRadar(interval = '4h', limit = 720) {
+    const endpoint = `/api/v1/analysis/radar?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
+    const res = await safeJsonFetch(endpoint, { method: 'GET' });
+    if (res.ok && res.data && Array.isArray(res.data.items)) {
+        const itemMap = {};
+        for (const item of res.data.items) {
+            if (item && item.symbol) itemMap[item.symbol] = item;
+        }
+        return UNIVERSE_COINS.map(sym => ({
+            symbol: sym,
+            success: !!itemMap[sym],
+            analysis: itemMap[sym] || null
+        }));
+    }
+
+    // Fallback: parallel fetch
     const results = await Promise.allSettled(
         UNIVERSE_COINS.map(sym => fetchAnalysis(sym, interval, limit))
     );
     const radar = [];
     UNIVERSE_COINS.forEach((sym, idx) => {
-        const res = results[idx];
-        if (res.status === 'fulfilled' && res.value.success && res.value.data) {
-            radar.push({ symbol: sym, success: true, analysis: res.value.data });
+        const r = results[idx];
+        if (r.status === 'fulfilled' && r.value.success && r.value.data) {
+            radar.push({ symbol: sym, success: true, analysis: r.value.data });
         } else {
             radar.push({ symbol: sym, success: false, analysis: null });
         }
