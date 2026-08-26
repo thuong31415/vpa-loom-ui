@@ -520,23 +520,12 @@
                             </div>
                         {/if}
 
-                        <!-- Tile Mini Range Bar -->
-                        <div class="tile-range-box">
-                            <div class="tile-range-labels">
-                                <span class="range-lbl-sup">
-                                    Hỗ trợ: {supDistPct !== null && supDistPct !== undefined ? `${Math.abs(supDistPct).toFixed(1)}%` : 'Đang dò đáy'}
-                                </span>
-                                <span class="range-lbl-res">
-                                    Kháng cự: {resDistPct !== null && resDistPct !== undefined ? `${Math.abs(resDistPct).toFixed(1)}%` : 'Open Air'}
-                                </span>
+                        <!-- Wyckoff V2 Context & Structure Snippet -->
+                        {#if weather && (weather.patternVi || weather.reasonVi)}
+                            <div class="tile-context-line {weather.weatherClass}">
+                                {weather.patternVi ? weather.patternVi : ''}{weather.patternVi && weather.reasonVi ? ' · ' : ''}{weather.reasonVi ? weather.reasonVi : ''}
                             </div>
-                            <div class="tile-range-track">
-                                <div 
-                                    class="tile-range-fill {weather ? weather.weatherClass : ''}" 
-                                    style="width: {supDistPct !== null && resDistPct !== null && (Math.abs(supDistPct) + Math.abs(resDistPct)) > 0 ? Math.min(100, Math.max(10, (Math.abs(supDistPct) / (Math.abs(supDistPct) + Math.abs(resDistPct))) * 100)) : 50}%;"
-                                ></div>
-                            </div>
-                        </div>
+                        {/if}
 
                         <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
                         {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
@@ -1526,47 +1515,34 @@
         color: #9333ea;
         font-weight: 600;
     }
-    .tile-range-box {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        background: var(--bg-tertiary);
-        padding: 0.45rem 0.6rem;
+    .tile-context-line {
+        font-size: 0.725rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        background: var(--bg-subtle);
+        padding: 0.4rem 0.6rem;
         border-radius: 6px;
+        border-left: 3px solid var(--border-card);
     }
-    .tile-range-labels {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.675rem;
-        font-weight: 500;
+    .tile-context-line.weather-sunny {
+        border-left-color: var(--emerald);
+        background: var(--emerald-bg);
+        color: #14532d;
     }
-    .range-lbl-sup {
-        color: var(--emerald);
+    .tile-context-line.weather-calm {
+        border-left-color: #0284c7;
+        background: rgba(2, 132, 199, 0.08);
+        color: #0369a1;
     }
-    .range-lbl-res {
-        color: var(--rose);
+    .tile-context-line.weather-warning {
+        border-left-color: #d97706;
+        background: var(--amber-bg);
+        color: #92400e;
     }
-    .tile-range-track {
-        height: 4px;
-        width: 100%;
-        background: var(--border-subtle);
-        border-radius: 2px;
-        overflow: hidden;
-    }
-    .tile-range-fill {
-        height: 100%;
-        border-radius: 2px;
-        background: var(--emerald);
-        transition: width 0.3s ease;
-    }
-    .tile-range-fill.weather-storm {
-        background: var(--rose);
-    }
-    .tile-range-fill.weather-warning {
-        background: var(--amber);
-    }
-    .tile-range-fill.weather-calm {
-        background: #0284c7;
+    .tile-context-line.weather-storm {
+        border-left-color: var(--rose);
+        background: var(--rose-bg);
+        color: #991b1b;
     }
     .tile-setup-box {
         background: var(--emerald-bg);
