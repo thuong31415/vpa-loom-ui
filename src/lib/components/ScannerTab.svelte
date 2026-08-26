@@ -416,65 +416,57 @@
     <!-- RADAR VIEW: TOÀN CẢNH KHÍ TƯỢNG 15 COIN WYCKOFF V2        -->
     <!-- ======================================================== -->
     <div class="radar-container">
-        <!-- Top Radar Stats & Filter Banner -->
-        <div class="card radar-summary-card">
-            <div class="radar-summary-left">
-                <div class="radar-title-group">
-                    <span class="radar-title-badge">🌐 BẢN ĐỒ KHÍ TƯỢNG WYCKOFF V2</span>
-                    <h2 class="radar-headline">Toàn Cảnh 15 Đồng Coin (Khung 4H)</h2>
-                </div>
-                <div class="radar-filters-row">
+        <!-- Sleek Single-Row Filter Toolbar -->
+        <div class="radar-toolbar">
+            <div class="radar-filters-row">
+                <button 
+                    class="filter-pill {radarFilter === 'ALL' ? 'active' : ''}"
+                    on:click={() => radarFilter = 'ALL'}
+                >
+                    Tất Cả ({radarData.length})
+                </button>
+                <button 
+                    class="filter-pill pill-markup {radarFilter === 'MARKUP' ? 'active' : ''}"
+                    on:click={() => radarFilter = 'MARKUP'}
+                >
+                    ☀️ Đẩy Giá ({phaseCounts.MARKUP})
+                </button>
+                <button 
+                    class="filter-pill pill-accum {radarFilter === 'ACCUMULATION' ? 'active' : ''}"
+                    on:click={() => radarFilter = 'ACCUMULATION'}
+                >
+                    🌊 Tích Lũy ({phaseCounts.ACCUMULATION})
+                </button>
+                <button 
+                    class="filter-pill pill-dist {radarFilter === 'DISTRIBUTION' ? 'active' : ''}"
+                    on:click={() => radarFilter = 'DISTRIBUTION'}
+                >
+                    ⚠️ Phân Phối ({phaseCounts.DISTRIBUTION})
+                </button>
+                <button 
+                    class="filter-pill pill-markd {radarFilter === 'MARKDOWN' ? 'active' : ''}"
+                    on:click={() => radarFilter = 'MARKDOWN'}
+                >
+                    ⛈️ Giảm Giá ({phaseCounts.MARKDOWN})
+                </button>
+                {#if phaseCounts.ACTIONABLE > 0}
                     <button 
-                        class="filter-pill {radarFilter === 'ALL' ? 'active' : ''}"
-                        on:click={() => radarFilter = 'ALL'}
+                        class="filter-pill pill-actionable {radarFilter === 'ACTIONABLE' ? 'active' : ''}"
+                        on:click={() => radarFilter = 'ACTIONABLE'}
                     >
-                        Tất Cả ({radarData.length})
+                        🟢 Có Setup ({phaseCounts.ACTIONABLE})
                     </button>
-                    <button 
-                        class="filter-pill pill-markup {radarFilter === 'MARKUP' ? 'active' : ''}"
-                        on:click={() => radarFilter = 'MARKUP'}
-                    >
-                        ☀️ Đẩy Giá ({phaseCounts.MARKUP})
-                    </button>
-                    <button 
-                        class="filter-pill pill-accum {radarFilter === 'ACCUMULATION' ? 'active' : ''}"
-                        on:click={() => radarFilter = 'ACCUMULATION'}
-                    >
-                        🌊 Tích Lũy ({phaseCounts.ACCUMULATION})
-                    </button>
-                    <button 
-                        class="filter-pill pill-dist {radarFilter === 'DISTRIBUTION' ? 'active' : ''}"
-                        on:click={() => radarFilter = 'DISTRIBUTION'}
-                    >
-                        ⚠️ Phân Phối ({phaseCounts.DISTRIBUTION})
-                    </button>
-                    <button 
-                        class="filter-pill pill-markd {radarFilter === 'MARKDOWN' ? 'active' : ''}"
-                        on:click={() => radarFilter = 'MARKDOWN'}
-                    >
-                        ⛈️ Giảm Giá ({phaseCounts.MARKDOWN})
-                    </button>
-                    {#if phaseCounts.ACTIONABLE > 0}
-                        <button 
-                            class="filter-pill pill-actionable {radarFilter === 'ACTIONABLE' ? 'active' : ''}"
-                            on:click={() => radarFilter = 'ACTIONABLE'}
-                        >
-                            🟢 Có Setup ({phaseCounts.ACTIONABLE})
-                        </button>
-                    {/if}
-                </div>
+                {/if}
             </div>
 
-            <div class="radar-summary-right">
-                <button 
-                    class="btn btn-outline" 
-                    style="padding: 0.45rem 0.85rem; font-size: 0.825rem;"
-                    on:click={loadRadarData} 
-                    disabled={isRadarLoading}
-                >
-                    {isRadarLoading ? '⌛ Đang tải...' : '🔄 Làm Mới Dữ Liệu'}
-                </button>
-            </div>
+            <button 
+                class="btn btn-outline" 
+                style="padding: 0.35rem 0.75rem; font-size: 0.775rem;"
+                on:click={loadRadarData} 
+                disabled={isRadarLoading}
+            >
+                {isRadarLoading ? '⌛' : '🔄'} Làm Mới
+            </button>
         </div>
 
         {#if isRadarLoading && radarData.length === 0}
@@ -1439,31 +1431,15 @@
     .radar-container {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
-    .radar-summary-card {
+    .radar-toolbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.15rem 1.35rem;
+        margin-bottom: 0.15rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
-        gap: 1rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-subtle);
-        border-radius: 12px;
-    }
-    .radar-title-badge {
-        font-size: 0.675rem;
-        font-weight: 800;
-        color: var(--emerald);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-    .radar-headline {
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin: 0.2rem 0 0.5rem 0;
     }
     .radar-filters-row {
         display: flex;
@@ -1476,19 +1452,20 @@
         border-radius: 9999px;
         font-size: 0.725rem;
         font-weight: 600;
-        background: var(--bg-tertiary);
+        background: var(--bg-card);
         border: 1px solid var(--border-subtle);
         color: var(--text-secondary);
         cursor: pointer;
         transition: all 0.2s;
     }
     .filter-pill:hover {
-        background: var(--border-subtle);
+        background: var(--bg-tertiary);
         color: var(--text-primary);
+        border-color: var(--text-muted);
     }
     .filter-pill.active {
         background: var(--text-primary);
-        color: var(--bg-primary);
+        color: var(--bg-primary) !important;
         border-color: var(--text-primary);
     }
     .pill-markup.active {
