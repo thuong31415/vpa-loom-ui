@@ -15,6 +15,8 @@
         translateCycleStage,
         translateStrength,
         translateCycleReason,
+        translateCycleValidity,
+        translateCycleProgress,
         translateSequencePattern,
         getFriendlyVPAStatus,
         translateDecisionStatus,
@@ -113,12 +115,17 @@
         const typedPhase = (cycle?.phase || 'UNRESOLVED').toUpperCase();
         const stage = cycle?.stage || 'MID';
         const strength = cycle?.authority || cycle?.strength || 'PROVISIONAL';
+        const validity = cycle?.validity || 'CURRENT';
+        const progress = cycle?.progress || 'STABLE';
+        const effectiveFrom = cycle?.effective_from || cycle?.effectiveFrom || null;
         const reason = cycle?.reason || '';
         const pattern = cycle?.sequence_pattern || '';
         const version = cycle?.version || '2.3.0';
 
         const stageVi = translateCycleStage(stage);
         const strengthVi = translateStrength(strength);
+        const validityVi = translateCycleValidity(validity);
+        const progressVi = translateCycleProgress(progress);
         const reasonVi = translateCycleReason(reason);
         const patternVi = translateSequencePattern(pattern);
 
@@ -134,6 +141,11 @@
                 stageVi,
                 strength,
                 strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
                 reason,
                 reasonVi,
                 pattern,
@@ -161,6 +173,11 @@
                 stageVi,
                 strength,
                 strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
                 reason,
                 reasonVi,
                 pattern,
@@ -190,6 +207,11 @@
                 stageVi,
                 strength,
                 strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
                 reason,
                 reasonVi,
                 pattern,
@@ -216,6 +238,11 @@
                 stageVi,
                 strength,
                 strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
                 reason,
                 reasonVi,
                 pattern,
@@ -247,6 +274,11 @@
             stageVi,
             strength,
             strengthVi,
+            validity,
+            validityVi,
+            progress,
+            progressVi,
+            effectiveFrom,
             reason,
             reasonVi,
             pattern,
@@ -561,6 +593,16 @@
                                         {marketWeather.strengthVi}
                                     </span>
                                 {/if}
+                                {#if marketWeather.progressVi}
+                                    <span class="weather-phase-tag" style="background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.25); color: #9333ea;">
+                                        Tiến trình: {marketWeather.progressVi}
+                                    </span>
+                                {/if}
+                                {#if marketWeather.validity && marketWeather.validity !== 'CURRENT'}
+                                    <span class="weather-phase-tag" style="background: var(--rose-bg); border-color: var(--rose-border); color: var(--rose); font-weight: 600;">
+                                        ⚠️ {marketWeather.validityVi || marketWeather.validity}
+                                    </span>
+                                {/if}
                             </div>
                         </div>
                     </div>
@@ -573,8 +615,11 @@
                                 <strong>Đặc tả:</strong> {marketWeather.patternVi ? marketWeather.patternVi : ''}{marketWeather.patternVi && marketWeather.reasonVi ? ' · ' : ''}{marketWeather.reasonVi ? marketWeather.reasonVi : ''}
                             </div>
                         {/if}
-                        <div style="font-size: 0.675rem; color: var(--text-muted); margin-top: 0.15rem; font-variant-numeric: tabular-nums;">
-                            Khung Range: ${formatPrice(singleAnalysisData.key_levels?.support?.lower || 0)} ↔ ${formatPrice(singleAnalysisData.key_levels?.resistance?.upper || 0)}
+                        <div style="font-size: 0.675rem; color: var(--text-muted); margin-top: 0.15rem; font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+                            <span>Khung Range: ${formatPrice(singleAnalysisData.key_levels?.support?.lower || 0)} ↔ ${formatPrice(singleAnalysisData.key_levels?.resistance?.upper || 0)}</span>
+                            {#if marketWeather.effectiveFrom}
+                                <span>Pha từ: <strong>{formatVNTime(marketWeather.effectiveFrom)}</strong></span>
+                            {/if}
                         </div>
                     </div>
                 </div>
@@ -718,6 +763,23 @@
                         <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.3rem;">
                             {getFriendlyWyckoffTitle(candidate.analysis?.plan?.policy_id, candidate.analysis?.plan?.direction)}
                         </div>
+
+                        {#if candidate.analysis?.market_state?.cycle_phase}
+                            {@const candCycle = candidate.analysis.market_state.cycle_phase}
+                            {@const candPhaseVi = translateCyclePhase(candCycle.phase)}
+                            {@const candStageVi = translateCycleStage(candCycle.stage)}
+                            {@const candStrengthVi = translateStrength(candCycle.authority || candCycle.strength)}
+                            <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.45rem; flex-wrap: wrap;">
+                                <span class="weather-phase-tag" style="font-size: 0.7rem; padding: 0.1rem 0.45rem;">
+                                    🏛️ {candPhaseVi || 'Chưa chốt pha'} {candStageVi ? `· ${candStageVi}` : ''}
+                                </span>
+                                {#if candStrengthVi}
+                                    <span class="weather-phase-tag" style="font-size: 0.7rem; padding: 0.1rem 0.45rem; background: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald-bg)' : 'var(--amber-bg)'}; border-color: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald-border)' : 'var(--amber-border)'}; color: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald)' : 'var(--amber)'};">
+                                        {candStrengthVi}
+                                    </span>
+                                {/if}
+                            </div>
+                        {/if}
 
                         <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 0.75rem;">
                             {getFriendlyVPADesc(candidate)}

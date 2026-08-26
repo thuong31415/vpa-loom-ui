@@ -471,6 +471,30 @@ export function translateSequencePattern(pattern) {
     }
 }
 
+export function translateCycleValidity(validity) {
+    if (!validity) return '';
+    switch (validity.toUpperCase()) {
+        case 'CURRENT': return 'Hợp Lệ';
+        case 'LAGGING': return 'Trễ Nhịp';
+        case 'DISLOCATED': return 'Lệch Cấu Trúc';
+        case 'CONFLICTING': return 'Xung Đột Đa Khung';
+        default: return validity;
+    }
+}
+
+export function translateCycleProgress(progress) {
+    if (!progress) return '';
+    switch (progress.toUpperCase()) {
+        case 'STABLE': return 'Ổn Định';
+        case 'ACTIVE': return 'Đang Hoạt Động';
+        case 'PROGRESSING': return 'Đang Tiến Triển';
+        case 'ACCELERATING': return 'Tăng Tốc Đà Giá';
+        case 'DECELERATING': return 'Giảm Tốc Hãm Đà';
+        case 'RESOLVING': return 'Đang Chốt Pha';
+        default: return progress;
+    }
+}
+
 export function translateEffort(type) {
     if (!type) return 'Bình thường';
     switch (type.toUpperCase()) {
