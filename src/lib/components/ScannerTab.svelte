@@ -1422,26 +1422,27 @@
         gap: 0.85rem;
     }
     .radar-tile {
-        padding: 0.95rem 1.05rem;
-        border-radius: 10px;
+        padding: 1rem 1.15rem;
+        border-radius: 12px;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, border-color 0.2s;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 0.65rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-subtle);
+        gap: 0.75rem;
+        background: #FFFFFF;
+        border: 1px solid #CBD5E1;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
         position: relative;
     }
     .radar-tile:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
-        border-color: var(--text-muted);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.09);
+        border-color: #94A3B8;
     }
     .tile-actionable {
-        border: 1.5px solid var(--emerald) !important;
-        box-shadow: 0 0 14px rgba(16, 185, 129, 0.18);
+        border: 2px solid #10B981 !important;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.22);
     }
     .tile-header {
         display: flex;
@@ -1455,132 +1456,142 @@
     }
     .tile-symbol-tag {
         font-weight: 800;
-        font-size: 1rem;
-        color: var(--text-primary);
+        font-size: 1.05rem;
+        color: #0F172A;
         letter-spacing: -0.02em;
     }
     .tile-price-group {
         display: flex;
         align-items: baseline;
-        gap: 0.3rem;
+        gap: 0.35rem;
     }
     .tile-price {
-        font-size: 0.875rem;
+        font-size: 0.925rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--text-primary);
+        color: #0F172A;
     }
     .tile-change {
-        font-size: 0.675rem;
+        font-size: 0.7rem;
         font-weight: 700;
     }
     .tile-change.up {
-        color: var(--emerald);
+        color: #166534;
     }
     .tile-change.down {
-        color: var(--rose);
+        color: #991B1B;
     }
     .tile-phase-badge {
-        font-size: 0.675rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 0.15rem 0.45rem;
-        border-radius: 4px;
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: 0.3rem;
         white-space: nowrap;
     }
     .tile-phase-badge.weather-sunny {
-        background: var(--emerald-bg);
-        border: 1px solid var(--emerald-border);
-        color: var(--emerald);
+        background: #ECFDF5;
+        border: 1px solid #A7F3D0;
+        color: #065F46;
     }
     .tile-phase-badge.weather-calm {
-        background: rgba(2, 132, 199, 0.1);
-        border: 1px solid rgba(2, 132, 199, 0.25);
-        color: #0284c7;
+        background: #F0F9FF;
+        border: 1px solid #BAE6FD;
+        color: #0369A1;
     }
     .tile-phase-badge.weather-warning {
-        background: var(--amber-bg);
-        border: 1px solid var(--amber-border);
-        color: var(--amber);
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        color: #92400E;
     }
     .tile-phase-badge.weather-storm {
-        background: var(--rose-bg);
-        border: 1px solid var(--rose-border);
-        color: var(--rose);
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        color: #991B1B;
     }
     .tile-meta-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-size: 0.725rem;
-        color: var(--text-secondary);
+        color: #64748B;
     }
     .tile-progress-text {
         font-size: 0.675rem;
-        color: #9333ea;
+        color: #7E22CE;
+        background: #F3E8FF;
+        border: 1px solid #E9D5FF;
+        border-radius: 4px;
+        padding: 0.1rem 0.4rem;
         font-weight: 600;
     }
     .tile-context-line {
-        font-size: 0.725rem;
-        color: var(--text-secondary);
-        line-height: 1.4;
-        background: var(--bg-subtle);
-        padding: 0.4rem 0.6rem;
-        border-radius: 6px;
-        border-left: 3px solid var(--border-card);
+        font-size: 0.775rem;
+        color: #334155;
+        line-height: 1.45;
+        background: #F8FAFC;
+        padding: 0.45rem 0.7rem;
+        border-radius: 8px;
+        border: 1px solid #E2E8F0;
+        border-left: 3.5px solid #94A3B8;
+        font-weight: 500;
     }
     .tile-context-line.weather-sunny {
-        border-left-color: var(--emerald);
-        background: var(--emerald-bg);
-        color: #14532d;
+        background: #F0FDF4;
+        border-color: #DCFCE7;
+        border-left-color: #10B981;
+        color: #065F46;
     }
     .tile-context-line.weather-calm {
-        border-left-color: #0284c7;
-        background: rgba(2, 132, 199, 0.08);
-        color: #0369a1;
+        background: #F0F9FF;
+        border-color: #E0F2FE;
+        border-left-color: #0284C7;
+        color: #0369A1;
     }
     .tile-context-line.weather-warning {
-        border-left-color: #d97706;
-        background: var(--amber-bg);
-        color: #92400e;
+        background: #FFFBEB;
+        border-color: #FEF3C7;
+        border-left-color: #F59E0B;
+        color: #92400E;
     }
     .tile-context-line.weather-storm {
-        border-left-color: var(--rose);
-        background: var(--rose-bg);
-        color: #991b1b;
+        background: #FEF2F2;
+        border-color: #FEE2E2;
+        border-left-color: #EF4444;
+        color: #991B1B;
     }
     .tile-setup-box {
-        background: var(--emerald-bg);
-        border: 1px solid var(--emerald-border);
-        border-radius: 6px;
-        padding: 0.45rem 0.55rem;
+        background: #ECFDF5;
+        border: 1px solid #A7F3D0;
+        border-radius: 8px;
+        padding: 0.5rem 0.65rem;
         margin-top: 0.2rem;
     }
     .tile-setup-metrics {
         display: flex;
         justify-content: space-between;
-        font-size: 0.675rem;
-        color: var(--text-secondary);
+        font-size: 0.7rem;
+        color: #334155;
         flex-wrap: wrap;
-        gap: 0.2rem;
+        gap: 0.25rem;
     }
     .tile-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-top: 1px solid var(--border-subtle);
-        padding-top: 0.45rem;
-        margin-top: 0.1rem;
+        border-top: 1px solid #F1F5F9;
+        padding-top: 0.55rem;
+        margin-top: 0.15rem;
     }
     .tile-view-link {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--text-muted);
+        color: #64748B;
         transition: color 0.2s;
     }
     .radar-tile:hover .tile-view-link {
-        color: var(--text-primary);
+        color: #0F172A;
     }
 </style>

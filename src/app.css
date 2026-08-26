@@ -1,33 +1,33 @@
 :root {
-    /* Ultra-Clean Minimalist Light Theme */
-    --bg-main: #FBF9F5;
+    /* Crisp Modern Light Theme with Clear Contrast */
+    --bg-main: #F8FAFC;
     --bg-card: #FFFFFF;
-    --bg-subtle: #F4F1EA;
-    --border-card: #EAE6DF;
-    --border-subtle: #F0EDE6;
+    --bg-subtle: #F1F5F9;
+    --border-card: #E2E8F0;
+    --border-subtle: #E2E8F0;
     
-    --text-primary: #18181B;
-    --text-secondary: #52525B;
-    --text-muted: #71717A;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
     
-    --btn-primary: #18181B;
-    --btn-primary-hover: #27272A;
+    --btn-primary: #0F172A;
+    --btn-primary-hover: #1E293B;
     
     --emerald: #166534;
-    --emerald-bg: #F0FDF4;
-    --emerald-border: #DCFCE7;
+    --emerald-bg: #DCFCE7;
+    --emerald-border: #BBF7D0;
     
     --rose: #991B1B;
-    --rose-bg: #FEF2F2;
-    --rose-border: #FEE2E2;
+    --rose-bg: #FEE2E2;
+    --rose-border: #FECACA;
     
     --amber: #9A3412;
-    --amber-bg: #FFF7ED;
-    --amber-border: #FFEDD5;
+    --amber-bg: #FEF3C7;
+    --amber-border: #FDE68A;
     
     --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.07);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
