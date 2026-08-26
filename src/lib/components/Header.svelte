@@ -15,7 +15,7 @@
         <button 
             class="tab-btn {activeTab === 'scanner' ? 'active' : ''}" 
             on:click={() => onSelectTab('scanner')}
-        >🎯 Quét Setup</button>
+        >🌐 Thị Trường</button>
         <button 
             class="tab-btn {activeTab === 'positions' ? 'active' : ''}" 
             on:click={() => onSelectTab('positions')}

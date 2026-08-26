@@ -389,12 +389,6 @@
         >
             🔍 Phân Tích ({cleanSymbol(selectedSymbol)})
         </button>
-        <button 
-            class="pill-btn {activeView === 'scan' ? 'active' : ''}" 
-            on:click={() => { activeView = 'scan'; if (!scanData) loadScanData(); }}
-        >
-            🎯 Setup Sẵn Sàng {scanData ? `(${scanData.actionable_count})` : ''}
-        </button>
     </div>
 
     {#if activeView === 'radar'}
@@ -543,6 +537,31 @@
                                 ></div>
                             </div>
                         </div>
+
+                        <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
+                        {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
+                            <div class="tile-setup-box" on:click|stopPropagation role="none">
+                                <div class="tile-setup-metrics">
+                                    <span><strong>Entry:</strong> ${formatPrice(analysis.plan?.entry)}</span>
+                                    <span><strong>SL:</strong> ${formatPrice(analysis.plan?.stop)}</span>
+                                    <span><strong>TP:</strong> ${formatPrice(analysis.plan?.target)}</span>
+                                    <span><strong>R:R:</strong> {analysis.plan?.reward_risk ? `${analysis.plan.reward_risk.toFixed(1)}R` : 'N/A'}</span>
+                                </div>
+                                <button 
+                                    class="btn btn-emerald" 
+                                    style="width: 100%; padding: 0.32rem 0.5rem; font-size: 0.775rem; font-weight: 700; margin-top: 0.35rem;"
+                                    on:click|stopPropagation={() => onOpenOrderModal(
+                                        item.symbol,
+                                        analysis.plan?.direction || 'LONG',
+                                        analysis.plan?.entry,
+                                        analysis.plan?.stop,
+                                        analysis.plan?.target
+                                    )}
+                                >
+                                    📋 Đặt Lệnh ({analysis.plan?.direction} @ ${formatPrice(analysis.plan?.entry)})
+                                </button>
+                            </div>
+                        {/if}
 
                         <!-- Tile Action Footer -->
                         <div class="tile-footer">
@@ -929,117 +948,6 @@
             </div>
         {/if}
     {/if}
-
-{:else if activeView === 'scan'}
-    <!-- ======================================================== -->
-    <!-- SCAN VIEW ACROSS ALL UNIVERSE COINS                       -->
-    <!-- ======================================================== -->
-    <div class="card">
-        <div class="card-header" style="margin-bottom: 1rem;">
-            <div>
-                <div class="card-title">Bộ Quét Thị Trường Tự Động ({scanData?.scanned_count || UNIVERSE_COINS.length} Cặp Coin)</div>
-                {#if scanData}
-                    <div class="stat-sub" style="margin-top: 0.25rem;">
-                        📊 Đã quét <strong>{scanData.scanned_count}</strong> coin · 
-                        <span class="text-emerald" style="font-weight: 600;">{scanData.actionable_count} Setup sẵn sàng</span> · 
-                        {scanData.no_trade_count} Đang quan sát · 
-                        {scanData.failures?.length || 0} Lỗi
-                    </div>
-                {/if}
-            </div>
-            <button class="btn btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;" on:click={loadScanData} disabled={isScanLoading}>
-                {isScanLoading ? '⌛ Đang quét...' : '🔍 Quét Lại Danh Mục'}
-            </button>
-        </div>
-
-        {#if isScanLoading}
-            <div style="padding: 3.5rem; text-align: center; color: var(--text-muted);">
-                <div style="font-size: 1.15rem; margin-bottom: 0.4rem; font-weight: 600;">⌛ Đang chạy quét song song trên backend...</div>
-                <div style="font-size: 0.85rem;"><code>GET /api/v1/analysis/scan</code></div>
-            </div>
-        {:else if scanData && scanData.candidates && scanData.candidates.length > 0}
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1rem;">
-                {#each scanData.candidates as candidate}
-                    <div class="subtype-card" style="margin-bottom: 0; padding: 1.15rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="symbol-tag" style="font-size: 1rem;">{cleanSymbol(candidate.symbol)}</span>
-                                <span class="badge badge-emerald" style="font-size: 0.775rem;">🟢 Sẵn sàng ({candidate.analysis?.plan?.direction || 'LONG'})</span>
-                            </div>
-                            <span class="badge badge-neutral" style="font-size: 0.75rem;">
-                                Điểm: {(candidate.priority?.score || 95).toFixed(1)}/100
-                            </span>
-                        </div>
-
-                        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.3rem;">
-                            {getFriendlyWyckoffTitle(candidate.analysis?.plan?.policy_id, candidate.analysis?.plan?.direction)}
-                        </div>
-
-                        {#if candidate.analysis?.market_state?.cycle_phase}
-                            {@const candCycle = candidate.analysis.market_state.cycle_phase}
-                            {@const candPhaseVi = translateCyclePhase(candCycle.phase)}
-                            {@const candStageVi = translateCycleStage(candCycle.stage)}
-                            {@const candStrengthVi = translateStrength(candCycle.authority || candCycle.strength)}
-                            <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.45rem; flex-wrap: wrap;">
-                                <span class="weather-phase-tag" style="font-size: 0.7rem; padding: 0.1rem 0.45rem;">
-                                    🏛️ {candPhaseVi || 'Chưa chốt pha'} {candStageVi ? `· ${candStageVi}` : ''}
-                                </span>
-                                {#if candStrengthVi}
-                                    <span class="weather-phase-tag" style="font-size: 0.7rem; padding: 0.1rem 0.45rem; background: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald-bg)' : 'var(--amber-bg)'}; border-color: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald-border)' : 'var(--amber-border)'}; color: {candCycle.authority === 'CONFIRMED' || candCycle.strength === 'CONFIRMED' ? 'var(--emerald)' : 'var(--amber)'};">
-                                        {candStrengthVi}
-                                    </span>
-                                {/if}
-                            </div>
-                        {/if}
-
-                        <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 0.75rem;">
-                            {getFriendlyVPADesc(candidate)}
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.45rem; text-align: center; margin-bottom: 0.75rem;">
-                            <div class="price-box" style="padding: 0.4rem;">
-                                <span class="price-label" style="font-size: 0.7rem;">Entry</span>
-                                <span class="price-val" style="font-size: 0.85rem;">${formatPrice(candidate.analysis?.plan?.entry)}</span>
-                            </div>
-                            <div class="price-box" style="padding: 0.4rem;">
-                                <span class="price-label" style="font-size: 0.7rem;">SL</span>
-                                <span class="price-val text-rose" style="font-size: 0.85rem;">${formatPrice(candidate.analysis?.plan?.stop)}</span>
-                            </div>
-                            <div class="price-box" style="padding: 0.4rem;">
-                                <span class="price-label" style="font-size: 0.7rem;">TP</span>
-                                <span class="price-val text-emerald" style="font-size: 0.85rem;">${formatPrice(candidate.analysis?.plan?.target)}</span>
-                            </div>
-                            <div class="price-box" style="padding: 0.4rem;">
-                                <span class="price-label" style="font-size: 0.7rem;">R:R</span>
-                                <span class="price-val text-emerald" style="font-size: 0.85rem;">{candidate.analysis?.plan?.reward_risk?.toFixed(2)} R</span>
-                            </div>
-                        </div>
-
-                        <button 
-                            class="btn btn-emerald" 
-                            style="width: 100%; padding: 0.5rem; font-size: 0.85rem; font-weight: 600;"
-                            on:click={() => onOpenOrderModal(
-                                candidate.symbol,
-                                candidate.analysis?.plan?.direction || 'LONG',
-                                candidate.analysis?.plan?.entry,
-                                candidate.analysis?.plan?.stop,
-                                candidate.analysis?.plan?.target
-                            )}
-                        >
-                            📋 Đặt Lệnh ({candidate.analysis?.plan?.direction} @ ${formatPrice(candidate.analysis?.plan?.entry)})
-                        </button>
-                    </div>
-                {/each}
-            </div>
-        {:else}
-            <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                <div style="font-size: 1.15rem; margin-bottom: 0.4rem; font-weight: 600;">⏸️ Chưa có coin nào đạt chuẩn vào lệnh (NO TRADE)</div>
-                <div style="font-size: 0.875rem; max-width: 520px; margin: 0 auto; line-height: 1.55;">
-                    Toàn bộ {UNIVERSE_COINS.length} coin đang trong trạng thái quan sát hoặc nằm lưng chừng range. Hệ thống giữ vững kỷ luật, chờ tín hiệu xác nhận cạn cung tại hỗ trợ.
-                </div>
-            </div>
-        {/if}
-    </div>
 {/if}
 
 <style>
@@ -1659,6 +1567,21 @@
     }
     .tile-range-fill.weather-calm {
         background: #0284c7;
+    }
+    .tile-setup-box {
+        background: var(--emerald-bg);
+        border: 1px solid var(--emerald-border);
+        border-radius: 6px;
+        padding: 0.45rem 0.55rem;
+        margin-top: 0.2rem;
+    }
+    .tile-setup-metrics {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.675rem;
+        color: var(--text-secondary);
+        flex-wrap: wrap;
+        gap: 0.2rem;
     }
     .tile-footer {
         display: flex;
