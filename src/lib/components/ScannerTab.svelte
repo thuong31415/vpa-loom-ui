@@ -44,8 +44,8 @@
     let radarFilter = 'ALL'; // 'ALL' | 'MARKUP' | 'ACCUMULATION' | 'DISTRIBUTION' | 'MARKDOWN' | 'ACTIONABLE'
     let radarTickerTimer = null;
 
-    // Single Analysis state
-    let selectedSymbol = 'ETHUSDT';
+    // Single Analysis state (Default to BTCUSDT)
+    let selectedSymbol = 'BTCUSDT';
     let singleAnalysisData = null;
     let isSingleLoading = false;
     let singleError = null;
@@ -359,7 +359,7 @@
 
     onMount(() => {
         loadRadarData();
-        loadSingleAnalysis('ETHUSDT');
+        loadSingleAnalysis('BTCUSDT');
         radarTickerTimer = setInterval(async () => {
             const t = await fetchBinanceUniverse24hTickers();
             if (t.ok && t.data) {
