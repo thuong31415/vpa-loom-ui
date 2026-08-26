@@ -519,17 +519,14 @@
                         {#if weather}
                             <div class="tile-meta-row">
                                 <span class="tile-subtext">
-                                    {weather.stageVi || 'Giai đoạn giữa'} · {weather.strengthVi || 'Xác nhận'}
+                                    {weather.stageVi || 'Giai đoạn giữa'} · {weather.strengthVi || 'Xác nhận'}{weather.progressVi ? ` · ${weather.progressVi}` : ''}
                                 </span>
-                                {#if weather.progressVi}
-                                    <span class="tile-progress-text">{weather.progressVi}</span>
-                                {/if}
                             </div>
                         {/if}
 
                         <!-- Wyckoff V2 Context & Structure Snippet -->
                         {#if weather && (weather.patternVi || weather.reasonVi)}
-                            <div class="tile-context-line {weather.weatherClass}">
+                            <div class="tile-context-line">
                                 {weather.patternVi ? weather.patternVi : ''}{weather.patternVi && weather.reasonVi ? ' · ' : ''}{weather.reasonVi ? weather.reasonVi : ''}
                             </div>
                         {/if}
@@ -597,45 +594,33 @@
             <!-- LEFT COLUMN: CON TÀU THỊ TRƯỜNG & VỊ TRÍ 2 CẢN      -->
             <!-- ==================================================== -->
             <div class="card cockpit-card">
-                <!-- Header Info -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <span class="symbol-tag" style="font-size: 0.8rem; padding: 0.2rem 0.55rem;">{cleanSymbol(selectedSymbol)}</span>
-                        <span class="status-pill {act.class}" style="font-size: 0.725rem; padding: 0.15rem 0.5rem;">
-                            <span class="dot"></span>
-                            {act.text}
-                        </span>
-                    </div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums;">
-                        {singleAnalysisData.as_of ? formatVNTime(singleAnalysisData.as_of) : '4H'}
-                    </span>
-                </div>
-
-                <!-- Price Headline (Polished & Binance Live Integrated) -->
-                <div class="price-headline-card">
-                    <div class="price-primary-row">
-                        <div class="price-live-display">
-                            <span class="currency-symbol">$</span>
-                            <span class="price-digits {priceFlash || ''}">{formatPrice(currentDisplayPrice)}</span>
-                        </div>
-                        {#if livePrice}
-                            <div class="live-pill" title="Giá thời gian thực khớp lệnh trực tiếp từ Binance">
-                                <span class="pulse-beacon"></span>
-                                <span class="live-text">LIVE</span>
-                            </div>
-                        {/if}
-                    </div>
-
-                    <div class="price-sub-row">
-                        <div class="ref-badge" title="Giá đóng nến 4H gần nhất dùng làm căn cứ thuật toán VPA">
-                            <span class="ref-title">Tham chiếu 4H:</span>
-                            <span class="ref-val">${formatPrice(refPriceNum)}</span>
-                        </div>
-                        {#if livePrice && Math.abs(priceDiffPct) >= 0.01}
-                            <span class="delta-badge {priceDiff >= 0 ? 'up' : 'down'}" title="Độ lệch giữa giá realtime và giá đóng nến 4H">
-                                {priceDiff >= 0 ? '▲ +' : '▼ '}{priceDiffPct.toFixed(2)}%
+                <!-- Unified Sleek Price & Market Status Header -->
+                <div class="cockpit-header">
+                    <div class="cockpit-header-left">
+                        <div class="cockpit-symbol-row">
+                            <span class="cockpit-symbol-name">{cleanSymbol(selectedSymbol)}/USDT</span>
+                            <span class="status-pill {act.class}" style="font-size: 0.725rem; padding: 0.15rem 0.5rem;">
+                                <span class="dot"></span>
+                                {act.text}
                             </span>
-                        {/if}
+                        </div>
+                        <div class="cockpit-price-row">
+                            <span class="cockpit-price-val {priceFlash || ''}">${formatPrice(currentDisplayPrice)}</span>
+                            {#if livePrice && Math.abs(priceDiffPct) >= 0.01}
+                                <span class="cockpit-delta {priceDiff >= 0 ? 'up' : 'down'}" title="Độ lệch so với giá đóng nến 4H">
+                                    {priceDiff >= 0 ? '+' : ''}{priceDiffPct.toFixed(2)}%
+                                </span>
+                            {/if}
+                        </div>
+                    </div>
+                    
+                    <div class="cockpit-header-right">
+                        <div class="cockpit-ref-info">
+                            <span>Tham chiếu 4H: <strong>${formatPrice(refPriceNum)}</strong></span>
+                            {#if singleAnalysisData.as_of}
+                                <span class="cockpit-time">{formatVNTime(singleAnalysisData.as_of)}</span>
+                            {/if}
+                        </div>
                     </div>
                 </div>
 
@@ -984,6 +969,122 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         font-weight: 700;
     }
+    .cockpit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 0.85rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .cockpit-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .cockpit-symbol-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .cockpit-symbol-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #0F172A;
+        letter-spacing: -0.01em;
+    }
+    .cockpit-price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .cockpit-price-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        transition: color 0.3s ease, transform 0.2s ease;
+    }
+    .cockpit-price-val.flash-up {
+        color: #166534;
+        transform: scale(1.02);
+    }
+    .cockpit-price-val.flash-down {
+        color: #991B1B;
+        transform: scale(0.98);
+    }
+    .cockpit-delta {
+        font-size: 0.725rem;
+        font-weight: 600;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        font-variant-numeric: tabular-nums;
+    }
+    .cockpit-delta.up {
+        background: #DCFCE7;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+    .cockpit-delta.down {
+        background: #FEE2E2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+    .cockpit-live-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #166534;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+        letter-spacing: 0.04em;
+    }
+    .pulse-beacon {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10B981;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: beacon-pulse 1.8s infinite;
+    }
+    @keyframes beacon-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+    .cockpit-header-right {
+        text-align: right;
+    }
+    .cockpit-ref-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        font-size: 0.775rem;
+        color: #64748B;
+    }
+    .cockpit-ref-info strong {
+        color: #334155;
+    }
+    .cockpit-time {
+        font-size: 0.725rem;
+        color: #94A3B8;
+    }
     .coin-selector-strip {
         display: flex;
         gap: 0.3rem;
@@ -1030,71 +1131,6 @@
     /* Price Headline Refinements */
     .price-headline-card {
         margin-bottom: 0.55rem;
-    }
-    .price-primary-row {
-        display: flex;
-        align-items: center;
-        gap: 0.55rem;
-        margin-bottom: 0.25rem;
-    }
-    .price-live-display {
-        display: flex;
-        align-items: baseline;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-    }
-    .currency-symbol {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        margin-right: 2px;
-    }
-    .price-digits {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        letter-spacing: -0.02em;
-        transition: color 0.3s ease, transform 0.2s ease;
-    }
-    .price-digits.flash-up {
-        color: var(--emerald);
-        transform: scale(1.02);
-    }
-    .price-digits.flash-down {
-        color: var(--rose);
-        transform: scale(0.98);
-    }
-    .live-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background: var(--emerald-bg);
-        border: 1px solid var(--emerald-border);
-        color: var(--emerald);
-        padding: 0.15rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.675rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-    }
-    .pulse-beacon {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #10B981;
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-        animation: beacon-pulse 1.8s infinite;
-    }
-    @keyframes beacon-pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-        }
     }
     .price-sub-row {
         display: flex;
@@ -1483,18 +1519,18 @@
     }
     .tile-phase-badge {
         font-size: 0.7rem;
-        font-weight: 700;
-        padding: 0.2rem 0.55rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
         border-radius: 6px;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.25rem;
         white-space: nowrap;
     }
     .tile-phase-badge.weather-sunny {
-        background: #ECFDF5;
-        border: 1px solid #A7F3D0;
-        color: #065F46;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        color: #166534;
     }
     .tile-phase-badge.weather-calm {
         background: #F0F9FF;
@@ -1504,28 +1540,19 @@
     .tile-phase-badge.weather-warning {
         background: #FFFBEB;
         border: 1px solid #FDE68A;
-        color: #92400E;
+        color: #B45309;
     }
     .tile-phase-badge.weather-storm {
         background: #FEF2F2;
         border: 1px solid #FECACA;
-        color: #991B1B;
+        color: #B91C1C;
     }
     .tile-meta-row {
         display: flex;
-        justify-content: space-between;
         align-items: center;
         font-size: 0.725rem;
         color: #64748B;
-    }
-    .tile-progress-text {
-        font-size: 0.675rem;
-        color: #7E22CE;
-        background: #F3E8FF;
-        border: 1px solid #E9D5FF;
-        border-radius: 4px;
-        padding: 0.1rem 0.4rem;
-        font-weight: 600;
+        font-weight: 500;
     }
     .tile-context-line {
         font-size: 0.775rem;
@@ -1535,32 +1562,7 @@
         padding: 0.45rem 0.7rem;
         border-radius: 8px;
         border: 1px solid #E2E8F0;
-        border-left: 3.5px solid #94A3B8;
         font-weight: 500;
-    }
-    .tile-context-line.weather-sunny {
-        background: #F0FDF4;
-        border-color: #DCFCE7;
-        border-left-color: #10B981;
-        color: #065F46;
-    }
-    .tile-context-line.weather-calm {
-        background: #F0F9FF;
-        border-color: #E0F2FE;
-        border-left-color: #0284C7;
-        color: #0369A1;
-    }
-    .tile-context-line.weather-warning {
-        background: #FFFBEB;
-        border-color: #FEF3C7;
-        border-left-color: #F59E0B;
-        color: #92400E;
-    }
-    .tile-context-line.weather-storm {
-        background: #FEF2F2;
-        border-color: #FEE2E2;
-        border-left-color: #EF4444;
-        color: #991B1B;
     }
     .tile-setup-box {
         background: #ECFDF5;
