@@ -64,18 +64,25 @@
     async function loadRadarData() {
         isRadarLoading = true;
         try {
-            const [analyses, tickers] = await Promise.all([
-                fetchUniverseRadar('4h', 720),
-                fetchBinanceUniverse24hTickers()
-            ]);
-            radarData = analyses;
-            if (tickers.ok && tickers.data) {
-                radarTickers = tickers.data;
-            }
+            // 1. Fetch Radar analysis from Backend (has all 15 coins with full Wyckoff & reference prices)
+            const analysesPromise = fetchUniverseRadar('4h', 720).then(analyses => {
+                radarData = analyses;
+                isRadarLoading = false; // Render cards immediately as soon as backend returns!
+            });
+
+            // 2. Fetch Binance 24h tickers asynchronously in the background without blocking UI
+            const tickersPromise = fetchBinanceUniverse24hTickers().then(tickers => {
+                if (tickers.ok && tickers.data) {
+                    radarTickers = { ...radarTickers, ...tickers.data };
+                }
+            });
+
+            await Promise.allSettled([analysesPromise, tickersPromise]);
         } catch (e) {
             console.error("Failed to load radar data", e);
+        } finally {
+            isRadarLoading = false;
         }
-        isRadarLoading = false;
     }
 
     async function updateLivePrice() {

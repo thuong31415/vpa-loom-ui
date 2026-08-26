@@ -41,10 +41,10 @@ async function safeJsonFetch(endpoint, options = {}) {
     if (BASE_URL) {
         candidates.push(`${BASE_URL}${endpoint}`);
     }
-    candidates.push(endpoint);
     if (import.meta.env.DEV) {
         candidates.push(`http://localhost:8080${endpoint}`);
     }
+    candidates.push(endpoint);
     REMOTE_HOSTS.forEach(host => {
         candidates.push(`${host}${endpoint}`);
     });
