@@ -131,6 +131,11 @@
 
     function selectSymbol(sym) {
         selectedSymbol = sym;
+        const cached = radarData.find(item => item.symbol === sym);
+        if (cached && cached.analysis) {
+            singleAnalysisData = cached.analysis;
+            isSingleLoading = false;
+        }
         loadSingleAnalysis(sym);
         activeView = 'single';
     }
@@ -366,7 +371,9 @@
 
     onMount(() => {
         loadRadarData();
-        loadSingleAnalysis('BTCUSDT');
+        if (activeView === 'single') {
+            loadSingleAnalysis(selectedSymbol);
+        }
         radarTickerTimer = setInterval(async () => {
             const t = await fetchBinanceUniverse24hTickers();
             if (t.ok && t.data) {
@@ -392,7 +399,14 @@
         </button>
         <button 
             class="pill-btn {activeView === 'single' ? 'active' : ''}" 
-            on:click={() => activeView = 'single'}
+            on:click={() => {
+                activeView = 'single';
+                if (!singleAnalysisData) {
+                    const cached = radarData.find(item => item.symbol === selectedSymbol);
+                    if (cached && cached.analysis) singleAnalysisData = cached.analysis;
+                    loadSingleAnalysis(selectedSymbol);
+                }
+            }}
         >
             🔍 Phân Tích ({cleanSymbol(selectedSymbol)})
         </button>

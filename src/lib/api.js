@@ -170,20 +170,12 @@ export async function fetchUniverseRadar(interval = '4h', limit = 1000) {
         }));
     }
 
-    // Fallback: parallel fetch
-    const results = await Promise.allSettled(
-        UNIVERSE_COINS.map(sym => fetchAnalysis(sym, interval, limit))
-    );
-    const radar = [];
-    UNIVERSE_COINS.forEach((sym, idx) => {
-        const r = results[idx];
-        if (r.status === 'fulfilled' && r.value.success && r.value.data) {
-            radar.push({ symbol: sym, success: true, analysis: r.value.data });
-        } else {
-            radar.push({ symbol: sym, success: false, analysis: null });
-        }
-    });
-    return radar;
+    console.warn("fetchUniverseRadar: Backend bulk radar response not available", res.error);
+    return UNIVERSE_COINS.map(sym => ({
+        symbol: sym,
+        success: false,
+        analysis: null
+    }));
 }
 
 /**
