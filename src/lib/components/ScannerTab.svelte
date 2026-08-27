@@ -65,7 +65,7 @@
         isRadarLoading = true;
         try {
             // 1. Fetch Radar analysis from Backend (has all 15 coins with full Wyckoff & reference prices)
-            const analysesPromise = fetchUniverseRadar('4h', 720).then(analyses => {
+            const analysesPromise = fetchUniverseRadar('4h', 1000).then(analyses => {
                 radarData = analyses;
                 isRadarLoading = false; // Render cards immediately as soon as backend returns!
             });
@@ -576,7 +576,7 @@
     <!-- ======================================================== -->
     {#if isSingleLoading}
         <div class="card" style="padding: 3.5rem; text-align: center; color: var(--text-muted);">
-            <div style="font-size: 1.15rem; margin-bottom: 0.4rem; font-weight: 600;">⌛ Đang phân tích dữ liệu 720 nến 4H cho {selectedSymbol}...</div>
+            <div style="font-size: 1.15rem; margin-bottom: 0.4rem; font-weight: 600;">⌛ Đang phân tích dữ liệu 1000 nến 4H cho {selectedSymbol}...</div>
             <div style="font-size: 0.85rem;">Kết nối trực tiếp tới <code>/api/v1/analysis?symbol={selectedSymbol}</code></div>
         </div>
     {:else if singleError}

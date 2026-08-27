@@ -42,6 +42,7 @@ async function safeJsonFetch(endpoint, options = {}) {
         candidates.push(`${BASE_URL}${endpoint}`);
     }
     if (import.meta.env.DEV) {
+        candidates.push(`http://localhost:8081${endpoint}`);
         candidates.push(`http://localhost:8080${endpoint}`);
     }
     candidates.push(endpoint);
@@ -87,9 +88,9 @@ async function safeJsonFetch(endpoint, options = {}) {
 
 /**
  * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
+ * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=1000
  */
-export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
+export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 1000) {
     const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
     const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
@@ -152,9 +153,9 @@ export async function fetchBinanceUniverse24hTickers() {
 
 /**
  * Fetch full radar analysis across all Universe coins via single fast bulk endpoint
- * GET /api/v1/analysis/radar?interval=4h&limit=720
+ * GET /api/v1/analysis/radar?interval=4h&limit=1000
  */
-export async function fetchUniverseRadar(interval = '4h', limit = 720) {
+export async function fetchUniverseRadar(interval = '4h', limit = 1000) {
     const endpoint = `/api/v1/analysis/radar?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
     const res = await safeJsonFetch(endpoint, { method: 'GET' });
     if (res.ok && res.data && Array.isArray(res.data.items)) {
@@ -187,17 +188,17 @@ export async function fetchUniverseRadar(interval = '4h', limit = 720) {
 
 /**
  * Hydrate and resolve analysis for a single symbol
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=720
+ * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=1000
  */
-export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 720) {
+export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 1000) {
     return fetchAnalysis(symbol, interval, limit);
 }
 
 /**
  * Fetch market scanner candidates across all 12 universe coins
- * GET /api/v1/analysis/scan?interval=4h&limit=720
+ * GET /api/v1/analysis/scan?interval=4h&limit=1000
  */
-export async function fetchScanCandidates(interval = '4h', limit = 720) {
+export async function fetchScanCandidates(interval = '4h', limit = 1000) {
     const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
 
     const res = await safeJsonFetch(endpoint, { method: 'GET' });
