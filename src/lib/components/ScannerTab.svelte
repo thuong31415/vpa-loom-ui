@@ -161,55 +161,6 @@
         return phase === radarFilter;
     });
 
-    const PHASE_SECTION_DEFS = [
-        {
-            phase: 'MARKUP',
-            title: 'Pha 2: Đẩy Giá (Markup) — Dòng Tiền Lớn Kiểm Soát',
-            emoji: '🚀',
-            badgeClass: 'weather-sunny',
-            desc: 'Các coin đang trong chu kỳ tăng trưởng mạnh mẽ, phe Mua làm chủ hoàn toàn cấu trúc sóng.'
-        },
-        {
-            phase: 'ACCUMULATION',
-            title: 'Pha 1: Tích Lũy (Accumulation) — Cá Mập Gom Hàng Đáy',
-            emoji: '🌊',
-            badgeClass: 'weather-calm',
-            desc: 'Các coin đang trong vùng đáy hấp thụ cạn cung, chuẩn bị bước vào chu kỳ tăng trưởng mới.'
-        },
-        {
-            phase: 'DISTRIBUTION',
-            title: 'Pha 3: Phân Phối (Distribution) — Cảnh Báo Xả Đỉnh',
-            emoji: '⚠️',
-            badgeClass: 'weather-warning',
-            desc: 'Các coin ở vùng đỉnh rủi ro, lực cầu suy yếu và xuất hiện áp lực phân phối chốt lời.'
-        },
-        {
-            phase: 'MARKDOWN',
-            title: 'Pha 4: Giảm Giá (Markdown) — Xu Hướng Thoái Trào',
-            emoji: '⛈️',
-            badgeClass: 'weather-storm',
-            desc: 'Các coin bị thủng hỗ trợ, phe Bán áp đảo, xu hướng suy thoái đang tiếp diễn.'
-        },
-        {
-            phase: 'UNRESOLVED',
-            title: 'Chưa Chốt Pha — Dao Động Cân Bằng Biên Độ',
-            emoji: '🌫️',
-            badgeClass: 'weather-calm',
-            desc: 'Các coin đang dao động trung tính giữa 2 cản, chưa hình thành chu kỳ có hướng rõ ràng.'
-        }
-    ];
-
-    $: radarSections = PHASE_SECTION_DEFS.map(def => {
-        const items = filteredRadarList.filter(item => {
-            const p = (item.analysis?.market_state?.cycle_phase?.phase || 'UNRESOLVED').toUpperCase();
-            if (def.phase === 'UNRESOLVED') {
-                return p !== 'MARKUP' && p !== 'ACCUMULATION' && p !== 'DISTRIBUTION' && p !== 'MARKDOWN';
-            }
-            return p === def.phase;
-        });
-        return { ...def, items };
-    }).filter(sec => sec.items.length > 0);
-
     $: refPriceNum = singleAnalysisData && singleAnalysisData.reference_price ? parseFloat(singleAnalysisData.reference_price) : 0;
     $: currentDisplayPrice = livePrice || refPriceNum;
     $: priceDiff = currentDisplayPrice - refPriceNum;
@@ -536,133 +487,115 @@
                 <div style="font-size: 0.85rem;">Phân tích song song mô hình Wyckoff V2 & kết nối giá Binance Realtime</div>
             </div>
         {:else}
-            {#each radarSections as section (section.phase)}
-                <div class="radar-phase-section">
-                    <!-- Section Header -->
-                    <div class="radar-section-header {section.badgeClass}">
-                        <div class="section-title-group">
-                            <span class="section-emoji">{section.emoji}</span>
-                            <div>
-                                <div class="section-title">{section.title}</div>
-                                <div class="section-desc">{section.desc}</div>
-                            </div>
-                        </div>
-                        <span class="section-count-badge">
-                            {section.items.length} Coin
-                        </span>
-                    </div>
+            <!-- 15-Coin Matrix Grid (Clean & Compact on 1 screen) -->
+            <div class="radar-matrix-grid">
+                {#each filteredRadarList as item (item.symbol)}
+                    {@const sym = cleanSymbol(item.symbol)}
+                    {@const analysis = item.analysis}
+                    {@const ticker = radarTickers[item.symbol]}
+                    {@const liveP = ticker?.price || (analysis?.reference_price ? parseFloat(analysis.reference_price) : 0)}
+                    {@const changePct = ticker?.priceChangePercent || 0}
+                    {@const weather = computeMarketWeather(analysis)}
+                    {@const act = translateAction(analysis?.action)}
+                    {@const supDistPct = analysis?.key_levels?.support?.distance_percent}
+                    {@const resDistPct = analysis?.key_levels?.resistance?.distance_percent}
 
-                    <!-- Matrix Grid for this Section -->
-                    <div class="radar-matrix-grid">
-                        {#each section.items as item (item.symbol)}
-                            {@const sym = cleanSymbol(item.symbol)}
-                            {@const analysis = item.analysis}
-                            {@const ticker = radarTickers[item.symbol]}
-                            {@const liveP = ticker?.price || (analysis?.reference_price ? parseFloat(analysis.reference_price) : 0)}
-                            {@const changePct = ticker?.priceChangePercent || 0}
-                            {@const weather = computeMarketWeather(analysis)}
-                            {@const act = translateAction(analysis?.action)}
-                            {@const supDistPct = analysis?.key_levels?.support?.distance_percent}
-                            {@const resDistPct = analysis?.key_levels?.resistance?.distance_percent}
-
-                            <div 
-                                class="card radar-tile {weather ? weather.weatherClass : ''} {analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY' ? 'tile-actionable' : ''}"
-                                role="button"
-                                tabindex="0"
-                                on:click={() => selectSymbol(item.symbol)}
-                                on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSymbol(item.symbol); }}
-                            >
-                                <!-- Tile Header -->
-                                <div class="tile-header">
-                                    <div class="tile-symbol-group">
-                                        <span class="tile-symbol-tag">{sym}</span>
-                                        <div class="tile-price-group">
-                                            <span class="tile-price">${formatPrice(liveP)}</span>
-                                            {#if ticker}
-                                                <span class="tile-change {changePct >= 0 ? 'up' : 'down'}">
-                                                    {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
-                                                </span>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    
-                                    {#if weather}
-                                        <span class="tile-phase-badge {weather.weatherClass}">
-                                            {weather.weatherEmoji} {weather.phaseBadge}
+                    <div 
+                        class="card radar-tile {weather ? weather.weatherClass : ''} {analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY' ? 'tile-actionable' : ''}"
+                        role="button"
+                        tabindex="0"
+                        on:click={() => selectSymbol(item.symbol)}
+                        on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSymbol(item.symbol); }}
+                    >
+                        <!-- Tile Header -->
+                        <div class="tile-header">
+                            <div class="tile-symbol-group">
+                                <span class="tile-symbol-tag">{sym}</span>
+                                <div class="tile-price-group">
+                                    <span class="tile-price">${formatPrice(liveP)}</span>
+                                    {#if ticker}
+                                        <span class="tile-change {changePct >= 0 ? 'up' : 'down'}">
+                                            {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
                                         </span>
                                     {/if}
                                 </div>
-
-                                <!-- Tile Wyckoff V2 Sub-State Badges -->
-                                {#if weather}
-                                    <div class="tile-substate-row">
-                                        {#if weather.stage === 'EARLY' && (weather.progress === 'ACCELERATING' || weather.progress === 'STABLE')}
-                                            <span class="v2-tag tag-early">🚀 Mới Vào Sóng</span>
-                                        {:else if weather.stage === 'LATE' || weather.progress === 'EXHAUSTING'}
-                                            <span class="v2-tag tag-late">⚠️ Cuối Sóng · Cạn Đà</span>
-                                        {:else if weather.stage === 'MIDDLE'}
-                                            <span class="v2-tag tag-mid">📈 Đang Tăng Trưởng</span>
-                                        {:else if weather.stageVi}
-                                            <span class="v2-tag tag-stage">{weather.stageVi}</span>
-                                        {/if}
-
-                                        {#if weather.progress && weather.progress !== 'STABLE'}
-                                            <span class="v2-tag tag-progress">{weather.progressVi}</span>
-                                        {/if}
-
-                                        {#if weather.strength === 'CONFIRMED'}
-                                            <span class="v2-tag tag-confirmed">🛡️ Đã Xác Nhận</span>
-                                        {:else}
-                                            <span class="v2-tag tag-provisional">⏳ Thăm Dò</span>
-                                        {/if}
-                                    </div>
-                                {/if}
-
-                                <!-- Wyckoff V2 Context & Structure Snippet -->
-                                {#if weather && (weather.reasonVi || weather.patternVi)}
-                                    <div class="tile-context-line" title="{weather.reasonVi || weather.patternVi}">
-                                        {weather.reasonVi || weather.patternVi}
-                                    </div>
-                                {/if}
-
-                                <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
-                                {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
-                                    <div class="tile-setup-box" on:click|stopPropagation role="none">
-                                        <div class="tile-setup-metrics">
-                                            <span><strong>Entry:</strong> ${formatPrice(analysis.plan?.entry)}</span>
-                                            <span><strong>SL:</strong> ${formatPrice(analysis.plan?.stop)}</span>
-                                            <span><strong>TP:</strong> ${formatPrice(analysis.plan?.target)}</span>
-                                            <span><strong>R:R:</strong> {analysis.plan?.reward_risk ? `${analysis.plan.reward_risk.toFixed(1)}R` : 'N/A'}</span>
-                                        </div>
-                                        <button 
-                                            class="btn btn-emerald" 
-                                            style="width: 100%; padding: 0.32rem 0.5rem; font-size: 0.775rem; font-weight: 700; margin-top: 0.35rem;"
-                                            on:click|stopPropagation={() => onOpenOrderModal(
-                                                item.symbol,
-                                                analysis.plan?.direction || 'LONG',
-                                                analysis.plan?.entry,
-                                                analysis.plan?.stop,
-                                                analysis.plan?.target
-                                            )}
-                                        >
-                                            📋 Đặt Lệnh ({analysis.plan?.direction} @ ${formatPrice(analysis.plan?.entry)})
-                                        </button>
-                                    </div>
-                                {/if}
-
-                                <!-- Tile Action Footer -->
-                                <div class="tile-footer">
-                                    <span class="status-pill {act.class}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
-                                        <span class="dot"></span>
-                                        {act.text}
-                                    </span>
-                                    <span class="tile-view-link">Chi tiết ➔</span>
-                                </div>
                             </div>
-                        {/each}
+                            
+                            {#if weather}
+                                <span class="tile-phase-badge {weather.weatherClass}">
+                                    {weather.weatherEmoji} {weather.phaseBadge}
+                                </span>
+                            {/if}
+                        </div>
+
+                        <!-- Tile Wyckoff V2 Sub-State Badges -->
+                        {#if weather}
+                            <div class="tile-substate-row">
+                                {#if weather.stage === 'EARLY' && (weather.progress === 'ACCELERATING' || weather.progress === 'STABLE')}
+                                    <span class="v2-tag tag-early">🚀 Mới Vào Sóng</span>
+                                {:else if weather.stage === 'LATE' || weather.progress === 'EXHAUSTING'}
+                                    <span class="v2-tag tag-late">⚠️ Cuối Sóng · Cạn Đà</span>
+                                {:else if weather.stage === 'MIDDLE'}
+                                    <span class="v2-tag tag-mid">📈 Đang Tăng Trưởng</span>
+                                {:else if weather.stageVi}
+                                    <span class="v2-tag tag-stage">{weather.stageVi}</span>
+                                {/if}
+
+                                {#if weather.progress && weather.progress !== 'STABLE'}
+                                    <span class="v2-tag tag-progress">{weather.progressVi}</span>
+                                {/if}
+
+                                {#if weather.strength === 'CONFIRMED'}
+                                    <span class="v2-tag tag-confirmed">🛡️ Đã Xác Nhận</span>
+                                {:else}
+                                    <span class="v2-tag tag-provisional">⏳ Thăm Dò</span>
+                                {/if}
+                            </div>
+                        {/if}
+
+                        <!-- Wyckoff V2 Context & Structure Snippet -->
+                        {#if weather && (weather.reasonVi || weather.patternVi)}
+                            <div class="tile-context-line" title="{weather.reasonVi || weather.patternVi}">
+                                {weather.reasonVi || weather.patternVi}
+                            </div>
+                        {/if}
+
+                        <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
+                        {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
+                            <div class="tile-setup-box" on:click|stopPropagation role="none">
+                                <div class="tile-setup-metrics">
+                                    <span><strong>Entry:</strong> ${formatPrice(analysis.plan?.entry)}</span>
+                                    <span><strong>SL:</strong> ${formatPrice(analysis.plan?.stop)}</span>
+                                    <span><strong>TP:</strong> ${formatPrice(analysis.plan?.target)}</span>
+                                    <span><strong>R:R:</strong> {analysis.plan?.reward_risk ? `${analysis.plan.reward_risk.toFixed(1)}R` : 'N/A'}</span>
+                                </div>
+                                <button 
+                                    class="btn btn-emerald" 
+                                    style="width: 100%; padding: 0.32rem 0.5rem; font-size: 0.775rem; font-weight: 700; margin-top: 0.35rem;"
+                                    on:click|stopPropagation={() => onOpenOrderModal(
+                                        item.symbol,
+                                        analysis.plan?.direction || 'LONG',
+                                        analysis.plan?.entry,
+                                        analysis.plan?.stop,
+                                        analysis.plan?.target
+                                    )}
+                                >
+                                    📋 Đặt Lệnh ({analysis.plan?.direction} @ ${formatPrice(analysis.plan?.entry)})
+                                </button>
+                            </div>
+                        {/if}
+
+                        <!-- Tile Action Footer -->
+                        <div class="tile-footer">
+                            <span class="status-pill {act.class}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+                                <span class="dot"></span>
+                                {act.text}
+                            </span>
+                            <span class="tile-view-link">Chi tiết ➔</span>
+                        </div>
                     </div>
-                </div>
-            {/each}
+                {/each}
+            </div>
         {/if}
     </div>
 
@@ -1514,67 +1447,6 @@
     .pill-actionable.active {
         background: #166534 !important;
         color: #FFFFFF !important;
-    }
-    .radar-phase-section {
-        display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
-        margin-bottom: 0.5rem;
-    }
-    .radar-section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        background: #FFFFFF;
-        border-radius: 10px;
-        border: 1px solid #CBD5E1;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-    .radar-section-header.weather-sunny {
-        background: linear-gradient(90deg, #F0FDF4 0%, #FFFFFF 100%);
-        border-left: 4px solid #10B981;
-    }
-    .radar-section-header.weather-calm {
-        background: linear-gradient(90deg, #F0F9FF 0%, #FFFFFF 100%);
-        border-left: 4px solid #0284C7;
-    }
-    .radar-section-header.weather-warning {
-        background: linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 100%);
-        border-left: 4px solid #F59E0B;
-    }
-    .radar-section-header.weather-storm {
-        background: linear-gradient(90deg, #FEF2F2 0%, #FFFFFF 100%);
-        border-left: 4px solid #EF4444;
-    }
-    .section-title-group {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-    }
-    .section-emoji {
-        font-size: 1.35rem;
-    }
-    .section-title {
-        font-size: 0.925rem;
-        font-weight: 800;
-        color: #0F172A;
-        letter-spacing: -0.01em;
-    }
-    .section-desc {
-        font-size: 0.725rem;
-        color: #64748B;
-        margin-top: 0.1rem;
-    }
-    .section-count-badge {
-        font-size: 0.75rem;
-        font-weight: 700;
-        background: #F1F5F9;
-        color: #334155;
-        padding: 0.25rem 0.65rem;
-        border-radius: 9999px;
-        border: 1px solid #E2E8F0;
     }
     .radar-matrix-grid {
         display: grid;
