@@ -161,6 +161,55 @@
         return phase === radarFilter;
     });
 
+    const PHASE_SECTION_DEFS = [
+        {
+            phase: 'MARKUP',
+            title: 'Pha 2: Đẩy Giá (Markup) — Dòng Tiền Lớn Kiểm Soát',
+            emoji: '🚀',
+            badgeClass: 'weather-sunny',
+            desc: 'Các coin đang trong chu kỳ tăng trưởng mạnh mẽ, phe Mua làm chủ hoàn toàn cấu trúc sóng.'
+        },
+        {
+            phase: 'ACCUMULATION',
+            title: 'Pha 1: Tích Lũy (Accumulation) — Cá Mập Gom Hàng Đáy',
+            emoji: '🌊',
+            badgeClass: 'weather-calm',
+            desc: 'Các coin đang trong vùng đáy hấp thụ cạn cung, chuẩn bị bước vào chu kỳ tăng trưởng mới.'
+        },
+        {
+            phase: 'DISTRIBUTION',
+            title: 'Pha 3: Phân Phối (Distribution) — Cảnh Báo Xả Đỉnh',
+            emoji: '⚠️',
+            badgeClass: 'weather-warning',
+            desc: 'Các coin ở vùng đỉnh rủi ro, lực cầu suy yếu và xuất hiện áp lực phân phối chốt lời.'
+        },
+        {
+            phase: 'MARKDOWN',
+            title: 'Pha 4: Giảm Giá (Markdown) — Xu Hướng Thoái Trào',
+            emoji: '⛈️',
+            badgeClass: 'weather-storm',
+            desc: 'Các coin bị thủng hỗ trợ, phe Bán áp đảo, xu hướng suy thoái đang tiếp diễn.'
+        },
+        {
+            phase: 'UNRESOLVED',
+            title: 'Chưa Chốt Pha — Dao Động Cân Bằng Biên Độ',
+            emoji: '🌫️',
+            badgeClass: 'weather-calm',
+            desc: 'Các coin đang dao động trung tính giữa 2 cản, chưa hình thành chu kỳ có hướng rõ ràng.'
+        }
+    ];
+
+    $: radarSections = PHASE_SECTION_DEFS.map(def => {
+        const items = filteredRadarList.filter(item => {
+            const p = (item.analysis?.market_state?.cycle_phase?.phase || 'UNRESOLVED').toUpperCase();
+            if (def.phase === 'UNRESOLVED') {
+                return p !== 'MARKUP' && p !== 'ACCUMULATION' && p !== 'DISTRIBUTION' && p !== 'MARKDOWN';
+            }
+            return p === def.phase;
+        });
+        return { ...def, items };
+    }).filter(sec => sec.items.length > 0);
+
     $: refPriceNum = singleAnalysisData && singleAnalysisData.reference_price ? parseFloat(singleAnalysisData.reference_price) : 0;
     $: currentDisplayPrice = livePrice || refPriceNum;
     $: priceDiff = currentDisplayPrice - refPriceNum;
@@ -487,99 +536,133 @@
                 <div style="font-size: 0.85rem;">Phân tích song song mô hình Wyckoff V2 & kết nối giá Binance Realtime</div>
             </div>
         {:else}
-            <!-- 15-Coin Matrix Grid -->
-            <div class="radar-matrix-grid">
-                {#each filteredRadarList as item (item.symbol)}
-                    {@const sym = cleanSymbol(item.symbol)}
-                    {@const analysis = item.analysis}
-                    {@const ticker = radarTickers[item.symbol]}
-                    {@const liveP = ticker?.price || (analysis?.reference_price ? parseFloat(analysis.reference_price) : 0)}
-                    {@const changePct = ticker?.priceChangePercent || 0}
-                    {@const weather = computeMarketWeather(analysis)}
-                    {@const act = translateAction(analysis?.action)}
-                    {@const supDistPct = analysis?.key_levels?.support?.distance_percent}
-                    {@const resDistPct = analysis?.key_levels?.resistance?.distance_percent}
+            {#each radarSections as section (section.phase)}
+                <div class="radar-phase-section">
+                    <!-- Section Header -->
+                    <div class="radar-section-header {section.badgeClass}">
+                        <div class="section-title-group">
+                            <span class="section-emoji">{section.emoji}</span>
+                            <div>
+                                <div class="section-title">{section.title}</div>
+                                <div class="section-desc">{section.desc}</div>
+                            </div>
+                        </div>
+                        <span class="section-count-badge">
+                            {section.items.length} Coin
+                        </span>
+                    </div>
 
-                    <div 
-                        class="card radar-tile {weather ? weather.weatherClass : ''} {analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY' ? 'tile-actionable' : ''}"
-                        role="button"
-                        tabindex="0"
-                        on:click={() => selectSymbol(item.symbol)}
-                        on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSymbol(item.symbol); }}
-                    >
-                        <!-- Tile Header -->
-                        <div class="tile-header">
-                            <div class="tile-symbol-group">
-                                <span class="tile-symbol-tag">{sym}</span>
-                                <div class="tile-price-group">
-                                    <span class="tile-price">${formatPrice(liveP)}</span>
-                                    {#if ticker}
-                                        <span class="tile-change {changePct >= 0 ? 'up' : 'down'}">
-                                            {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
+                    <!-- Matrix Grid for this Section -->
+                    <div class="radar-matrix-grid">
+                        {#each section.items as item (item.symbol)}
+                            {@const sym = cleanSymbol(item.symbol)}
+                            {@const analysis = item.analysis}
+                            {@const ticker = radarTickers[item.symbol]}
+                            {@const liveP = ticker?.price || (analysis?.reference_price ? parseFloat(analysis.reference_price) : 0)}
+                            {@const changePct = ticker?.priceChangePercent || 0}
+                            {@const weather = computeMarketWeather(analysis)}
+                            {@const act = translateAction(analysis?.action)}
+                            {@const supDistPct = analysis?.key_levels?.support?.distance_percent}
+                            {@const resDistPct = analysis?.key_levels?.resistance?.distance_percent}
+
+                            <div 
+                                class="card radar-tile {weather ? weather.weatherClass : ''} {analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY' ? 'tile-actionable' : ''}"
+                                role="button"
+                                tabindex="0"
+                                on:click={() => selectSymbol(item.symbol)}
+                                on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectSymbol(item.symbol); }}
+                            >
+                                <!-- Tile Header -->
+                                <div class="tile-header">
+                                    <div class="tile-symbol-group">
+                                        <span class="tile-symbol-tag">{sym}</span>
+                                        <div class="tile-price-group">
+                                            <span class="tile-price">${formatPrice(liveP)}</span>
+                                            {#if ticker}
+                                                <span class="tile-change {changePct >= 0 ? 'up' : 'down'}">
+                                                    {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
+                                                </span>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                    
+                                    {#if weather}
+                                        <span class="tile-phase-badge {weather.weatherClass}">
+                                            {weather.weatherEmoji} {weather.phaseBadge}
                                         </span>
                                     {/if}
                                 </div>
-                            </div>
-                            
-                            {#if weather}
-                                <span class="tile-phase-badge {weather.weatherClass}">
-                                    {weather.weatherEmoji} {weather.phaseBadge}
-                                </span>
-                            {/if}
-                        </div>
 
-                        <!-- Tile Wyckoff Stage & Progress Row -->
-                        {#if weather}
-                            <div class="tile-meta-row">
-                                <span class="tile-subtext">
-                                    {weather.stageVi || 'Giai đoạn đầu'} · {weather.progressVi || 'Ổn định'} · {weather.strengthVi || 'Xác nhận'}
-                                </span>
-                            </div>
-                        {/if}
+                                <!-- Tile Wyckoff V2 Sub-State Badges -->
+                                {#if weather}
+                                    <div class="tile-substate-row">
+                                        {#if weather.stage === 'EARLY' && (weather.progress === 'ACCELERATING' || weather.progress === 'STABLE')}
+                                            <span class="v2-tag tag-early">🚀 Mới Vào Sóng</span>
+                                        {:else if weather.stage === 'LATE' || weather.progress === 'EXHAUSTING'}
+                                            <span class="v2-tag tag-late">⚠️ Cuối Sóng · Cạn Đà</span>
+                                        {:else if weather.stage === 'MIDDLE'}
+                                            <span class="v2-tag tag-mid">📈 Đang Tăng Trưởng</span>
+                                        {:else if weather.stageVi}
+                                            <span class="v2-tag tag-stage">{weather.stageVi}</span>
+                                        {/if}
 
-                        <!-- Wyckoff V2 Context & Structure Snippet -->
-                        {#if weather && (weather.reasonVi || weather.patternVi)}
-                            <div class="tile-context-line" title="{weather.reasonVi || weather.patternVi}">
-                                {weather.reasonVi || weather.patternVi}
-                            </div>
-                        {/if}
+                                        {#if weather.progress && weather.progress !== 'STABLE'}
+                                            <span class="v2-tag tag-progress">{weather.progressVi}</span>
+                                        {/if}
 
-                        <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
-                        {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
-                            <div class="tile-setup-box" on:click|stopPropagation role="none">
-                                <div class="tile-setup-metrics">
-                                    <span><strong>Entry:</strong> ${formatPrice(analysis.plan?.entry)}</span>
-                                    <span><strong>SL:</strong> ${formatPrice(analysis.plan?.stop)}</span>
-                                    <span><strong>TP:</strong> ${formatPrice(analysis.plan?.target)}</span>
-                                    <span><strong>R:R:</strong> {analysis.plan?.reward_risk ? `${analysis.plan.reward_risk.toFixed(1)}R` : 'N/A'}</span>
+                                        {#if weather.strength === 'CONFIRMED'}
+                                            <span class="v2-tag tag-confirmed">🛡️ Đã Xác Nhận</span>
+                                        {:else}
+                                            <span class="v2-tag tag-provisional">⏳ Thăm Dò</span>
+                                        {/if}
+                                    </div>
+                                {/if}
+
+                                <!-- Wyckoff V2 Context & Structure Snippet -->
+                                {#if weather && (weather.reasonVi || weather.patternVi)}
+                                    <div class="tile-context-line" title="{weather.reasonVi || weather.patternVi}">
+                                        {weather.reasonVi || weather.patternVi}
+                                    </div>
+                                {/if}
+
+                                <!-- Dynamic Actionable Setup Details (Only displayed when there is an active buy/sell setup) -->
+                                {#if analysis?.action === 'BUY_READY' || analysis?.action === 'SHORT_READY'}
+                                    <div class="tile-setup-box" on:click|stopPropagation role="none">
+                                        <div class="tile-setup-metrics">
+                                            <span><strong>Entry:</strong> ${formatPrice(analysis.plan?.entry)}</span>
+                                            <span><strong>SL:</strong> ${formatPrice(analysis.plan?.stop)}</span>
+                                            <span><strong>TP:</strong> ${formatPrice(analysis.plan?.target)}</span>
+                                            <span><strong>R:R:</strong> {analysis.plan?.reward_risk ? `${analysis.plan.reward_risk.toFixed(1)}R` : 'N/A'}</span>
+                                        </div>
+                                        <button 
+                                            class="btn btn-emerald" 
+                                            style="width: 100%; padding: 0.32rem 0.5rem; font-size: 0.775rem; font-weight: 700; margin-top: 0.35rem;"
+                                            on:click|stopPropagation={() => onOpenOrderModal(
+                                                item.symbol,
+                                                analysis.plan?.direction || 'LONG',
+                                                analysis.plan?.entry,
+                                                analysis.plan?.stop,
+                                                analysis.plan?.target
+                                            )}
+                                        >
+                                            📋 Đặt Lệnh ({analysis.plan?.direction} @ ${formatPrice(analysis.plan?.entry)})
+                                        </button>
+                                    </div>
+                                {/if}
+
+                                <!-- Tile Action Footer -->
+                                <div class="tile-footer">
+                                    <span class="status-pill {act.class}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+                                        <span class="dot"></span>
+                                        {act.text}
+                                    </span>
+                                    <span class="tile-view-link">Chi tiết ➔</span>
                                 </div>
-                                <button 
-                                    class="btn btn-emerald" 
-                                    style="width: 100%; padding: 0.32rem 0.5rem; font-size: 0.775rem; font-weight: 700; margin-top: 0.35rem;"
-                                    on:click|stopPropagation={() => onOpenOrderModal(
-                                        item.symbol,
-                                        analysis.plan?.direction || 'LONG',
-                                        analysis.plan?.entry,
-                                        analysis.plan?.stop,
-                                        analysis.plan?.target
-                                    )}
-                                >
-                                    📋 Đặt Lệnh ({analysis.plan?.direction} @ ${formatPrice(analysis.plan?.entry)})
-                                </button>
                             </div>
-                        {/if}
-
-                        <!-- Tile Action Footer -->
-                        <div class="tile-footer">
-                            <span class="status-pill {act.class}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
-                                <span class="dot"></span>
-                                {act.text}
-                            </span>
-                            <span class="tile-view-link">Chi tiết ➔</span>
-                        </div>
+                        {/each}
                     </div>
-                {/each}
-            </div>
+                </div>
+            {/each}
         {/if}
     </div>
 
@@ -848,94 +931,82 @@
                     </div>
                 </div>
 
-                <!-- 4-Phase Wyckoff Macro Roadmap Stepper (Expanded & Informative) -->
-                <div class="macro-stepper-grid">
-                    <!-- Step 1: Accumulation -->
-                    <div class="stepper-node {marketWeather.phaseId === 'ACCUMULATION' ? 'node-active' : marketWeather.phaseId === 'UNRESOLVED_RANGE' && marketWeather.phaseStep === 1 ? 'node-testing' : 'node-inactive'}">
-                        <div class="node-header">
-                            <span class="node-step">PHA 1</span>
-                            {#if marketWeather.phaseId === 'ACCUMULATION'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'TÍCH LŨY'}</span>
-                            {:else if marketWeather.phaseId === 'UNRESOLVED_RANGE' && marketWeather.phaseStep === 1}
-                                <span class="node-badge-testing">● TIẾP CẬN HỖ TRỢ</span>
-                            {/if}
+                <!-- ==================================================== -->
+                <!-- WYCKOFF V2 STATE-DRIVEN CYCLE INSPECTOR              -->
+                <!-- ==================================================== -->
+                <div class="v2-cycle-inspector-grid">
+                    <!-- Panel 1: Stage & Momentum -->
+                    <div class="v2-inspector-panel">
+                        <div class="v2-panel-head">
+                            <span class="v2-panel-icon">📊</span>
+                            <span class="v2-panel-title">Tiến Trình & Động Lượng Sóng</span>
                         </div>
-                        <div class="node-title">🧱 Tích Lũy Gom Hàng</div>
-                        <div class="node-desc">Giai đoạn A – C: Dò đáy, hấp thụ cạn cung</div>
-                        <div class="node-points">
-                            {#if marketWeather.phaseId === 'ACCUMULATION' && (marketWeather.patternVi || marketWeather.reasonVi)}
-                                <span>• {marketWeather.patternVi || 'Đi ngang trong range'}</span>
-                                <span>• {marketWeather.reasonVi || 'Chờ xác nhận test đáy'}</span>
-                            {:else}
-                                <span>• Đi ngang trong range</span>
-                                <span>• Chờ xác nhận test đáy</span>
-                            {/if}
-                        </div>
-                    </div>
-
-                    <div class="stepper-arrow {marketWeather.phaseStep >= 2 ? 'arrow-active' : ''}">➔</div>
-
-                    <!-- Step 2: Markup -->
-                    <div class="stepper-node {marketWeather.phaseId === 'MARKUP' ? 'node-active' : 'node-inactive'}">
-                        <div class="node-header">
-                            <span class="node-step">PHA 2</span>
-                            {#if marketWeather.phaseId === 'MARKUP'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'ĐẨY GIÁ'}</span>
-                            {/if}
-                        </div>
-                        <div class="node-title">🚀 Xu Hướng Đẩy Giá</div>
-                        <div class="node-desc">Giai đoạn D – E: Vượt cản, mở rộng sóng</div>
-                        <div class="node-points">
-                            <span>• Phe Mua kiểm soát</span>
-                            <span>• Bầu trời mở rộng đà tăng</span>
+                        <div class="v2-panel-body">
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Giai đoạn chu kỳ:</span>
+                                <span class="v2-val font-semibold">{marketWeather.stageVi || 'Giai đoạn đầu'}</span>
+                            </div>
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Động lượng đà giá:</span>
+                                <span class="v2-val font-semibold {marketWeather.progress === 'ACCELERATING' ? 'text-emerald' : marketWeather.progress === 'EXHAUSTING' ? 'text-amber' : ''}">
+                                    {marketWeather.progressVi || 'Ổn định'}
+                                </span>
+                            </div>
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Áp suất Cung – Cầu:</span>
+                                <span class="v2-val">{marketWeather.pressure}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="stepper-arrow {marketWeather.phaseStep >= 3 ? 'arrow-active' : ''}">➔</div>
-
-                    <!-- Step 3: Distribution -->
-                    <div class="stepper-node {marketWeather.phaseId === 'DISTRIBUTION' ? 'node-active' : marketWeather.phaseId === 'UNRESOLVED_RANGE' && marketWeather.phaseStep === 3 ? 'node-testing' : 'node-inactive'}">
-                        <div class="node-header">
-                            <span class="node-step">PHA 3</span>
-                            {#if marketWeather.phaseId === 'DISTRIBUTION'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.stageVi || 'PHÂN PHỐI'}</span>
-                            {:else if marketWeather.phaseId === 'UNRESOLVED_RANGE' && marketWeather.phaseStep === 3}
-                                <span class="node-badge-testing">● TIẾP CẬN KHÁNG CỰ</span>
-                            {/if}
+                    <!-- Panel 2: Authority & Validation -->
+                    <div class="v2-inspector-panel">
+                        <div class="v2-panel-head">
+                            <span class="v2-panel-icon">🛡️</span>
+                            <span class="v2-panel-title">Quyền Hạn & Tính Xác Thực</span>
                         </div>
-                        <div class="node-title">⚠️ Phân Phối Tạo Đỉnh</div>
-                        <div class="node-desc">Giai đoạn A – C: Kiệt sức mua, xả hàng</div>
-                        <div class="node-points">
-                            {#if marketWeather.phaseId === 'DISTRIBUTION' && (marketWeather.patternVi || marketWeather.reasonVi)}
-                                <span>• {marketWeather.patternVi || 'Lực cầu suy yếu đỉnh'}</span>
-                                <span>• {marketWeather.reasonVi || 'Bẫy tăng giá'}</span>
-                            {:else}
-                                <span>• Lực cầu suy yếu đỉnh</span>
-                                <span>• Bẫy tăng giá</span>
-                            {/if}
+                        <div class="v2-panel-body">
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Quyền hạn chu kỳ:</span>
+                                <span class="v2-val {marketWeather.strength === 'CONFIRMED' ? 'text-emerald font-bold' : 'text-amber font-semibold'}">
+                                    {marketWeather.strengthVi || 'Đã Xác Nhận'}
+                                </span>
+                            </div>
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Tính hợp lệ nến:</span>
+                                <span class="v2-val">{marketWeather.validityVi || 'Hợp Lệ (Current)'}</span>
+                            </div>
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Mốc chốt pha:</span>
+                                <span class="v2-val font-mono">{marketWeather.effectiveFrom ? formatVNTime(marketWeather.effectiveFrom) : 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="stepper-arrow {marketWeather.phaseStep >= 4 ? 'arrow-active' : ''}">➔</div>
-
-                    <!-- Step 4: Markdown -->
-                    <div class="stepper-node {marketWeather.phaseId === 'MARKDOWN' ? 'node-active' : 'node-inactive'}">
-                        <div class="node-header">
-                            <span class="node-step">PHA 4</span>
-                            {#if marketWeather.phaseId === 'MARKDOWN'}
-                                <span class="node-badge-here">● {marketWeather.strength === 'CONFIRMED' ? 'XÁC NHẬN' : 'TẠM THỜI'} · {marketWeather.phaseBadge}</span>
-                            {/if}
+                    <!-- Panel 3: Transition & Action Watchlist -->
+                    <div class="v2-inspector-panel">
+                        <div class="v2-panel-head">
+                            <span class="v2-panel-icon">🧭</span>
+                            <span class="v2-panel-title">Bằng Chứng & Kịch Bản Chuyển Pha</span>
                         </div>
-                        <div class="node-title">{marketWeather.isAbsorbing ? '⛅ Dò Đáy Hấp Thụ' : '📉 Xu Hướng Giảm Giá'}</div>
-                        <div class="node-desc">{marketWeather.isAbsorbing ? 'Giai đoạn A – B: Hãm đà, hấp thụ lực bán đáy' : 'Giai đoạn D – E: Thủng hỗ trợ, giảm sâu'}</div>
-                        <div class="node-points">
-                            {#if marketWeather.isAbsorbing}
-                                <span>• Nén trong biên hỗ trợ</span>
-                                <span>• Xuất hiện lực hấp thụ đáy</span>
-                            {:else}
-                                <span>• Phe Bán áp đảo</span>
-                                <span>• Chờ cấu trúc cân bằng mới</span>
-                            {/if}
+                        <div class="v2-panel-body">
+                            <div class="v2-detail-row">
+                                <span class="v2-lbl">Nguyên nhân V2:</span>
+                                <span class="v2-val font-semibold text-primary">{marketWeather.reasonVi || marketWeather.patternVi || 'Tiếp diễn xu hướng'}</span>
+                            </div>
+                            <div class="v2-tip-box">
+                                {#if marketWeather.phaseId === 'MARKUP'}
+                                    💡 <strong>Chiến lược:</strong> Tiếp tục Follow Trend phe Mua. Cảnh báo đảo chiều nếu xuất hiện nến Vol lớn thân hẹp (Cá mập xả ngầm) hoặc thủng cản Hỗ trợ.
+                                {:else if marketWeather.phaseId === 'ACCUMULATION'}
+                                    💡 <strong>Chiến lược:</strong> Canh tìm điểm vào chân sóng ở đáy Range. Xác nhận vào Pha 2 Đẩy Giá khi đóng nến vượt Kháng Cự với Vol lớn.
+                                {:else if marketWeather.phaseId === 'DISTRIBUTION'}
+                                    💡 <strong>Chiến lược:</strong> Vùng đỉnh phân phối rủi ro. Canh chốt lời hoặc thiết lập vị thế Bán (Short) khi xuất hiện bẫy tăng giá (UTAD).
+                                {:else if marketWeather.phaseId === 'MARKDOWN'}
+                                    💡 <strong>Chiến lược:</strong> Xu hướng giảm đang tiếp diễn. Không bắt dao rơi cho đến khi xuất hiện nến cao trào hãm đà (Selling Climax) và cạn cung.
+                                {:else}
+                                    💡 <strong>Chiến lược:</strong> Giá đang dao động trong biên. Kiên nhẫn chờ nến 4H đóng bứt phá dứt khoát ra khỏi cản để xác nhận pha mới.
+                                {/if}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1281,115 +1352,94 @@
         line-height: 1.35;
     }
 
-    /* 4-Phase Stepper Grid */
-    .macro-stepper-grid {
+    /* Wyckoff V2 State-Driven Cycle Inspector Grid */
+    .v2-cycle-inspector-grid {
         display: grid;
-        grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
-        align-items: stretch;
-        gap: 0.65rem;
-        background: var(--bg-subtle);
-        padding: 0.75rem 0.85rem;
-        border-radius: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0.85rem;
+        background: #FFFFFF;
+        padding: 0.85rem;
+        border-radius: 12px;
         border: 1px solid var(--border-card);
     }
-    .stepper-node {
-        background: #FFFFFF;
-        border: 1px solid var(--border-card);
-        border-radius: 8px;
-        padding: 0.65rem 0.75rem;
-        transition: all 0.2s ease;
+    .v2-inspector-panel {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 0.85rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        gap: 0.65rem;
     }
-    .stepper-node.node-active {
-        border-color: var(--text-primary);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-        background: #FFFFFF;
-    }
-    .stepper-node.node-testing {
-        border-color: var(--amber-border);
-        background: linear-gradient(135deg, #FFFFFF 0%, #FFFBEB 100%);
-        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
-    }
-    .stepper-node.node-inactive {
-        opacity: 0.65;
-        background: rgba(255, 255, 255, 0.55);
-    }
-    .node-header {
+    .v2-panel-head {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.25rem;
+        gap: 0.45rem;
+        border-bottom: 1px solid #E2E8F0;
+        padding-bottom: 0.45rem;
     }
-    .node-step {
-        font-size: 0.65rem;
-        font-weight: 800;
-        color: var(--text-muted);
-        letter-spacing: 0.05em;
+    .v2-panel-icon {
+        font-size: 1.1rem;
     }
-    .node-badge-here {
-        font-size: 0.6rem;
-        font-weight: 800;
-        background: var(--btn-primary);
-        color: #FFFFFF;
-        padding: 0.1rem 0.35rem;
-        border-radius: 4px;
-        letter-spacing: 0.02em;
-        animation: beacon-pulse 2s infinite;
-    }
-    .node-badge-testing {
-        font-size: 0.575rem;
-        font-weight: 800;
-        background: var(--amber-bg);
-        color: var(--amber);
-        border: 1px solid var(--amber-border);
-        padding: 0.08rem 0.35rem;
-        border-radius: 4px;
-        letter-spacing: 0.02em;
-    }
-    .node-title {
+    .v2-panel-title {
         font-size: 0.825rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.15rem;
-        white-space: nowrap;
+        color: #0F172A;
+        letter-spacing: -0.01em;
     }
-    .node-desc {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        line-height: 1.3;
-    }
-    .node-points {
+    .v2-panel-body {
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
-        margin-top: 0.4rem;
-        padding-top: 0.4rem;
-        border-top: 1px solid var(--border-subtle);
-        font-size: 0.675rem;
-        color: var(--text-secondary);
-        line-height: 1.3;
+        gap: 0.4rem;
     }
-    .stepper-arrow {
-        font-size: 0.85rem;
+    .v2-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+        font-size: 0.775rem;
+    }
+    .v2-lbl {
+        color: #64748B;
+        font-weight: 500;
+    }
+    .v2-val {
+        color: #0F172A;
+        text-align: right;
+    }
+    .v2-tip-box {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.725rem;
+        color: #334155;
+        line-height: 1.4;
+        margin-top: 0.25rem;
+    }
+    .text-emerald {
+        color: #166534 !important;
+    }
+    .text-amber {
+        color: #B45309 !important;
+    }
+    .text-primary {
+        color: #0F172A !important;
+    }
+    .font-semibold {
+        font-weight: 600;
+    }
+    .font-bold {
         font-weight: 700;
-        color: var(--text-muted);
-        text-align: center;
-        user-select: none;
-        align-self: center;
     }
-    .stepper-arrow.arrow-active {
-        color: var(--text-primary);
+    .font-mono {
+        font-family: var(--font-mono, monospace);
     }
 
     @media (max-width: 950px) {
-        .macro-stepper-grid {
+        .v2-cycle-inspector-grid {
             grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-        .stepper-arrow {
-            display: none;
         }
         .weather-top-row {
             flex-direction: column;
@@ -1464,6 +1514,67 @@
     .pill-actionable.active {
         background: #166534 !important;
         color: #FFFFFF !important;
+    }
+    .radar-phase-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin-bottom: 0.5rem;
+    }
+    .radar-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: #FFFFFF;
+        border-radius: 10px;
+        border: 1px solid #CBD5E1;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .radar-section-header.weather-sunny {
+        background: linear-gradient(90deg, #F0FDF4 0%, #FFFFFF 100%);
+        border-left: 4px solid #10B981;
+    }
+    .radar-section-header.weather-calm {
+        background: linear-gradient(90deg, #F0F9FF 0%, #FFFFFF 100%);
+        border-left: 4px solid #0284C7;
+    }
+    .radar-section-header.weather-warning {
+        background: linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 100%);
+        border-left: 4px solid #F59E0B;
+    }
+    .radar-section-header.weather-storm {
+        background: linear-gradient(90deg, #FEF2F2 0%, #FFFFFF 100%);
+        border-left: 4px solid #EF4444;
+    }
+    .section-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .section-emoji {
+        font-size: 1.35rem;
+    }
+    .section-title {
+        font-size: 0.925rem;
+        font-weight: 800;
+        color: #0F172A;
+        letter-spacing: -0.01em;
+    }
+    .section-desc {
+        font-size: 0.725rem;
+        color: #64748B;
+        margin-top: 0.1rem;
+    }
+    .section-count-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: #F1F5F9;
+        color: #334155;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+        border: 1px solid #E2E8F0;
     }
     .radar-matrix-grid {
         display: grid;
@@ -1566,6 +1677,55 @@
         font-size: 0.725rem;
         color: #64748B;
         font-weight: 500;
+    }
+    .tile-substate-row {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+    .v2-tag {
+        font-size: 0.675rem;
+        font-weight: 700;
+        padding: 0.15rem 0.45rem;
+        border-radius: 6px;
+        white-space: nowrap;
+        letter-spacing: -0.01em;
+    }
+    .v2-tag.tag-early {
+        background: #DCFCE7;
+        color: #15803D;
+        border: 1px solid #BBF7D0;
+    }
+    .v2-tag.tag-late {
+        background: #FEF3C7;
+        color: #B45309;
+        border: 1px solid #FDE68A;
+    }
+    .v2-tag.tag-mid {
+        background: #E0F2FE;
+        color: #0369A1;
+        border: 1px solid #BAE6FD;
+    }
+    .v2-tag.tag-stage {
+        background: #F1F5F9;
+        color: #475569;
+        border: 1px solid #E2E8F0;
+    }
+    .v2-tag.tag-progress {
+        background: #FAF5FF;
+        color: #7E22CE;
+        border: 1px solid #E9D5FF;
+    }
+    .v2-tag.tag-confirmed {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #86EFAC;
+    }
+    .v2-tag.tag-provisional {
+        background: #FFFBEB;
+        color: #92400E;
+        border: 1px solid #FCD34D;
     }
     .tile-context-line {
         font-size: 0.775rem;
