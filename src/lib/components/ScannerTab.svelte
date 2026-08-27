@@ -15,6 +15,7 @@
         translateEffort,
         translateCyclePhase,
         translateCycleStage,
+        translateLegOrdinal,
         translateStrength,
         translateCycleReason,
         translateCycleValidity,
@@ -176,17 +177,19 @@
         const vpa = data.market_state?.effort_result;
         const rangeState = data.market_state?.range_state || 'ACTIVE';
         
-        // Unified canonical cycle_phase object from backend
+        // Canonical Wyckoff V2 state object from backend
         const cycle = data.market_state?.cycle_phase;
         const typedPhase = (cycle?.phase || 'UNRESOLVED').toUpperCase();
-        const stage = cycle?.stage || 'MID';
+        const stage = cycle?.stage || 'EARLY';
         const strength = cycle?.authority || cycle?.strength || 'PROVISIONAL';
         const validity = cycle?.validity || 'CURRENT';
         const progress = cycle?.progress || 'STABLE';
         const effectiveFrom = cycle?.effective_from || cycle?.effectiveFrom || null;
         const reason = cycle?.reason || '';
         const pattern = cycle?.sequence_pattern || '';
-        const version = cycle?.version || '2.3.0';
+        const version = cycle?.version || '2.4.0';
+        const phaseOrdinal = cycle?.phase_ordinal ?? cycle?.phaseOrdinal ?? 0;
+        const legOrdinal = cycle?.leg_ordinal ?? cycle?.legOrdinal ?? 0;
 
         const stageVi = translateCycleStage(stage);
         const strengthVi = translateStrength(strength);
@@ -194,14 +197,18 @@
         const progressVi = translateCycleProgress(progress);
         const reasonVi = translateCycleReason(reason);
         const patternVi = translateSequencePattern(pattern);
+        const phaseLegVi = translateLegOrdinal(legOrdinal);
 
-        // 1. Confirmed Markup (typed cycle_phase.phase === 'MARKUP' or fallback indicators when unresolved)
-        if (typedPhase === 'MARKUP' || (typedPhase === 'UNRESOLVED' && (action === 'BUY_READY' || location === 'ABOVE_RESISTANCE' || rangeState === 'BROKEN_UP' || structureBreak === 'UP_BREAK_CONFIRMED'))) {
+        // 1. MARKUP (Pha 2: Đẩy Giá)
+        if (typedPhase === 'MARKUP') {
             return {
                 phaseId: 'MARKUP',
                 phaseStep: 2,
                 phaseName: `Pha 2: Đẩy Giá · ${stageVi}`,
                 phaseBadge: 'ĐẨY GIÁ',
+                phaseLegVi,
+                phaseOrdinal,
+                legOrdinal,
                 typedPhase: 'MARKUP',
                 stage,
                 stageVi,
@@ -219,21 +226,92 @@
                 version,
                 rangeState,
                 weatherEmoji: '☀️',
-                weatherTitle: `Trời Trong · Xu Hướng Đẩy Giá`,
+                weatherTitle: `Trời Trong · Đẩy Giá (${progressVi})`,
                 weatherClass: 'weather-sunny',
-                weatherSummary: `Cấu trúc thị trường tăng đồng thuận${patternVi ? ` (${patternVi})` : ''}. Phe Mua kiểm soát hoàn toàn đà giá, không gian phía trên mở rộng.`,
+                weatherSummary: `Cấu trúc sóng tăng đẩy giá (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Phe Mua kiểm soát đà tăng${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: '⚡ Lực Cầu Hoàn Toàn Kiểm Soát'
             };
         }
 
-        // 2. Confirmed Markdown (typed cycle_phase.phase === 'MARKDOWN' or fallback indicators when unresolved)
-        if (typedPhase === 'MARKDOWN' || (typedPhase === 'UNRESOLVED' && (action === 'SHORT_READY' || location === 'BELOW_SUPPORT' || rangeState === 'BROKEN_DOWN' || structureBreak === 'DOWN_BREAK_CONFIRMED'))) {
-            const isAbsorbing = location === 'BETWEEN_SUPPORT_AND_RESISTANCE' || location === 'AT_SUPPORT' || trend === 'MIXED_BULLISH' || (vpa && vpa.type === 'HIGH_EFFORT_LOW_RESULT');
+        // 2. ACCUMULATION (Pha 1: Tích Lũy)
+        if (typedPhase === 'ACCUMULATION') {
+            return {
+                phaseId: 'ACCUMULATION',
+                phaseStep: 1,
+                phaseName: `Pha 1: Tích Lũy · ${stageVi}`,
+                phaseBadge: 'TÍCH LŨY',
+                phaseLegVi,
+                phaseOrdinal,
+                legOrdinal,
+                typedPhase: 'ACCUMULATION',
+                stage,
+                stageVi,
+                strength,
+                strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
+                reason,
+                reasonVi,
+                pattern,
+                patternVi,
+                version,
+                rangeState,
+                weatherEmoji: '🌊',
+                weatherTitle: `Sóng Êm · Vùng Tích Lũy Gom Hàng (${progressVi})`,
+                weatherClass: 'weather-calm',
+                weatherSummary: `Thị trường đang trong pha Tích Lũy (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Lực cung đáy đang được hấp thụ${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                pressure: strength === 'CONFIRMED' ? '🌊 Hấp Thụ Cung Đáy Hoàn Tất' : '🌊 Đang Hấp Thụ Cung Đáy'
+            };
+        }
+
+        // 3. DISTRIBUTION (Pha 3: Phân Phối)
+        if (typedPhase === 'DISTRIBUTION') {
+            return {
+                phaseId: 'DISTRIBUTION',
+                phaseStep: 3,
+                phaseName: `Pha 3: Phân Phối · ${stageVi}`,
+                phaseBadge: 'PHÂN PHỐI',
+                phaseLegVi,
+                phaseOrdinal,
+                legOrdinal,
+                typedPhase: 'DISTRIBUTION',
+                stage,
+                stageVi,
+                strength,
+                strengthVi,
+                validity,
+                validityVi,
+                progress,
+                progressVi,
+                effectiveFrom,
+                reason,
+                reasonVi,
+                pattern,
+                patternVi,
+                version,
+                rangeState,
+                weatherEmoji: '⚠️',
+                weatherTitle: `Cảnh Báo Giông · Phân Phối Đỉnh (${progressVi})`,
+                weatherClass: 'weather-warning',
+                weatherSummary: `Thị trường đang trong pha Phân Phối (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Áp lực bán xả hàng vùng đỉnh${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                pressure: strength === 'CONFIRMED' ? '⚠️ Cung Xả Đỉnh Xác Nhận' : '⚠️ Áp Lực Cung Xả Đỉnh'
+            };
+        }
+
+        // 4. MARKDOWN (Pha 4: Giảm Giá)
+        if (typedPhase === 'MARKDOWN') {
+            const isAbsorbing = progress === 'DECELERATING' || progress === 'EXHAUSTING' || (vpa && vpa.type === 'HIGH_EFFORT_LOW_RESULT');
             return {
                 phaseId: 'MARKDOWN',
                 phaseStep: 4,
                 phaseName: isAbsorbing ? `Pha 4: Hãm Đà Giảm · ${stageVi}` : `Pha 4: Giảm Giá · ${stageVi}`,
                 phaseBadge: isAbsorbing ? 'HÃM ĐÀ GIẢM' : 'GIẢM GIÁ',
+                phaseLegVi,
+                phaseOrdinal,
+                legOrdinal,
                 typedPhase: 'MARKDOWN',
                 stage,
                 stageVi,
@@ -252,89 +330,24 @@
                 rangeState,
                 isAbsorbing,
                 weatherEmoji: isAbsorbing ? '⛅' : '⛈️',
-                weatherTitle: isAbsorbing ? `Mây Mù Tan Dần · Dò Đáy Hấp Thụ Cung` : `Mưa Giông · Xu Hướng Giảm Giá`,
+                weatherTitle: isAbsorbing ? `Mây Mù Tan Dần · Hãm Đà Giảm (${progressVi})` : `Mưa Giông · Giảm Giá (${progressVi})`,
                 weatherClass: isAbsorbing ? 'weather-warning' : 'weather-storm',
                 weatherSummary: isAbsorbing
-                    ? `Xu hướng giảm vĩ mô đang chững lại trong vùng biên hỗ trợ${patternVi ? ` (${patternVi})` : ''}. Lực cầu cá mập đang hấp thụ cung tạo đáy cân bằng.`
-                    : `Cấu trúc thị trường suy thoái${patternVi ? ` (${patternVi})` : ''}. Cản hỗ trợ bị phá vỡ, phe Bán hoàn toàn áp đảo thị trường.`,
-                pressure: isAbsorbing ? '⛅ Cung Vĩ Mô Đang Bị Hấp Thụ Tại Hỗ Trợ' : '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
-            };
-        }
-
-        // 3. Accumulation Sequence (cycle_phase.phase === 'ACCUMULATION')
-        if (typedPhase === 'ACCUMULATION') {
-            return {
-                phaseId: 'ACCUMULATION',
-                phaseStep: 1,
-                phaseName: `Pha 1: Tích Lũy · ${stageVi}`,
-                phaseBadge: 'TÍCH LŨY',
-                typedPhase: 'ACCUMULATION',
-                stage,
-                stageVi,
-                strength,
-                strengthVi,
-                validity,
-                validityVi,
-                progress,
-                progressVi,
-                effectiveFrom,
-                reason,
-                reasonVi,
-                pattern,
-                patternVi,
-                version,
-                rangeState,
-                weatherEmoji: '🌊',
-                weatherTitle: `Sóng Êm · Vùng Tích Lũy Gom Hàng`,
-                weatherClass: 'weather-calm',
-                weatherSummary: `Thị trường đang trong pha Tích Lũy${patternVi ? ` · Mô hình ${patternVi}` : ''}${reasonVi ? ` · ${reasonVi}` : ''}. Lực cung đáy đang được hấp thụ.`,
-                pressure: strength === 'CONFIRMED' ? '🌊 Hấp Thụ Cung Đáy Hoàn Tất' : '🌊 Đang Hấp Thụ Cung Đáy'
-            };
-        }
-
-        // 4. Distribution Sequence (cycle_phase.phase === 'DISTRIBUTION')
-        if (typedPhase === 'DISTRIBUTION') {
-            return {
-                phaseId: 'DISTRIBUTION',
-                phaseStep: 3,
-                phaseName: `Pha 3: Phân Phối · ${stageVi}`,
-                phaseBadge: 'PHÂN PHỐI',
-                typedPhase: 'DISTRIBUTION',
-                stage,
-                stageVi,
-                strength,
-                strengthVi,
-                validity,
-                validityVi,
-                progress,
-                progressVi,
-                effectiveFrom,
-                reason,
-                reasonVi,
-                pattern,
-                patternVi,
-                version,
-                rangeState,
-                weatherEmoji: '⚠️',
-                weatherTitle: `Cảnh Báo Giông · Vùng Phân Phối Đỉnh`,
-                weatherClass: 'weather-warning',
-                weatherSummary: `Thị trường đang trong pha Phân Phối${patternVi ? ` · Mô hình ${patternVi}` : ''}${reasonVi ? ` · ${reasonVi}` : ''}. Áp lực bán xả hàng vùng đỉnh.`,
-                pressure: strength === 'CONFIRMED' ? '⚠️ Cung Xả Đỉnh Xác Nhận' : '⚠️ Áp Lực Cung Xả Đỉnh'
+                    ? `Đà giảm đang chững lại (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Lực cầu cá mập đang hấp thụ cung tạo đáy${reasonVi ? ` · ${reasonVi}` : ''}.`
+                    : `Cấu trúc suy thoái (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Phe Bán hoàn toàn áp đảo thị trường${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                pressure: isAbsorbing ? '⛅ Cung Vĩ Mô Đang Bị Hấp Thụ' : '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
             };
         }
 
         // 5. UNRESOLVED / ACTIVE RANGE
-        const resDist = res && res.distance_percent !== null && res.distance_percent !== undefined ? parseFloat(res.distance_percent) : 999;
-        const supDist = sup && sup.distance_percent !== null && sup.distance_percent !== undefined ? parseFloat(sup.distance_percent) : 999;
-        const isAtResistance = location === 'AT_RESISTANCE' || resDist <= 2.5;
-        const isAtSupport = location === 'AT_SUPPORT' || supDist <= 2.5;
-        const isHeavyVol = vpa && vpa.relative_volume >= 1.8;
-
         return {
             phaseId: 'UNRESOLVED_RANGE',
-            phaseStep: isAtResistance ? 3 : isAtSupport ? 1 : 0,
+            phaseStep: 0,
             phaseName: `Range: ${rangeState} · Pha: Chưa Chốt`,
             phaseBadge: 'CHƯA CHỐT PHA',
+            phaseLegVi: '',
+            phaseOrdinal,
+            legOrdinal,
             typedPhase: 'UNRESOLVED',
             stage,
             stageVi,
@@ -351,19 +364,11 @@
             patternVi,
             version,
             rangeState,
-            weatherEmoji: isAtResistance ? '⚠️' : isAtSupport ? '🌊' : '🌫️',
-            weatherTitle: isAtResistance
-                ? `Áp Lực Vùng Cản · ${isHeavyVol ? `Nỗ Lực Lớn (${vpa.relative_volume}x Vol)` : 'Đang Kiểm Thử Kháng Cự'}`
-                : isAtSupport
-                ? 'Kiểm Tra Hỗ Trợ Đáy · Hấp Thụ Cung'
-                : 'Dao Động Lưng Chừng Range · Tích Lũy Biên Độ',
-            weatherClass: isAtResistance ? 'weather-warning' : 'weather-calm',
-            weatherSummary: `Đang trong Trading Range hoạt động. ${isAtResistance ? 'Giá đang kiểm tra mép Kháng Cự phía trên.' : isAtSupport ? 'Giá đang kiểm tra mép Hỗ Trợ đáy.' : 'Giá dao động ở vùng trung tính giữa 2 cản.'} Chưa chốt chuỗi Phase hoàn chỉnh.`,
-            pressure: isAtResistance
-                ? (isHeavyVol ? `⚡ Cung Chặn Lớn (${vpa.relative_volume}x Vol)` : '⚠️ Đang Kiểm Thử Cung Đỉnh')
-                : isAtSupport
-                ? '🌊 Hấp Thụ Cung Tại Hỗ Trợ'
-                : '⚖️ Cân Bằng Cung – Cầu Trong Range'
+            weatherEmoji: '🌫️',
+            weatherTitle: `Mây Mù · Vùng Cân Bằng Giằng Co`,
+            weatherClass: 'weather-calm',
+            weatherSummary: `Thị trường đang dao động trong biên độ cân bằng. Chưa chốt pha vĩ mô hoàn chỉnh${reasonVi ? ` · ${reasonVi}` : ''}.`,
+            pressure: '⚖️ Cân Bằng Cung – Cầu Trong Biên'
         };
     }
 
@@ -524,7 +529,7 @@
                             
                             {#if weather}
                                 <span class="tile-phase-badge {weather.weatherClass}">
-                                    {weather.weatherEmoji} {weather.phaseBadge}
+                                    {weather.weatherEmoji} {weather.phaseBadge}{weather.phaseLegVi ? ` · ${weather.phaseLegVi}` : ''}
                                 </span>
                             {/if}
                         </div>
@@ -533,15 +538,15 @@
                         {#if weather}
                             <div class="tile-meta-row">
                                 <span class="tile-subtext">
-                                    {weather.stageVi || 'Giai đoạn giữa'} · {weather.strengthVi || 'Xác nhận'}{weather.progressVi ? ` · ${weather.progressVi}` : ''}
+                                    {weather.stageVi || 'Giai đoạn đầu'} · {weather.progressVi || 'Ổn định'} · {weather.strengthVi || 'Xác nhận'}
                                 </span>
                             </div>
                         {/if}
 
                         <!-- Wyckoff V2 Context & Structure Snippet -->
-                        {#if weather && (weather.patternVi || weather.reasonVi)}
-                            <div class="tile-context-line">
-                                {weather.patternVi ? weather.patternVi : ''}{weather.patternVi && weather.reasonVi ? ' · ' : ''}{weather.reasonVi ? weather.reasonVi : ''}
+                        {#if weather && (weather.reasonVi || weather.patternVi)}
+                            <div class="tile-context-line" title="{weather.reasonVi || weather.patternVi}">
+                                {weather.reasonVi || weather.patternVi}
                             </div>
                         {/if}
 
@@ -808,6 +813,11 @@
                             <div class="weather-status-name">{marketWeather.weatherTitle}</div>
                             <div class="weather-tags-row" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.35rem;">
                                 <span class="weather-phase-tag">{marketWeather.phaseBadge}</span>
+                                {#if marketWeather.phaseLegVi}
+                                    <span class="weather-phase-tag" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #d97706; font-weight: 700;">
+                                        {marketWeather.phaseLegVi}
+                                    </span>
+                                {/if}
                                 {#if marketWeather.stageVi}
                                     <span class="weather-phase-tag" style="background: rgba(14, 165, 233, 0.08); border-color: rgba(14, 165, 233, 0.25); color: #0284c7;">
                                         {marketWeather.stageVi}
@@ -835,9 +845,9 @@
                     <div class="weather-advisory-box">
                         <div class="advisory-label">Áp Suất Cung – Cầu Vĩ Mô:</div>
                         <div class="advisory-text">{marketWeather.pressure}</div>
-                        {#if marketWeather.patternVi || marketWeather.reasonVi}
-                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.3;">
-                                <strong>Đặc tả:</strong> {marketWeather.patternVi ? marketWeather.patternVi : ''}{marketWeather.patternVi && marketWeather.reasonVi ? ' · ' : ''}{marketWeather.reasonVi ? marketWeather.reasonVi : ''}
+                        {#if marketWeather.reasonVi || marketWeather.patternVi}
+                            <div style="font-size: 0.725rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.35;">
+                                <strong>Đặc tả Wyckoff:</strong> {marketWeather.reasonVi || marketWeather.patternVi}
                             </div>
                         {/if}
                         <div style="font-size: 0.675rem; color: var(--text-muted); margin-top: 0.15rem; font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">

@@ -539,14 +539,21 @@ export function translateCycleValidity(validity) {
     }
 }
 
+export function translateLegOrdinal(leg) {
+    if (leg === null || leg === undefined || isNaN(leg)) return '';
+    return `Nhịp ${Number(leg) + 1}`;
+}
+
 export function translateCycleProgress(progress) {
     if (!progress) return '';
     switch (progress.toUpperCase()) {
         case 'STABLE': return 'Ổn Định';
         case 'ACTIVE': return 'Đang Hoạt Động';
+        case 'DEVELOPING':
         case 'PROGRESSING': return 'Đang Tiến Triển';
         case 'ACCELERATING': return 'Tăng Tốc Đà Giá';
         case 'DECELERATING': return 'Giảm Tốc Hãm Đà';
+        case 'EXHAUSTING': return 'Cạn Kiệt Đà Giá';
         case 'RESOLVING': return 'Đang Chốt Pha';
         default: return progress;
     }
