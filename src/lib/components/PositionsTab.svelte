@@ -103,7 +103,7 @@
                     isSell = true;
                     actionTitle = '🔴 BÁN (XUẤT HIỆN LỰC XẢ)';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Nến đóng có lực xả hàng lớn của Smart Money (HIGH_EFFORT_LOW_RESULT). Đóng vị thế chốt lời ngay.';
+                    actionDesc = 'Nến đóng có lực xả hàng lớn của Smart Money (Cá mập xả ngầm). Đóng vị thế chốt lời ngay.';
                 } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
                     actionTitle = '🟢 HOLD (GỒNG LÃI RUNNER)';
                     actionBadge = 'badge-emerald';

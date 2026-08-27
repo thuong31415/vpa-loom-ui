@@ -65,11 +65,14 @@
     function formatExitReason(reason) {
         if (!reason) return 'Chốt đóng thủ công';
         switch (reason) {
-            case 'DYNAMIC_CLOSE_FILLED': return '🎯 Dynamic Close';
-            case 'TAKE_PROFIT': return '🟢 Take Profit';
-            case 'STOP_LOSS': return '🔴 Stop Loss';
-            case 'EXIT_ON_OPPOSITE_SIGNAL': return '🔄 Đảo Chiều';
-            case 'MANUAL_DASHBOARD_CLOSE': return '👤 Chốt Trên UI';
+            case 'DYNAMIC_CLOSE_FILLED': return '🎯 Khớp Chốt Lời Động';
+            case 'TAKE_PROFIT': return '🎯 Chốt Lời (TP)';
+            case 'STOP_LOSS': return '🛑 Cắt Lỗ (SL)';
+            case 'EXIT_ON_OPPOSITE_SIGNAL': return '🔄 Đảo Chiều Tín Hiệu';
+            case 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS': return '📉 Gãy Cấu Trúc Đẩy';
+            case 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL': return '📉 Đảo Chiều Vùng Đỉnh';
+            case 'MANUAL_DASHBOARD_CLOSE':
+            case 'MANUAL_CLOSE': return '👤 Đóng Thủ Công';
             default: return reason;
         }
     }

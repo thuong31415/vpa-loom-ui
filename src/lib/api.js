@@ -766,13 +766,13 @@ export function getFriendlyVPADesc(candidate) {
         || 0;
     
     if (effort === 'HIGH_EFFORT_LOW_RESULT') {
-        return `"Khối lượng giao dịch tăng cao (gấp ${vol.toFixed(2)}x SMA20) nhưng biên độ nến bị nén chặt. Lực đối ứng bị cá mập hấp thụ hoàn toàn (HIGH_EFFORT_LOW_RESULT), xác nhận bẫy thanh khoản và sẵn sàng cho nhịp đảo chiều."`;
+        return `"Khối lượng giao dịch tăng cao (gấp ${vol.toFixed(2)}x SMA20) nhưng biên độ nến bị nén chặt. Lực đối ứng bị cá mập hấp thụ hoàn toàn, xác nhận bẫy thanh khoản và sẵn sàng cho nhịp đảo chiều."`;
     }
     if (effort === 'HIGH_EFFORT_HIGH_RESULT') {
-        return `"Khối lượng bùng nổ (gấp ${vol.toFixed(2)}x SMA20) đồng pha với thân nến mở rộng quyết liệt (HIGH_EFFORT_HIGH_RESULT). Dòng tiền lớn tham gia xác nhận xu hướng bứt phá."`;
+        return `"Khối lượng bùng nổ (gấp ${vol.toFixed(2)}x SMA20) đồng pha với thân nến mở rộng quyết liệt. Dòng tiền lớn tham gia xác nhận xu hướng bứt phá."`;
     }
     if (effort === 'LOW_EFFORT_HIGH_RESULT') {
-        return `"Nguồn cung/cầu đối nghịch cạn kiệt hoàn toàn, giá di chuyển thanh thoát mà không cần nhiều khối lượng (LOW_EFFORT_HIGH_RESULT / Ease of Movement)."`;
+        return `"Nguồn cung/cầu đối nghịch cạn kiệt hoàn toàn, giá di chuyển thanh thoát nhẹ nhàng mà không gặp lực cản đối ứng."`;
     }
     return `"Cấu trúc nén chặt tại vùng cản trọng yếu ($${support ? formatPrice(support) : 'Support'} - $${resistance ? formatPrice(resistance) : 'Resistance'}), khối lượng kiểm định đạt chuẩn VPA, mở ra cơ hội giao dịch với tỷ lệ R:R tối ưu."`;
 }
