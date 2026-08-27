@@ -197,8 +197,6 @@
         const progressVi = translateCycleProgress(progress);
         const reasonVi = translateCycleReason(reason);
         const patternVi = translateSequencePattern(pattern);
-        const phaseLegVi = translateLegOrdinal(legOrdinal);
-
         // 1. MARKUP (Pha 2: Đẩy Giá)
         if (typedPhase === 'MARKUP') {
             return {
@@ -206,7 +204,6 @@
                 phaseStep: 2,
                 phaseName: `Pha 2: Đẩy Giá · ${stageVi}`,
                 phaseBadge: 'ĐẨY GIÁ',
-                phaseLegVi,
                 phaseOrdinal,
                 legOrdinal,
                 typedPhase: 'MARKUP',
@@ -228,7 +225,7 @@
                 weatherEmoji: '☀️',
                 weatherTitle: `Trời Trong · Đẩy Giá (${progressVi})`,
                 weatherClass: 'weather-sunny',
-                weatherSummary: `Cấu trúc sóng tăng đẩy giá (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Phe Mua kiểm soát đà tăng${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                weatherSummary: `Cấu trúc sóng tăng đẩy giá (${stageVi}). Phe Mua kiểm soát đà tăng${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: '⚡ Lực Cầu Hoàn Toàn Kiểm Soát'
             };
         }
@@ -240,7 +237,6 @@
                 phaseStep: 1,
                 phaseName: `Pha 1: Tích Lũy · ${stageVi}`,
                 phaseBadge: 'TÍCH LŨY',
-                phaseLegVi,
                 phaseOrdinal,
                 legOrdinal,
                 typedPhase: 'ACCUMULATION',
@@ -262,7 +258,7 @@
                 weatherEmoji: '🌊',
                 weatherTitle: `Sóng Êm · Vùng Tích Lũy Gom Hàng (${progressVi})`,
                 weatherClass: 'weather-calm',
-                weatherSummary: `Thị trường đang trong pha Tích Lũy (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Lực cung đáy đang được hấp thụ${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                weatherSummary: `Thị trường đang trong pha Tích Lũy (${stageVi}). Lực cung đáy đang được hấp thụ${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: strength === 'CONFIRMED' ? '🌊 Hấp Thụ Cung Đáy Hoàn Tất' : '🌊 Đang Hấp Thụ Cung Đáy'
             };
         }
@@ -274,7 +270,6 @@
                 phaseStep: 3,
                 phaseName: `Pha 3: Phân Phối · ${stageVi}`,
                 phaseBadge: 'PHÂN PHỐI',
-                phaseLegVi,
                 phaseOrdinal,
                 legOrdinal,
                 typedPhase: 'DISTRIBUTION',
@@ -296,7 +291,7 @@
                 weatherEmoji: '⚠️',
                 weatherTitle: `Cảnh Báo Giông · Phân Phối Đỉnh (${progressVi})`,
                 weatherClass: 'weather-warning',
-                weatherSummary: `Thị trường đang trong pha Phân Phối (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Áp lực bán xả hàng vùng đỉnh${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                weatherSummary: `Thị trường đang trong pha Phân Phối (${stageVi}). Áp lực bán xả hàng vùng đỉnh${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: strength === 'CONFIRMED' ? '⚠️ Cung Xả Đỉnh Xác Nhận' : '⚠️ Áp Lực Cung Xả Đỉnh'
             };
         }
@@ -309,7 +304,6 @@
                 phaseStep: 4,
                 phaseName: isAbsorbing ? `Pha 4: Hãm Đà Giảm · ${stageVi}` : `Pha 4: Giảm Giá · ${stageVi}`,
                 phaseBadge: isAbsorbing ? 'HÃM ĐÀ GIẢM' : 'GIẢM GIÁ',
-                phaseLegVi,
                 phaseOrdinal,
                 legOrdinal,
                 typedPhase: 'MARKDOWN',
@@ -333,8 +327,8 @@
                 weatherTitle: isAbsorbing ? `Mây Mù Tan Dần · Hãm Đà Giảm (${progressVi})` : `Mưa Giông · Giảm Giá (${progressVi})`,
                 weatherClass: isAbsorbing ? 'weather-warning' : 'weather-storm',
                 weatherSummary: isAbsorbing
-                    ? `Đà giảm đang chững lại (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Lực cầu cá mập đang hấp thụ cung tạo đáy${reasonVi ? ` · ${reasonVi}` : ''}.`
-                    : `Cấu trúc suy thoái (${stageVi}${phaseLegVi ? ` · ${phaseLegVi}` : ''}). Phe Bán hoàn toàn áp đảo thị trường${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                    ? `Đà giảm đang chững lại (${stageVi}). Lực cầu cá mập đang hấp thụ cung tạo đáy${reasonVi ? ` · ${reasonVi}` : ''}.`
+                    : `Cấu trúc suy thoái (${stageVi}). Phe Bán hoàn toàn áp đảo thị trường${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: isAbsorbing ? '⛅ Cung Vĩ Mô Đang Bị Hấp Thụ' : '⛈️ Lực Cung Hoàn Toàn Áp Đảo'
             };
         }
@@ -529,7 +523,7 @@
                             
                             {#if weather}
                                 <span class="tile-phase-badge {weather.weatherClass}">
-                                    {weather.weatherEmoji} {weather.phaseBadge}{weather.phaseLegVi ? ` · ${weather.phaseLegVi}` : ''}
+                                    {weather.weatherEmoji} {weather.phaseBadge}
                                 </span>
                             {/if}
                         </div>
@@ -813,11 +807,6 @@
                             <div class="weather-status-name">{marketWeather.weatherTitle}</div>
                             <div class="weather-tags-row" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.35rem;">
                                 <span class="weather-phase-tag">{marketWeather.phaseBadge}</span>
-                                {#if marketWeather.phaseLegVi}
-                                    <span class="weather-phase-tag" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25); color: #d97706; font-weight: 700;">
-                                        {marketWeather.phaseLegVi}
-                                    </span>
-                                {/if}
                                 {#if marketWeather.stageVi}
                                     <span class="weather-phase-tag" style="background: rgba(14, 165, 233, 0.08); border-color: rgba(14, 165, 233, 0.25); color: #0284c7;">
                                         {marketWeather.stageVi}
