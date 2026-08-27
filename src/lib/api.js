@@ -479,6 +479,7 @@ export function translateStrength(strength) {
     switch (strength.toUpperCase()) {
         case 'CONFIRMED': return 'Đã Xác Nhận';
         case 'PROVISIONAL': return 'Tạm Thời';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Khởi Tạo Sơ Bộ';
         default: return strength;
     }
 }
@@ -507,6 +508,18 @@ export function translateCycleReason(reason) {
         case 'STAGE_ADVANCED': return 'Tiến trình giai đoạn hoàn tất';
         case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Xung đột bằng chứng chuyển pha';
         case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên cấu trúc';
+        case 'BOOTSTRAP_RECONCILED':
+        case 'BOOTSTRAP_RECONCILIATION': return 'Khởi tạo chu kỳ đồng thuận';
+        case 'CYCLE_REANCHORED': return 'Tái thiết lập mốc chu kỳ';
+        case 'BOOTSTRAP_SELECTION': return 'Chọn lọc cấu trúc khởi tạo';
+        case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc khởi tạo';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Khởi tạo tín hiệu sơ bộ';
+        case 'CONTINUATION': return 'Tiếp diễn đà giá';
+        case 'MARKUP': return 'Tiếp diễn xu hướng Đẩy giá';
+        case 'MARKDOWN': return 'Tiếp diễn xu hướng Giảm giá';
+        case 'ACCUMULATION': return 'Tích lũy gom hàng';
+        case 'DISTRIBUTION': return 'Phân phối xả hàng';
+        case 'NO_TRANSITION': return 'Duy trì trạng thái hiện tại';
         default: return reason;
     }
 }
