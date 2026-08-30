@@ -479,7 +479,7 @@ export function translateStrength(strength) {
     switch (strength.toUpperCase()) {
         case 'CONFIRMED': return 'Đã Xác Nhận';
         case 'PROVISIONAL': return 'Tạm Thời';
-        case 'BOOTSTRAP_PROVISIONAL': return 'Khởi Tạo Sơ Bộ';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Sơ Bộ (Đang Định Hình)';
         default: return strength;
     }
 }
@@ -509,15 +509,15 @@ export function translateCycleReason(reason) {
         case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Xung đột bằng chứng chuyển pha';
         case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên cấu trúc';
         case 'BOOTSTRAP_RECONCILED':
-        case 'BOOTSTRAP_RECONCILIATION': return 'Khởi tạo chu kỳ đồng thuận';
+        case 'BOOTSTRAP_RECONCILIATION': return 'Đồng thuận cấu trúc ban đầu';
         case 'CYCLE_REANCHORED': return 'Tái thiết lập mốc chu kỳ';
-        case 'BOOTSTRAP_SELECTION': return 'Chọn lọc cấu trúc khởi tạo';
-        case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc khởi tạo';
-        case 'BOOTSTRAP_PROVISIONAL': return 'Khởi tạo tín hiệu sơ bộ';
+        case 'BOOTSTRAP_SELECTION': return 'Chọn lọc cấu trúc ban đầu';
+        case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc ban đầu';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Cấu trúc chu kỳ sơ bộ';
         case 'BOOTSTRAP_V1_HINT':
         case 'V1_HINT':
-        case 'BOOTSTRAP_HINT': return 'Khởi tạo từ tín hiệu cơ sở (V1 Hint)';
-        case 'BOOTSTRAP_CREATED': return 'Khởi tạo mốc chu kỳ mới';
+        case 'BOOTSTRAP_HINT': return 'Định hình xu hướng ban đầu';
+        case 'BOOTSTRAP_CREATED': return 'Khởi tạo cấu trúc chu kỳ';
         case 'CONTINUATION': return 'Tiếp diễn đà giá';
         case 'MARKUP': return 'Tiếp diễn xu hướng Đẩy giá';
         case 'MARKDOWN': return 'Tiếp diễn xu hướng Giảm giá';
