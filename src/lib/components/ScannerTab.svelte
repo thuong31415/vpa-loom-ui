@@ -101,17 +101,43 @@
         }
     }
 
+    function stopRadarTickerPolling() {
+        if (radarTickerTimer) {
+            clearInterval(radarTickerTimer);
+            radarTickerTimer = null;
+        }
+    }
+
+    function stopLivePricePolling() {
+        if (livePriceTimer) {
+            clearInterval(livePriceTimer);
+            livePriceTimer = null;
+        }
+    }
+
+    function startRadarTickerPolling() {
+        stopRadarTickerPolling();
+        radarTickerTimer = setInterval(async () => {
+            if (activeView !== 'radar') return;
+            const t = await fetchBinanceUniverse24hTickers();
+            if (t.ok && t.data) {
+                radarTickers = { ...radarTickers, ...t.data };
+            }
+        }, 5000);
+    }
+
     function startLivePricePolling(sym) {
-        if (livePriceTimer) clearInterval(livePriceTimer);
+        stopLivePricePolling();
         livePrice = null;
         updateLivePrice();
-        livePriceTimer = setInterval(updateLivePrice, 2000);
+        livePriceTimer = setInterval(updateLivePrice, 3000);
     }
 
     async function loadSingleAnalysis(sym = selectedSymbol) {
         selectedSymbol = sym;
         isSingleLoading = true;
         singleError = null;
+        stopRadarTickerPolling();
         startLivePricePolling(sym);
         const res = await fetchAnalysis(sym);
         if (res.success && res.data) {
@@ -132,13 +158,14 @@
 
     function selectSymbol(sym) {
         selectedSymbol = sym;
+        activeView = 'single';
+        stopRadarTickerPolling();
         const cached = radarData.find(item => item.symbol === sym);
         if (cached && cached.analysis) {
             singleAnalysisData = cached.analysis;
             isSingleLoading = false;
         }
         loadSingleAnalysis(sym);
-        activeView = 'single';
     }
 
     $: phaseCounts = radarData.reduce((acc, item) => {
@@ -369,21 +396,17 @@
     $: marketWeather = computeMarketWeather(singleAnalysisData);
 
     onMount(() => {
-        loadRadarData();
-        if (activeView === 'single') {
+        if (activeView === 'radar') {
+            loadRadarData();
+            startRadarTickerPolling();
+        } else if (activeView === 'single') {
             loadSingleAnalysis(selectedSymbol);
         }
-        radarTickerTimer = setInterval(async () => {
-            const t = await fetchBinanceUniverse24hTickers();
-            if (t.ok && t.data) {
-                radarTickers = { ...radarTickers, ...t.data };
-            }
-        }, 3000);
     });
 
     onDestroy(() => {
-        if (livePriceTimer) clearInterval(livePriceTimer);
-        if (radarTickerTimer) clearInterval(radarTickerTimer);
+        stopLivePricePolling();
+        stopRadarTickerPolling();
     });
 </script>
 
@@ -392,7 +415,12 @@
     <div class="view-toggle-group">
         <button 
             class="pill-btn {activeView === 'radar' ? 'active' : ''}" 
-            on:click={() => { activeView = 'radar'; if (radarData.length === 0) loadRadarData(); }}
+            on:click={() => {
+                activeView = 'radar';
+                stopLivePricePolling();
+                if (radarData.length === 0) loadRadarData();
+                startRadarTickerPolling();
+            }}
         >
             🌐 Toàn Cảnh (15 Coin)
         </button>
@@ -400,10 +428,13 @@
             class="pill-btn {activeView === 'single' ? 'active' : ''}" 
             on:click={() => {
                 activeView = 'single';
+                stopRadarTickerPolling();
                 if (!singleAnalysisData) {
                     const cached = radarData.find(item => item.symbol === selectedSymbol);
                     if (cached && cached.analysis) singleAnalysisData = cached.analysis;
                     loadSingleAnalysis(selectedSymbol);
+                } else {
+                    startLivePricePolling(selectedSymbol);
                 }
             }}
         >
