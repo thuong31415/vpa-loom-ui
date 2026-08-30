@@ -514,6 +514,10 @@ export function translateCycleReason(reason) {
         case 'BOOTSTRAP_SELECTION': return 'Chọn lọc cấu trúc khởi tạo';
         case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc khởi tạo';
         case 'BOOTSTRAP_PROVISIONAL': return 'Khởi tạo tín hiệu sơ bộ';
+        case 'BOOTSTRAP_V1_HINT':
+        case 'V1_HINT':
+        case 'BOOTSTRAP_HINT': return 'Khởi tạo từ tín hiệu cơ sở (V1 Hint)';
+        case 'BOOTSTRAP_CREATED': return 'Khởi tạo mốc chu kỳ mới';
         case 'CONTINUATION': return 'Tiếp diễn đà giá';
         case 'MARKUP': return 'Tiếp diễn xu hướng Đẩy giá';
         case 'MARKDOWN': return 'Tiếp diễn xu hướng Giảm giá';
