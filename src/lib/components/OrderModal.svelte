@@ -1,5 +1,5 @@
 <script>
-    import { createPositionApi, cleanSymbol } from '../api.js';
+    import { createPositionApi, cleanSymbol, formatPrice } from '../api.js';
 
     export let isOpen = false;
     export let symbol = 'SUIUSDT';
@@ -27,9 +27,9 @@
         const s = parseFloat(sl) || 0;
 
         if (direction === 'LONG' && s >= e && e > 0) {
-            slWarning = '⚠️ LONG yêu cầu Stop Loss phải nhỏ hơn Entry!';
+            slWarning = 'LONG yêu cầu Stop Loss phải nhỏ hơn Entry!';
         } else if (direction === 'SHORT' && s <= e && e > 0) {
-            slWarning = '⚠️ SHORT yêu cầu Stop Loss phải lớn hơn Entry!';
+            slWarning = 'SHORT yêu cầu Stop Loss phải lớn hơn Entry!';
         } else {
             slWarning = '';
         }
@@ -44,7 +44,7 @@
         e.preventDefault();
         validateSL();
         if (slWarning) {
-            alert('❌ Lỗi Stop Loss: Hãy đảm bảo SL nằm đúng phía so với Entry!');
+            alert('Lỗi Stop Loss: Hãy đảm bảo SL nằm đúng phía so với Entry!');
             return;
         }
 
@@ -69,7 +69,7 @@
         };
 
         if (res.success) {
-            alert(`✅ Vị thế ${direction} ${symbol} @ $${entry} đã được ghi nhận trực tiếp vào PostgreSQL!`);
+            alert(`Vị thế ${direction} ${symbol} @ $${entry} đã được ghi nhận trực tiếp vào Backend 8081!`);
         }
 
         onSubmitOrderSuccess(newPos);
@@ -78,12 +78,12 @@
 </script>
 
 {#if isOpen}
-<div class="modal-overlay active" on:click|self={onClose} on:keydown={(e) => e.key === 'Escape' && onClose()} role="dialog" aria-modal="true" tabindex="-1">
-    <div class="modal-card" style="max-width: 480px; padding: 1.75rem; border-radius: 20px;">
-        <div class="card-header" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+<div class="modal-overlay" on:click|self={onClose} on:keydown={(e) => e.key === 'Escape' && onClose()} role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-card">
+        <div class="card-header" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
             <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <span class="symbol-tag" style="font-size: 1.2rem; font-weight: 800;">{cleanSymbol(symbol) || 'SUI'}</span>
-                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; font-weight: 700;">
+                <span class="station-symbol">{cleanSymbol(symbol) || 'SUI'}</span>
+                <span class="badge {direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">
                     {direction === 'LONG' ? 'MUA (LONG)' : 'BÁN (SHORT)'}
                 </span>
             </div>
@@ -94,13 +94,13 @@
             <!-- Giá Vào Lệnh & Vốn Ký Quỹ -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="entry-price">Giá Mua (Entry)</label>
+                    <label for="entry-price">Giá Vào Lệnh (Entry)</label>
                     <input 
                         type="number" 
                         step="any" 
                         id="entry-price" 
                         bind:value={entry} 
-                        style="font-size: 1.1rem; font-weight: 700; font-family: monospace;" 
+                        style="font-size: 1.05rem; font-weight: 700;" 
                         required
                     />
                 </div>
@@ -118,7 +118,7 @@
                         step="any" 
                         id="risk-amount" 
                         bind:value={risk} 
-                        style="font-size: 1.1rem; font-weight: 700; font-family: monospace;" 
+                        style="font-size: 1.05rem; font-weight: 700;" 
                         required
                     />
                 </div>
@@ -133,7 +133,8 @@
                         step="any" 
                         id="sl-price" 
                         bind:value={sl} 
-                        style="font-size: 1.1rem; font-weight: 700; color: var(--rose); font-family: monospace;" 
+                        class="text-rose"
+                        style="font-size: 1.05rem; font-weight: 700;" 
                         required
                     />
                 </div>
@@ -144,20 +145,21 @@
                         step="any" 
                         id="tp-price" 
                         bind:value={tp} 
-                        style="font-size: 1.1rem; font-weight: 700; color: var(--emerald); font-family: monospace;" 
+                        class="text-emerald"
+                        style="font-size: 1.05rem; font-weight: 700;" 
                         required
                     />
                 </div>
             </div>
 
             {#if slWarning}
-                <div style="font-size: 0.775rem; color: var(--rose); margin-bottom: 0.8rem; background: var(--rose-bg); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--rose-border);">
+                <div style="font-size: 0.775rem; color: var(--rose); margin-bottom: 0.8rem; background: var(--phase-markdown-bg); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--phase-markdown-border);">
                     {slWarning}
                 </div>
             {/if}
 
             <!-- Summary metrics pill -->
-            <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: 0.825rem; display: flex; justify-content: space-between; border: 1px solid var(--border-card);">
+            <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.825rem; display: flex; justify-content: space-between; border: 1px solid var(--border-card); font-family: var(--font-mono);">
                 <span>Tỷ lệ R:R: <strong class="text-emerald">{rr} R</strong></span>
                 <span>Khoảng cách SL: <strong>{slDist} USDT</strong></span>
             </div>
@@ -167,11 +169,11 @@
                 <button type="button" class="btn btn-outline" style="flex: 1;" on:click={onClose}>Hủy bỏ</button>
                 <button 
                     type="submit" 
-                    class="btn {direction === 'LONG' ? 'btn-emerald' : ''}" 
-                    style="flex: 2; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;"
+                    class="btn {direction === 'LONG' ? 'btn-emerald' : 'btn-rose'}" 
+                    style="flex: 2;"
                     disabled={isLoading}
                 >
-                    {isLoading ? '⌛ Đang gửi...' : `🟢 Xác Nhận Mở Vị Thế ($${risk || 200} USDT)`}
+                    {isLoading ? 'Đang gửi...' : `Xác Nhận Mở Lệnh ($${risk || 200} USDT)`}
                 </button>
             </div>
         </form>
@@ -189,9 +191,10 @@
         cursor: pointer;
         color: var(--text-secondary);
         font-weight: 600;
+        font-family: var(--font-mono);
     }
     .quick-btn:hover {
         background: var(--btn-primary);
-        color: #FFFFFF;
+        color: var(--btn-primary-text);
     }
 </style>

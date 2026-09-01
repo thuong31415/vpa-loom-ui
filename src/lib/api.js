@@ -1,4 +1,4 @@
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://103.167.88.197:8081';
 export const REMOTE_HOSTS = [
     'http://103.167.88.197:8081'
 ];

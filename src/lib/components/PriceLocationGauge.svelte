@@ -29,25 +29,25 @@
         let zoneTip = '';
 
         if (p <= supUpper) {
-            zoneLabel = '🟢 Sát Vùng Hỗ Trợ Đáy';
+            zoneLabel = 'Sát Vùng Hỗ Trợ Đáy';
             zoneClass = 'text-emerald';
-            zoneTip = 'Đang ở hỗ trợ';
+            zoneTip = 'Đang ở hỗ trợ đáy';
         } else if (p >= resLower) {
-            zoneLabel = '⚡ Sát Vùng Kháng Cự Đỉnh';
+            zoneLabel = 'Sát Vùng Kháng Cự Đỉnh';
             zoneClass = 'text-rose';
-            zoneTip = 'Đang ở kháng cự';
+            zoneTip = 'Đang ở kháng cự đỉnh';
         } else if (clampedPercent <= 30) {
-            zoneLabel = '↗️ Vùng Thấp Nghiêng Hỗ Trợ';
+            zoneLabel = 'Vùng Thấp Nghiêng Hỗ Trợ';
             zoneClass = 'text-emerald';
             zoneTip = 'Nghiêng hỗ trợ';
         } else if (clampedPercent >= 70) {
-            zoneLabel = '⚠️ Vùng Cao Cận Kháng Cự';
+            zoneLabel = 'Vùng Cao Cận Kháng Cự';
             zoneClass = 'text-rose';
             zoneTip = 'Nghiêng kháng cự';
         } else {
-            zoneLabel = '↔️ Vùng Lưng Chừng Giữa 2 Cản';
+            zoneLabel = 'Vùng Lưng Chừng Biên';
             zoneClass = 'text-amber';
-            zoneTip = 'Lưng chừng biên';
+            zoneTip = 'Lưng chừng biên Range';
         }
 
         return {
@@ -67,10 +67,10 @@
         <!-- Gauge Visual Track -->
         <div class="track-wrapper">
             <div class="gauge-track">
-                <!-- Zone markers -->
-                <div class="zone-segment zone-sup" style="width: 25%;" title="Vùng Hỗ Trợ"></div>
+                <!-- Zone markers in pastel ink tones -->
+                <div class="zone-segment zone-sup" style="width: 25%;" title="Vùng Hỗ Trợ Đáy"></div>
                 <div class="zone-segment zone-mid" style="width: 50%;" title="Vùng Lưng Chừng"></div>
-                <div class="zone-segment zone-res" style="width: 25%;" title="Vùng Kháng Cự"></div>
+                <div class="zone-segment zone-res" style="width: 25%;" title="Vùng Kháng Cự Đỉnh"></div>
 
                 <!-- Current Price Needle / Dot -->
                 <div 
@@ -87,20 +87,16 @@
 
         <!-- Labels at edges -->
         <div class="gauge-labels">
-            <div style="text-align: left; white-space: nowrap;">
-                <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">HỖ TRỢ ĐÁY</div>
-                <div style="font-size: 0.85rem; font-weight: 700; font-family: monospace; color: var(--emerald);">
-                    ${formatPrice(gauge.supUpper)}
-                </div>
+            <div class="gauge-edge-label">
+                <span class="label-title">HỖ TRỢ ĐÁY</span>
+                <span class="label-val text-emerald">${formatPrice(gauge.supUpper)}</span>
             </div>
-            <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 0 0.5rem; font-weight: 500;">
-                {gauge.zoneTip}
+            <div class="gauge-center-tip {gauge.zoneClass}">
+                {gauge.zoneTip} ({gauge.percent.toFixed(0)}% Range)
             </div>
-            <div style="text-align: right; white-space: nowrap;">
-                <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">KHÁNG CỰ ĐỈNH</div>
-                <div style="font-size: 0.85rem; font-weight: 700; font-family: monospace; color: var(--rose);">
-                    ${formatPrice(gauge.resLower)}
-                </div>
+            <div class="gauge-edge-label right">
+                <span class="label-title">KHÁNG CỰ ĐỈNH</span>
+                <span class="label-val text-rose">${formatPrice(gauge.resLower)}</span>
             </div>
         </div>
     </div>
@@ -108,38 +104,38 @@
 
 <style>
     .gauge-container {
-        background: #FFFFFF;
+        background: var(--bg-subtle);
         border: 1px solid var(--border-card);
-        border-radius: 10px;
-        padding: 0.4rem 0.85rem 0.45rem 0.85rem;
-        margin: 0.35rem 0;
+        border-radius: 8px;
+        padding: 0.65rem 1rem 0.65rem 1rem;
+        margin: 0.5rem 0;
     }
     .track-wrapper {
         position: relative;
-        padding: 1.15rem 0.5rem 0.15rem 0.5rem;
+        padding: 1.25rem 0.5rem 0.25rem 0.5rem;
     }
     .gauge-track {
-        height: 8px;
-        background: var(--bg-subtle);
+        height: 6px;
+        background: #E8E6E0;
         border-radius: 999px;
         position: relative;
         display: flex;
         overflow: visible;
-        border: 1px solid var(--border-card);
+        border: 1px solid #DFDCD4;
     }
     .zone-segment {
         height: 100%;
     }
     .zone-sup {
-        background: rgba(22, 101, 52, 0.22);
+        background: var(--phase-markup-border);
         border-top-left-radius: 999px;
         border-bottom-left-radius: 999px;
     }
     .zone-mid {
-        background: rgba(154, 52, 18, 0.1);
+        background: var(--phase-dist-border);
     }
     .zone-res {
-        background: rgba(153, 27, 27, 0.22);
+        background: var(--phase-markdown-border);
         border-top-right-radius: 999px;
         border-bottom-right-radius: 999px;
     }
@@ -152,28 +148,28 @@
         align-items: center;
         z-index: 10;
         pointer-events: none;
-        transition: left 0.3s ease;
+        transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .pointer-dot {
-        width: 13px;
-        height: 13px;
-        background: var(--btn-primary);
+        width: 12px;
+        height: 12px;
+        background: var(--text-primary);
         border: 2px solid #FFFFFF;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
         border-radius: 50%;
     }
     .pointer-bubble {
         position: absolute;
-        bottom: 13px;
-        background: var(--btn-primary);
+        bottom: 14px;
+        background: var(--text-primary);
         color: #FFFFFF;
-        font-size: 0.675rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        font-family: monospace;
-        padding: 0.12rem 0.45rem;
-        border-radius: 5px;
+        font-family: var(--font-mono);
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
         white-space: nowrap;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
     }
     .pointer-bubble::after {
         content: '';
@@ -181,15 +177,39 @@
         top: 100%;
         left: 50%;
         transform: translateX(-50%);
-        border-width: 3px;
+        border-width: 4px;
         border-style: solid;
-        border-color: var(--btn-primary) transparent transparent transparent;
+        border-color: var(--text-primary) transparent transparent transparent;
     }
     .gauge-labels {
         display: grid;
         grid-template-columns: auto 1fr auto;
         align-items: center;
-        margin-top: 0.35rem;
-        gap: 0.4rem;
+        margin-top: 0.45rem;
+        gap: 0.5rem;
+    }
+    .gauge-edge-label {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+    .gauge-edge-label.right {
+        text-align: right;
+    }
+    .label-title {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+    .label-val {
+        font-size: 0.825rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+    }
+    .gauge-center-tip {
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 700;
     }
 </style>

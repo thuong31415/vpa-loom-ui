@@ -34,7 +34,6 @@
     export async function loadAccountData() {
         isLoading = true;
         try {
-            // 1. Fetch live summary from Backend PostgreSQL
             const summaryRes = await fetchAccountSummaryApi();
             if (summaryRes.success && summaryRes.data) {
                 const d = summaryRes.data;
@@ -53,7 +52,6 @@
                 };
             }
 
-            // 2. Fetch live transactions ledger from Backend PostgreSQL
             const txRes = await fetchCapitalTransactionsApi(100);
             if (txRes.success && Array.isArray(txRes.data) && txRes.data.length > 0) {
                 capitalLogs = txRes.data.map(t => formatTransaction(t));
@@ -89,7 +87,7 @@
             amountPrefix = '';
             category = 'CAPITAL';
         } else if (type === 'POSITION_BUY') {
-            typeLabel = 'VÀO LỆNH (MUA)';
+            typeLabel = 'VÀO LỆNH';
             typeBadge = 'badge-neutral';
             amountClass = 'text-rose';
             amountPrefix = '';
@@ -141,96 +139,95 @@
 
 <div class="bento-grid">
     <!-- Card 1: Tổng Vốn Đã Nạp -->
-    <div class="card" style="grid-column: span 3; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="margin-bottom: 0.5rem;">
-            <span class="card-title" style="font-size: 0.9rem; color: var(--text-muted);">Tổng Vốn Đã Nạp</span>
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="margin-bottom: 0.4rem;">
+            <span class="price-label">Tổng Vốn Đã Nạp</span>
         </div>
-        <div class="stat-val" style="font-size: 1.65rem; font-weight: 800; color: var(--text-primary);">
+        <div class="stat-value">
             ${summary.totalDeposited.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+        <div class="stat-sub" style="margin-top: 0.25rem;">
             Vốn ròng: ${summary.netCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
     </div>
 
-    <!-- Card 2: Số Dư Khả Dụng (Tiền Mặt) -->
-    <div class="card" style="grid-column: span 3; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="margin-bottom: 0.5rem;">
-            <span class="card-title" style="font-size: 0.9rem; color: var(--text-muted);">Số Dư Khả Dụng (USDT)</span>
-            <span class="badge badge-emerald" style="font-size: 0.7rem;">Sẵn sàng mua</span>
+    <!-- Card 2: Số Dư Khả Dụng -->
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="margin-bottom: 0.4rem;">
+            <span class="price-label">Khả Dụng (USDT)</span>
+            <span class="badge badge-emerald">Ví tự do</span>
         </div>
-        <div class="stat-val text-emerald" style="font-size: 1.65rem; font-weight: 800;">
+        <div class="stat-value text-emerald">
             ${summary.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
-            Tiền mặt tự do trong ví
+        <div class="stat-sub" style="margin-top: 0.25rem;">
+            Sẵn sàng mở vị thế
         </div>
     </div>
 
-    <!-- Card 3: Đang Giam Trong Vị Thế -->
-    <div class="card" style="grid-column: span 3; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="margin-bottom: 0.5rem;">
-            <span class="card-title" style="font-size: 0.9rem; color: var(--text-muted);">Đang Vào Lệnh (Margin)</span>
+    <!-- Card 3: Đang Ký Quỹ -->
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="margin-bottom: 0.4rem;">
+            <span class="price-label">Ký Quỹ Vị Thế</span>
+            <span class="badge badge-cyan">Margin</span>
         </div>
-        <div class="stat-val" style="font-size: 1.65rem; font-weight: 800; color: var(--text-primary);">
+        <div class="stat-value">
             ${summary.inPositions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
-            Ký quỹ các lệnh đang mở
+        <div class="stat-sub" style="margin-top: 0.25rem;">
+            Đang phân bổ trong lệnh
         </div>
     </div>
 
-    <!-- Card 4: Tổng Tài Sản Thực Tế (Equity) & Lợi Nhuận -->
-    <div class="card" style="grid-column: span 3; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="margin-bottom: 0.5rem;">
-            <span class="card-title" style="font-size: 0.9rem; color: var(--text-muted);">Tổng Tài Sản (Equity)</span>
-            <span class="badge {roiPercent >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.75rem; font-weight: 700;">
+    <!-- Card 4: Tổng Tài Sản Equity & Winrate -->
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="margin-bottom: 0.4rem;">
+            <span class="price-label">Tổng Tài Sản (Equity)</span>
+            <span class="badge {roiPercent >= 0 ? 'badge-emerald' : 'badge-rose'}">
                 ROI: {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(1)}%
             </span>
         </div>
-        <div class="stat-val {summary.totalEquity >= summary.netCapital ? 'text-emerald' : 'text-rose'}" style="font-size: 1.65rem; font-weight: 800;">
+        <div class="stat-value {summary.totalEquity >= summary.netCapital ? 'text-emerald' : 'text-rose'}">
             ${summary.totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
-            {summary.winCount} thắng · {summary.lossCount} thua (Winrate {summary.winRate.toFixed(1)}%)
+        <div class="stat-sub" style="margin-top: 0.25rem;">
+            {summary.winCount}W - {summary.lossCount}L (Winrate {summary.winRate.toFixed(1)}%)
         </div>
     </div>
 
     <!-- Table: Sổ Cái Biến Động Số Dư (Ledger) -->
-    <div class="card" style="grid-column: span 12; background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 16px; padding: 1.25rem 1.5rem;">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-            <div>
-                <div class="card-title" style="margin: 0; font-size: 1.1rem; font-weight: 800;">Sổ Cái Tài Chính & Biến Động Nguồn Vốn</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Hạch toán tự động Nạp, Rút, Mua coin và Chốt lời/Cắt lỗ theo thời gian thực</div>
-            </div>
-            <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
-                <button class="btn btn-outline" on:click={loadAccountData} disabled={isLoading} style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
-                    {isLoading ? '⌛ Đang tải...' : '🔄 Làm mới'}
+    <div class="card" style="grid-column: span 12;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; align-items: center;">
+            <!-- Quick Filters for Ledger -->
+            <div class="filter-pills" style="margin-bottom: 0;">
+                <button 
+                    class="pill-btn {selectedFilter === 'ALL' ? 'active' : ''}" 
+                    on:click={() => selectedFilter = 'ALL'}
+                >
+                    Tất Cả ({capitalLogs.length})
                 </button>
-                <button class="btn" on:click={onOpenDepositModal} style="padding: 0.45rem 1rem; font-size: 0.85rem;">+ Ghi chép nạp/rút vốn</button>
+                <button 
+                    class="pill-btn {selectedFilter === 'CAPITAL' ? 'active' : ''}" 
+                    on:click={() => selectedFilter = 'CAPITAL'}
+                >
+                    Nạp & Rút Vốn
+                </button>
+                <button 
+                    class="pill-btn {selectedFilter === 'TRADE' ? 'active' : ''}" 
+                    on:click={() => selectedFilter = 'TRADE'}
+                >
+                    Vào Lệnh & Chốt Lời
+                </button>
             </div>
-        </div>
 
-        <!-- Quick Filters for Ledger -->
-        <div class="filter-pills" style="margin-bottom: 1rem;">
-            <button 
-                class="pill-btn {selectedFilter === 'ALL' ? 'active' : ''}" 
-                on:click={() => selectedFilter = 'ALL'}
-            >
-                📋 Tất Cả ({capitalLogs.length})
-            </button>
-            <button 
-                class="pill-btn {selectedFilter === 'CAPITAL' ? 'active' : ''}" 
-                on:click={() => selectedFilter = 'CAPITAL'}
-            >
-                💵 Nạp & Rút Vốn
-            </button>
-            <button 
-                class="pill-btn {selectedFilter === 'TRADE' ? 'active' : ''}" 
-                on:click={() => selectedFilter = 'TRADE'}
-            >
-                ⚡ Vào Lệnh & Chốt Lời
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-outline" on:click={loadAccountData} disabled={isLoading} style="padding: 0.4rem 0.85rem; font-size: 0.825rem;">
+                    {isLoading ? 'Đang tải...' : 'Làm mới'}
+                </button>
+                <button class="btn" on:click={onOpenDepositModal} style="padding: 0.4rem 0.95rem; font-size: 0.825rem;">
+                    + Ghi chép nạp/rút
+                </button>
+            </div>
         </div>
 
         {#if filteredLogs.length > 0}
@@ -238,34 +235,33 @@
                 <table style="width: 100%; border-collapse: collapse; min-width: 650px;">
                     <thead>
                         <tr style="border-bottom: 1px solid var(--border-card); text-align: left;">
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Mã GD</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Loại Giao Dịch</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Số Tiền</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Số Dư Khả Dụng</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian</th>
-                            <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Chi Tiết / Ghi Chú</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Mã GD</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Loại Giao Dịch</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Số Tiền</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Số Dư Khả Dụng</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian</th>
+                            <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Chi Tiết / Ghi Chú</th>
                         </tr>
                     </thead>
                     <tbody>
                         {#each filteredLogs as log (log.id)}
-                            <tr style="border-bottom: 1px solid var(--border-card);">
-                                <td style="padding: 0.85rem 0.75rem; font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">{log.id}</td>
+                            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 0.85rem 0.75rem; font-family: var(--font-mono); font-size: 0.825rem; color: var(--text-muted);">{log.id}</td>
                                 <td style="padding: 0.85rem 0.75rem;"><span class="badge {log.typeClass}">{log.type}</span></td>
-                                <td style="padding: 0.85rem 0.75rem; font-weight: 700;" class="{log.amountClass}">{log.amount}</td>
-                                <td style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--text-primary);">{log.balanceAfter || '-'}</td>
+                                <td style="padding: 0.85rem 0.75rem; font-weight: 700; font-family: var(--font-mono);" class="{log.amountClass}">{log.amount}</td>
+                                <td style="padding: 0.85rem 0.75rem; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);">{log.balanceAfter || '-'}</td>
                                 <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted);">{log.time}</td>
-                                <td style="padding: 0.85rem 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">{log.note}</td>
+                                <td style="padding: 0.85rem 0.75rem; font-size: 0.825rem; color: var(--text-secondary);">{log.note}</td>
                             </tr>
                         {/each}
                     </tbody>
                 </table>
             </div>
         {:else}
-            <div style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💳</div>
-                <div style="font-weight: 600; color: var(--text-primary);">Chưa có biến động vốn nào phù hợp bộ lọc</div>
-                <div style="font-size: 0.85rem; margin-top: 0.25rem;">
-                    Bấm nút <strong>"+ Ghi chép nạp/rút vốn"</strong> hoặc mở lệnh giao dịch để bắt đầu hạch toán.
+            <div style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem;">
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.3rem;">Chưa có biến động vốn nào phù hợp bộ lọc</div>
+                <div style="font-size: 0.85rem;">
+                    Bấm nút <strong>"+ Ghi chép nạp/rút"</strong> hoặc mở lệnh giao dịch để bắt đầu hạch toán.
                 </div>
             </div>
         {/if}

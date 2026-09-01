@@ -38,7 +38,6 @@
                     };
                 });
 
-                // Calculate cumulative stats
                 if (historyList.length > 0) {
                     totalRealizedR = historyList.reduce((acc, curr) => acc + curr.realizedR, 0);
                     totalRealizedPnl = historyList.reduce((acc, curr) => acc + curr.realizedPnl, 0);
@@ -65,92 +64,89 @@
     function formatExitReason(reason) {
         if (!reason) return 'Chốt đóng thủ công';
         switch (reason) {
-            case 'DYNAMIC_CLOSE_FILLED': return '🎯 Khớp Chốt Lời Động';
-            case 'TAKE_PROFIT': return '🎯 Chốt Lời (TP)';
-            case 'STOP_LOSS': return '🛑 Cắt Lỗ (SL)';
-            case 'EXIT_ON_OPPOSITE_SIGNAL': return '🔄 Đảo Chiều Tín Hiệu';
-            case 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS': return '📉 Gãy Cấu Trúc Đẩy';
-            case 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL': return '📉 Đảo Chiều Vùng Đỉnh';
+            case 'DYNAMIC_CLOSE_FILLED': return 'Khớp Chốt Lời Động';
+            case 'TAKE_PROFIT': return 'Chốt Lời (TP)';
+            case 'STOP_LOSS': return 'Cắt Lỗ (SL)';
+            case 'EXIT_ON_OPPOSITE_SIGNAL': return 'Đảo Chiều Tín Hiệu';
+            case 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS': return 'Gãy Cấu Trúc Đẩy';
+            case 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL': return 'Đảo Chiều Vùng Đỉnh';
             case 'MANUAL_DASHBOARD_CLOSE':
-            case 'MANUAL_CLOSE': return '👤 Đóng Thủ Công';
+            case 'MANUAL_CLOSE': return 'Đóng Thủ Công';
             default: return reason;
         }
     }
 </script>
 
-<div class="card" style="box-shadow: none; border: none; background: transparent; padding: 0;">
+<div style="display: flex; flex-direction: column; gap: 1.25rem;">
     <!-- Header with Live Stats -->
-    <div class="card-header" style="background: #FFFFFF; padding: 1.25rem 1.5rem; border-radius: 16px; border: 1px solid var(--border-card); margin-bottom: 1.25rem;">
-        <div>
-            <div class="card-title">Lịch Sử Lệnh Đã Đóng</div>
-            <div class="stat-sub" style="margin-top: 0.2rem;">
-                Dữ liệu chốt lệnh thực tế từ PostgreSQL Database
-            </div>
-        </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <span style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
+                Lệnh Đã Đóng ({historyList.length})
+            </span>
             {#if historyList.length > 0}
-                <span class="badge {totalRealizedR >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.9rem; padding: 0.4rem 0.8rem; font-weight: 700;">
+                <span class="badge {totalRealizedR >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; padding: 0.25rem 0.65rem; font-weight: 700; font-family: var(--font-mono);">
                     Lãi Lũy Kế: {totalRealizedR >= 0 ? '+' : ''}{totalRealizedR.toFixed(2)} R ({totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toFixed(2)})
                 </span>
-                <span class="badge badge-neutral" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                <span class="badge badge-neutral" style="font-size: 0.825rem; padding: 0.25rem 0.65rem; font-family: var(--font-mono);">
                     Win Rate: <strong>{winRate.toFixed(1)}%</strong> ({winCount}/{historyList.length})
                 </span>
             {/if}
-            <button class="btn btn-outline" on:click={loadHistory} disabled={isLoading}>
-                {isLoading ? '⌛ Đang tải...' : '🔄 Tải lại lịch sử'}
-            </button>
         </div>
+        <button class="btn btn-outline" on:click={loadHistory} disabled={isLoading} style="padding: 0.4rem 0.85rem; font-size: 0.825rem;">
+            {isLoading ? 'Đang tải...' : 'Tải lại lịch sử'}
+        </button>
     </div>
 
     <!-- Table of Closed Positions -->
-    <div class="card" style="background: #FFFFFF; border: 1px solid var(--border-card); border-radius: 14px; padding: 1rem 1.25rem;">
-        <div class="table-responsive">
-            <table style="width: 100%; border-collapse: collapse;">
+    <div class="card" style="padding: 1.25rem;">
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 700px;">
                 <thead>
                     <tr style="border-bottom: 1px solid var(--border-card); text-align: left;">
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Mã Coin</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Hướng</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Setup Policy</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Giá Entry</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Giá Exit</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Lý Do Thoát</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Kết Quả R</th>
-                        <th style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian Đóng</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Mã Coin</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Hướng</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Setup Policy</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Entry</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Exit</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Lý Do Thoát</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Kết Quả R</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian Đóng</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each historyList as item (item.id)}
-                        <tr style="border-bottom: 1px solid var(--border-card);">
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
                             <td style="padding: 0.85rem 0.75rem;">
                                 <strong style="font-weight: 800; color: var(--text-primary);">{cleanSymbol(item.symbol)}</strong>
                             </td>
                             <td style="padding: 0.85rem 0.75rem;">
                                 <span class="badge {item.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{item.direction}</span>
                             </td>
-                            <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
                                 {item.policyId || 'MANUAL'}
                             </td>
-                            <td style="padding: 0.85rem 0.75rem; font-weight: 600;">
+                            <td style="padding: 0.85rem 0.75rem; font-weight: 600; font-family: var(--font-mono);">
                                 ${formatPrice(item.entry)}
                             </td>
-                            <td style="padding: 0.85rem 0.75rem; font-weight: 700; color: {item.realizedR >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
+                            <td style="padding: 0.85rem 0.75rem; font-weight: 700; font-family: var(--font-mono); color: {item.realizedR >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
                                 ${formatPrice(item.exit)}
                             </td>
                             <td style="padding: 0.85rem 0.75rem;">
                                 <span class="badge badge-neutral" style="font-size: 0.75rem;">{formatExitReason(item.exitReason)}</span>
                             </td>
-                            <td style="padding: 0.85rem 0.75rem;">
+                            <td style="padding: 0.85rem 0.75rem; font-family: var(--font-mono);">
                                 <span style="font-weight: 800; color: {item.realizedR >= 0 ? 'var(--emerald)' : 'var(--rose)'}; font-size: 0.95rem;">
                                     {item.rResult}
                                 </span>
                                 {#if item.pnlPercent}
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">
+                                    <span style="font-size: 0.725rem; color: var(--text-muted); display: block;">
                                         ({item.pnlPercent})
                                     </span>
                                 {/if}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                                {formatVNTime(item.exitTime)}
+                                {item.exitTime ? formatVNTime(item.exitTime) : 'N/A'}
                             </td>
                         </tr>
                     {/each}
@@ -160,11 +156,8 @@
 
         {#if historyList.length === 0}
             <div style="text-align: center; color: var(--text-muted); padding: 3.5rem 1rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📜</div>
-                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">Chưa có lệnh nào được chốt đóng</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem; max-width: 450px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-                    Toàn bộ các vị thế khi được chốt đóng (thủ công hoặc tự động bởi tín hiệu của Engine) sẽ được lưu trữ vĩnh viễn và thống kê chi tiết tại đây.
-                </div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.3rem;">Chưa có lệnh nào được chốt</div>
+                <div style="font-size: 0.85rem;">Các vị thế khi chốt sẽ tự động lưu lại nhật ký tại đây.</div>
             </div>
         {/if}
     </div>
