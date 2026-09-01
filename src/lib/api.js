@@ -381,7 +381,14 @@ export function translateCycleStage(stage) {
         case 'STAGE_ADVANCED':
         case 'STAGE_ADVANCE': return 'Chuyển Tiến Trình';
         case 'TRANSITION': return 'Chuyển Pha';
-        default: return stage;
+        default: {
+            if (norm.includes('PHASE_A')) return 'Pha A (Hãm Đà)';
+            if (norm.includes('PHASE_B')) return 'Pha B (Tích Lũy Nền)';
+            if (norm.includes('PHASE_C')) return 'Pha C (Rũ Bỏ / Kiểm Định)';
+            if (norm.includes('PHASE_D')) return 'Pha D (Bứt Phá Nội Biên)';
+            if (norm.includes('PHASE_E')) return 'Pha E (Thoát Biên)';
+            return norm.replace(/_/g, ' ');
+        }
     }
 }
 
@@ -400,34 +407,48 @@ export function translateStrength(strength) {
 export function translateCycleReason(reason) {
     if (!reason) return '';
     const norm = reason.toUpperCase().trim();
+
+    // 1. Exact Matches for Wyckoff Events & Reasons
     switch (norm) {
+        case 'ACCUMULATION_SUSTAINED_DOWN_INVALIDATION': return 'Thủng hỗ trợ, gãy cấu trúc Tích Lũy';
+        case 'MARKUP_SUSTAINED_DOWN_INVALIDATION': return 'Gãy sóng tăng, đảo chiều Giảm';
+        case 'DISTRIBUTION_SUSTAINED_UP_INVALIDATION': return 'Vượt kháng cự, gãy cấu trúc Phân Phối';
+        case 'MARKDOWN_SUSTAINED_UP_INVALIDATION': return 'Bứt phá cản, đảo chiều Tăng';
+        case 'SUSTAINED_DOWN_INVALIDATION': return 'Thủng đáy, gãy hỗ trợ xác nhận';
+        case 'SUSTAINED_UP_INVALIDATION': return 'Bứt đỉnh, vượt cản xác nhận';
+        case 'THESIS_INVALIDATION': return 'Gãy cấu trúc xu hướng giả định';
+        case 'SUSTAINED_INVALIDATION': return 'Cấu trúc trước đó bị phá vỡ hoàn toàn';
+
         case 'STRUCTURAL_MATURITY': return 'Cấu trúc nén đạt độ chín muồi';
         case 'STARTED_BALANCE':
         case 'BALANCE_START': return 'Bắt đầu tích tụ cân bằng';
         case 'COMPLETED_PATH': return 'Hoàn thành đường dẫn chu kỳ';
-        case 'SOS_BREAKOUT': return 'Bứt phá điểm mạnh (SOS)';
-        case 'SOW_BREAKDOWN': return 'Thủng đáy điểm yếu (SOW)';
-        case 'SPRING_RECLAIM': return 'Rũ bỏ đáy và lấy lại hỗ trợ (Spring)';
-        case 'UTAD_REJECTION': return 'Bẫy tăng giá đỉnh từ chối (UTAD)';
+        case 'SOS_BREAKOUT':
+        case 'SIGN_OF_STRENGTH': return 'Bứt phá điểm mạnh (SOS)';
+        case 'SOW_BREAKDOWN':
+        case 'SIGN_OF_WEAKNESS': return 'Thủng đáy điểm yếu (SOW)';
+        case 'SPRING_RECLAIM':
+        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ (Spring)';
+        case 'UTAD_REJECTION':
+        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá đỉnh từ chối (UTAD)';
+        case 'TYPED_UTAD_ATTEMPT': return 'Xác nhận nỗ lực bẫy đỉnh (UTAD)';
+        case 'UTAD_ATTEMPT_SUPERSEDED': return 'Bẫy UTAD bị triệt tiêu';
         case 'STAGE_ADVANCE':
         case 'STAGE_ADVANCED': return 'Chuyển tiến trình giai đoạn';
         case 'CYCLE_DISLOCATION':
         case 'DISLOCATION': return 'Lệch biên độ cấu trúc';
         case 'SUSTAINED_DISLOCATION': return 'Gãy cấu trúc kéo dài';
-        case 'THESIS_INVALIDATION': return 'Gãy cấu trúc giả định';
-        case 'SUSTAINED_INVALIDATION': return 'Gãy cấu trúc duy trì';
         case 'CONFLICT_RESOLUTION': return 'Đã giải quyết xung đột đa khung';
         case 'OPTIONAL_FACTS_DEGRADED': return 'Dữ liệu phụ suy giảm';
-        case 'TYPED_UTAD_ATTEMPT': return 'Xác nhận nỗ lực UTAD';
-        case 'UTAD_ATTEMPT_SUPERSEDED': return 'Bẫy UTAD bị triệt tiêu';
+
         case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
         case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
         case 'TRANSITION_CONFIRMED': return 'Chuyển pha bứt phá xác nhận';
         case 'MARKDOWN_CONTINUATION': return 'Tiếp diễn xu hướng Giảm giá';
         case 'MARKUP_CONTINUATION': return 'Tiếp diễn xu hướng Đẩy giá';
-        case 'CLIMAX_STOPPING_CONFIRMED': return 'Xuất hiện nến cao trào hãm đà';
-        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ';
-        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh';
+        case 'CLIMAX_STOPPING_CONFIRMED':
+        case 'SELLING_CLIMAX': return 'Xuất hiện nến cao trào hãm đà (SC)';
+        case 'BUYING_CLIMAX': return 'Xuất hiện nến cao trào mua đỉnh (BC)';
         case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến và khối lượng đồng thuận';
         case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng (CHoCH)';
         case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà chưa bứt cản';
@@ -460,8 +481,40 @@ export function translateCycleReason(reason) {
         case 'REDISTRIBUTION':
         case 'RE_DISTRIBUTION': return 'Tái phân phối xả hàng';
         case 'NO_TRANSITION': return 'Duy trì trạng thái hiện tại';
-        default: return reason;
     }
+
+    // 2. Smart Fuzzy Pattern Matchers (Guarantees zero raw English codes ever leak to UI)
+    if (norm.includes('INVALIDATION')) {
+        if (norm.includes('ACCUMULATION') && norm.includes('DOWN')) return 'Thủng hỗ trợ, gãy cấu trúc Tích Lũy';
+        if (norm.includes('MARKUP') && norm.includes('DOWN')) return 'Gãy sóng tăng, đảo chiều Giảm';
+        if (norm.includes('DISTRIBUTION') && norm.includes('UP')) return 'Vượt kháng cự, gãy cấu trúc Phân Phối';
+        if (norm.includes('MARKDOWN') && norm.includes('UP')) return 'Bứt phá cản, đảo chiều Tăng';
+        if (norm.includes('DOWN')) return 'Thủng đáy, gãy hỗ trợ xác nhận';
+        if (norm.includes('UP')) return 'Vượt đỉnh, gãy cấu trúc cản';
+        return 'Gãy cấu trúc chu kỳ';
+    }
+
+    if (norm.includes('DISLOCATION')) {
+        if (norm.includes('DOWN')) return 'Biến động thủng biên dưới';
+        if (norm.includes('UP')) return 'Biến động vượt biên trên';
+        return 'Lệch biên độ cấu trúc';
+    }
+
+    if (norm.includes('SPRING')) return 'Rũ bỏ đáy gom hàng (Spring)';
+    if (norm.includes('UTAD') || norm.includes('UPTHRUST')) return 'Bẫy tăng giá đỉnh (UTAD)';
+    if (norm.includes('CLIMAX')) return 'Nến cao trào hãm đà';
+    if (norm.includes('BALANCE')) return 'Tích tụ cân bằng trong biên độ';
+    if (norm.includes('BREAKOUT') || norm.includes('BREAK_UP')) return 'Bứt phá kháng cự xác nhận';
+    if (norm.includes('BREAKDOWN') || norm.includes('BREAK_DOWN')) return 'Thủng hỗ trợ xác nhận';
+    if (norm.includes('REACCUMULATION')) return 'Tái tích lũy gom hàng';
+    if (norm.includes('REDISTRIBUTION')) return 'Tái phân phối xả hàng';
+    if (norm.includes('ACCUMULATION')) return 'Tích lũy gom hàng';
+    if (norm.includes('DISTRIBUTION')) return 'Phân phối xả hàng';
+    if (norm.includes('MARKUP')) return 'Đẩy giá tăng trưởng';
+    if (norm.includes('MARKDOWN')) return 'Giảm giá xả hàng';
+
+    // 3. Clean fallback
+    return norm.replace(/_/g, ' ');
 }
 
 export function translateSequencePattern(pattern) {
