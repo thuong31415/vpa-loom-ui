@@ -365,12 +365,21 @@ export function translateCyclePhase(phase) {
 
 export function translateCycleStage(stage) {
     if (!stage) return '';
-    switch (stage.toUpperCase()) {
+    const norm = stage.toUpperCase().trim();
+    switch (norm) {
+        case 'PHASE_A': return 'Pha A (Hãm Đà)';
+        case 'PHASE_B': return 'Pha B (Tích Lũy Nền)';
+        case 'PHASE_C': return 'Pha C (Rũ Bỏ / Kiểm Định)';
+        case 'PHASE_D': return 'Pha D (Bứt Phá Nội Biên)';
+        case 'PHASE_E': return 'Pha E (Thoát Biên)';
         case 'EARLY': return 'Giai Đoạn Đầu';
         case 'MIDDLE':
         case 'MID': return 'Giai Đoạn Giữa';
         case 'LATE': return 'Giai Đoạn Cuối';
         case 'MATURE': return 'Chín Muồi';
+        case 'STRUCTURAL_MATURITY': return 'Độ Chín Cấu Trúc';
+        case 'STAGE_ADVANCED':
+        case 'STAGE_ADVANCE': return 'Chuyển Tiến Trình';
         case 'TRANSITION': return 'Chuyển Pha';
         default: return stage;
     }
@@ -378,10 +387,11 @@ export function translateCycleStage(stage) {
 
 export function translateStrength(strength) {
     if (!strength) return 'Chờ Xác Nhận';
-    switch (strength.toUpperCase()) {
+    switch (strength.toUpperCase().trim()) {
         case 'CONFIRMED': return 'Đã Xác Nhận';
-        case 'PROVISIONAL':
-        case 'BOOTSTRAP_PROVISIONAL':
+        case 'ESTABLISHED': return 'Đã Thiết Lập';
+        case 'PROVISIONAL': return 'Chờ Xác Nhận';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Đang Khởi Tạo';
         default:
             return 'Chờ Xác Nhận';
     }
@@ -389,7 +399,27 @@ export function translateStrength(strength) {
 
 export function translateCycleReason(reason) {
     if (!reason) return '';
-    switch (reason.toUpperCase()) {
+    const norm = reason.toUpperCase().trim();
+    switch (norm) {
+        case 'STRUCTURAL_MATURITY': return 'Cấu trúc nén đạt độ chín muồi';
+        case 'STARTED_BALANCE':
+        case 'BALANCE_START': return 'Bắt đầu tích tụ cân bằng';
+        case 'COMPLETED_PATH': return 'Hoàn thành đường dẫn chu kỳ';
+        case 'SOS_BREAKOUT': return 'Bứt phá điểm mạnh (SOS)';
+        case 'SOW_BREAKDOWN': return 'Thủng đáy điểm yếu (SOW)';
+        case 'SPRING_RECLAIM': return 'Rũ bỏ đáy và lấy lại hỗ trợ (Spring)';
+        case 'UTAD_REJECTION': return 'Bẫy tăng giá đỉnh từ chối (UTAD)';
+        case 'STAGE_ADVANCE':
+        case 'STAGE_ADVANCED': return 'Chuyển tiến trình giai đoạn';
+        case 'CYCLE_DISLOCATION':
+        case 'DISLOCATION': return 'Lệch biên độ cấu trúc';
+        case 'SUSTAINED_DISLOCATION': return 'Gãy cấu trúc kéo dài';
+        case 'THESIS_INVALIDATION': return 'Gãy cấu trúc giả định';
+        case 'SUSTAINED_INVALIDATION': return 'Gãy cấu trúc duy trì';
+        case 'CONFLICT_RESOLUTION': return 'Đã giải quyết xung đột đa khung';
+        case 'OPTIONAL_FACTS_DEGRADED': return 'Dữ liệu phụ suy giảm';
+        case 'TYPED_UTAD_ATTEMPT': return 'Xác nhận nỗ lực UTAD';
+        case 'UTAD_ATTEMPT_SUPERSEDED': return 'Bẫy UTAD bị triệt tiêu';
         case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
         case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
         case 'TRANSITION_CONFIRMED': return 'Chuyển pha bứt phá xác nhận';
@@ -399,7 +429,7 @@ export function translateCycleReason(reason) {
         case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ';
         case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh';
         case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến và khối lượng đồng thuận';
-        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng (CHoCH)';
         case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà chưa bứt cản';
         case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Hấp thụ cân bằng sau đà giảm';
         case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Tích tụ cân bằng sau đà tăng';
@@ -408,7 +438,6 @@ export function translateCycleReason(reason) {
         case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Hoàn tất chuỗi Phân Phối';
         case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận';
         case 'BREAKDOWN_CONFIRMED': return 'Gãy thủng hỗ trợ xác nhận';
-        case 'STAGE_ADVANCED': return 'Tiến trình giai đoạn hoàn tất';
         case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Tín hiệu chuyển pha chưa đồng thuận';
         case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên độ';
         case 'BOOTSTRAP_RECONCILED':
@@ -426,6 +455,10 @@ export function translateCycleReason(reason) {
         case 'MARKDOWN': return 'Tiếp diễn xu hướng Giảm giá';
         case 'ACCUMULATION': return 'Tích lũy gom hàng';
         case 'DISTRIBUTION': return 'Phân phối xả hàng';
+        case 'REACCUMULATION':
+        case 'RE_ACCUMULATION': return 'Tái tích lũy gom hàng';
+        case 'REDISTRIBUTION':
+        case 'RE_DISTRIBUTION': return 'Tái phân phối xả hàng';
         case 'NO_TRANSITION': return 'Duy trì trạng thái hiện tại';
         default: return reason;
     }
@@ -450,11 +483,12 @@ export function translateSequencePattern(pattern) {
 
 export function translateCycleValidity(validity) {
     if (!validity) return '';
-    switch (validity.toUpperCase()) {
+    switch (validity.toUpperCase().trim()) {
         case 'CURRENT': return 'Hợp Lệ';
         case 'LAGGING': return 'Trễ Nhịp';
         case 'DISLOCATED': return 'Lệch Cấu Trúc';
         case 'CONFLICTING': return 'Xung Đột Đa Khung';
+        case 'DEGRADED': return 'Chất Lượng Thấp';
         default: return validity;
     }
 }
@@ -466,9 +500,10 @@ export function translateLegOrdinal(leg) {
 
 export function translateCycleProgress(progress) {
     if (!progress) return '';
-    switch (progress.toUpperCase()) {
+    switch (progress.toUpperCase().trim()) {
         case 'STABLE': return 'Ổn Định';
         case 'ACTIVE': return 'Đang Hoạt Động';
+        case 'CANDIDATE': return 'Đang Theo Dõi';
         case 'DEVELOPING':
         case 'PROGRESSING': return 'Đang Tiến Triển';
         case 'ACCELERATING': return 'Tăng Tốc Đà Giá';
@@ -476,6 +511,39 @@ export function translateCycleProgress(progress) {
         case 'EXHAUSTING': return 'Cạn Kiệt Đà Giá';
         case 'RESOLVING': return 'Đang Chốt Pha';
         default: return progress;
+    }
+}
+
+export function translateRejectionReason(reason) {
+    if (!reason) return 'Chưa đủ điều kiện vào lệnh.';
+    const norm = reason.toUpperCase().trim();
+    switch (norm) {
+        case 'CONTEXT_UNAVAILABLE': return 'Dữ liệu ngữ cảnh chưa sẵn sàng';
+        case 'UNSUPPORTED_SCOPE': return 'Khung thời gian không hỗ trợ';
+        case 'LOCATION_UNAVAILABLE': return 'Vị trí giá chưa thuận lợi';
+        case 'STALE_EVIDENCE': return 'Dữ liệu cũ chưa cập nhật';
+        case 'CONFLICTING_CONFIRMED_EVIDENCE': return 'Tín hiệu đa khung xung đột';
+        case 'NO_CONFIRMED_MICRO_TRIGGER': return 'Chưa có nến kích hoạt đạt chuẩn';
+        case 'NO_CONFIRMED_POST_BREAK_RETEST': return 'Chưa xác nhận nhịp kiểm định sau phá vỡ';
+        case 'NO_CONFIRMED_RANGE_BREAK_CONTINUATION': return 'Chưa xác nhận tiếp diễn phá vỡ biên độ';
+        case 'NO_CONFIRMED_SC_SPRING_RECOVERY': return 'Chưa xác nhận nhịp phục hồi sau Spring';
+        case 'NO_CONFIRMED_SC_MARKUP_RECOVERY': return 'Chưa xác nhận nhịp phục hồi đẩy giá';
+        case 'SC_MARKUP_RECOVERY_INVALIDATED': return 'Mô hình phục hồi đẩy giá bị gãy';
+        case 'SC_MARKUP_ROLE_FLIP_UNAVAILABLE': return 'Chưa xác nhận đảo vai cản thành hỗ trợ';
+        case 'NO_CONFIRMED_SHORT_MARKDOWN_RECOVERY': return 'Chưa xác nhận nhịp phục hồi giảm giá';
+        case 'NO_CONFIRMED_SHORT_BREAK_CONTINUATION': return 'Chưa xác nhận tiếp diễn phá đáy';
+        case 'NO_CONFIRMED_RANGE_BREAK_IMPULSE': return 'Chưa có xung lực bứt phá biên độ';
+        case 'SC_MARKDOWN_RECOVERY_INVALIDATED': return 'Mô hình phục hồi giảm giá bị gãy';
+        case 'SHORT_EPOCH_SUPERSEDED': return 'Chu kỳ giảm đã bị thay thế';
+        case 'NO_POLICY_PROPOSAL': return 'Chưa có mô hình đạt chuẩn vào lệnh';
+        case 'INSUFFICIENT_BREAKOUT_EFFORT': return 'Khối lượng bứt phá chưa đủ lớn';
+        case 'RBI_PROMPT_VALUE_LOCATION_UNAVAILABLE': return 'Vị trí giá chưa tối ưu để bứt phá';
+        case 'CYCLE_PHASE_BOOTSTRAP': return 'Chu kỳ đang trong giai đoạn khởi tạo';
+        case 'CYCLE_PHASE_CONFLICT': return 'Chu kỳ đang có xung đột cấu trúc';
+        case 'CYCLE_PHASE_DISLOCATED': return 'Chu kỳ bị lệch ngoài biên độ';
+        case 'CYCLE_TIMELINE_LAG': return 'Chu kỳ bị trễ nhịp thời gian';
+        case 'CYCLE_PHASE_NOT_DIRECTIONALLY_CONFIRMED': return 'Chu kỳ chưa xác nhận cùng chiều lệnh';
+        default: return translateCycleReason(reason) || reason;
     }
 }
 
@@ -601,7 +669,11 @@ export function formatDecisionExplanation(data) {
         return `Giá đang dao động lưng chừng giữa 2 cản ($${formatPrice(sup.upper)} – $${formatPrice(res.lower)}). Kiên nhẫn quan sát, không mở vị thế ở vùng giá bất lợi.`;
     }
 
-    return data.decision?.waiting_for || data.reason || 'Chưa đủ điều kiện vào lệnh. Chờ nến 4H tiếp theo để xác nhận.';
+    const rawReason = data.decision?.waiting_for || data.decision?.reason || data.reason;
+    if (rawReason) {
+        return translateRejectionReason(rawReason);
+    }
+    return 'Chưa đủ điều kiện vào lệnh. Chờ nến 4H tiếp theo để xác nhận.';
 }
 
 export function translateAction(action) {
