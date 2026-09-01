@@ -81,29 +81,29 @@
                 }
 
                 let isSell = false;
-                let actionTitle = 'HOLD (TIẾP TỤC GIỮ)';
+                let actionTitle = 'TIẾP TỤC NẮM GIỮ';
                 let actionBadge = 'badge-emerald';
-                let actionDesc = `Vị thế an toàn, cấu trúc sóng duy trì (+${rMultiple.toFixed(2)} R). Tiếp tục gồng theo sóng.`;
+                let actionDesc = `Vị thế an toàn, xu hướng được bảo toàn (+${rMultiple.toFixed(2)} R). Tiếp tục nắm giữ theo sóng.`;
 
                 if (engineRec === 'STOP_LOSS') {
                     isSell = true;
-                    actionTitle = 'BÁN (CHẠM STOP LOSS)';
+                    actionTitle = 'CẮT LỖ BẢO VỆ VỐN';
                     actionBadge = 'badge-rose';
                     actionDesc = 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Đóng vị thế ngay.';
                 } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
                     isSell = true;
-                    actionTitle = 'BÁN (ĐẢO CHIỀU CẤU TRÚC)';
+                    actionTitle = 'CHỐT LỜI KHI ĐẢO CHIỀU';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Cây nến đã đóng xác nhận tín hiệu đảo chiều / gãy cấu trúc. Đóng vị thế chốt lời ngay.';
+                    actionDesc = 'Nến 4H đã đóng xác nhận tín hiệu đảo chiều. Đóng vị thế chốt lời ngay.';
                 } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
                     isSell = true;
-                    actionTitle = 'BÁN (XUẤT HIỆN LỰC XẢ)';
+                    actionTitle = 'CHỐT LỜI KHI BỊ XẢ HÀNG';
                     actionBadge = 'badge-rose';
-                    actionDesc = 'Nến đóng có lực xả hàng lớn của Smart Money (Cá mập xả ngầm). Đóng vị thế chốt lời ngay.';
+                    actionDesc = 'Nến đóng có áp lực xả hàng lớn của dòng tiền lớn. Đóng vị thế chốt lời ngay.';
                 } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
-                    actionTitle = 'HOLD (GỒNG LÃI RUNNER)';
+                    actionTitle = 'TIẾP TỤC GỒNG LÃI';
                     actionBadge = 'badge-emerald';
-                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt Target ($${tp.toFixed(3)}), sóng vẫn đang mạnh (+${rMultiple.toFixed(2)} R). Tiếp tục HOLD theo sóng cho đến khi nến đóng đảo chiều.`;
+                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt mục tiêu ($${tp.toFixed(3)}), sóng vẫn đang mạnh (+${rMultiple.toFixed(2)} R). Tiếp tục gồng lãi cho đến khi xuất hiện nến đảo chiều.`;
                 }
 
                 return {
@@ -112,7 +112,7 @@
                     symbol: sym,
                     direction: direction,
                     status: p.status === 'OPEN' ? 'FILLED' : (p.status || 'FILLED'),
-                    statusLabel: p.status === 'OPEN' ? 'Đang Mở (Live)' : (p.status || 'Đang Mở'),
+                    statusLabel: p.status === 'OPEN' ? 'Đang Mở' : (p.status || 'Đang Mở'),
                     statusClass: direction === 'LONG' ? 'badge-emerald' : 'badge-rose',
                     entry: entry,
                     currentPrice: currentPrice,
@@ -129,7 +129,7 @@
                     actionTitle: actionTitle,
                     actionBadge: actionBadge,
                     actionDesc: actionDesc,
-                    actionBtnText: isSell ? 'BÁN NGAY' : 'Chốt đóng vị thế',
+                    actionBtnText: isSell ? 'Bán Ngay' : 'Chốt đóng vị thế',
                     nextStatus: 'CLOSED'
                 };
             });
@@ -192,13 +192,13 @@
             {#if positions.length > 0}
                 <div class="pos-badges-wrap">
                     <span class="badge {totalPnlUsdt >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
-                        P&L: {totalPnlPercent >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}% ({totalPnlUsdt >= 0 ? '+' : ''}${totalPnlUsdt.toFixed(2)})
+                        Lợi Nhuận: {totalPnlPercent >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}% ({totalPnlUsdt >= 0 ? '+' : ''}${totalPnlUsdt.toFixed(2)})
                     </span>
                     <span class="badge badge-emerald" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
                         {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)} R
                     </span>
                     <span class="badge badge-neutral" style="font-size: 0.8rem; font-family: var(--font-mono);">
-                        Vốn: ${totalCapital.toFixed(2)}
+                        Tổng Vốn: ${totalCapital.toFixed(2)}
                     </span>
                 </div>
             {/if}
@@ -220,10 +220,10 @@
                 <div class="position-header">
                     <div class="position-title-group">
                         <span class="station-symbol">{cleanSymbol(pos.symbol)}</span>
-                        <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{pos.direction}</span>
+                        <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{pos.direction === 'SHORT' ? 'BÁN' : 'MUA'}</span>
                         <span class="badge {pos.statusClass}">{pos.statusLabel}</span>
                         {#if pos.policyId}
-                            <span class="badge badge-neutral">Setup: {pos.policyId}</span>
+                            <span class="badge badge-neutral">Chiến Lược: {pos.policyId}</span>
                         {/if}
                     </div>
                     <button class="btn {pos.isSell ? 'btn-rose' : 'btn-outline'}" style="font-size: 0.825rem; padding: 0.35rem 0.85rem;" on:click={() => handleOpenCloseModal(pos)}>
@@ -233,7 +233,7 @@
 
                 <div class="position-metrics-grid">
                     <div class="p-metric-item">
-                        <span class="p-metric-label">Giá Entry</span>
+                        <span class="p-metric-label">Giá Vào</span>
                         <span class="p-metric-val">${formatPrice(pos.entry)}</span>
                     </div>
 
@@ -245,17 +245,17 @@
                     </div>
 
                     <div class="p-metric-item">
-                        <span class="p-metric-label">Stop Loss (SL)</span>
+                        <span class="p-metric-label">Cắt Lỗ</span>
                         <span class="p-metric-val text-rose">${formatPrice(pos.sl)}</span>
                     </div>
 
                     <div class="p-metric-item">
-                        <span class="p-metric-label">Target TP</span>
+                        <span class="p-metric-label">Chốt Lời</span>
                         <span class="p-metric-val text-emerald">${formatPrice(pos.tp)}</span>
                     </div>
 
                     <div class="p-metric-item">
-                        <span class="p-metric-label">Lợi Nhuận P&L</span>
+                        <span class="p-metric-label">Lợi Nhuận</span>
                         <span class="p-metric-val {pos.pnlPercent >= 0 ? 'text-emerald' : 'text-rose'}">
                             {pos.pnlPercent >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%
                             <span style="font-size: 0.75rem; opacity: 0.8;">
@@ -284,7 +284,7 @@
 
                 {#if pos.entryTime}
                     <div style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.75rem; font-family: var(--font-mono);">
-                        Thời gian mở: <strong>{formatVNTime(pos.entryTime)}</strong> · Vốn phân bổ: <strong>${pos.risk.toFixed(2)} USDT</strong>
+                        Thời gian mở: <strong>{formatVNTime(pos.entryTime)}</strong> · Vốn phân bổ: <strong>${pos.risk.toFixed(2)}</strong>
                     </div>
                 {/if}
             </div>

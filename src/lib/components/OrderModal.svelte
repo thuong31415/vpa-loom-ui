@@ -28,9 +28,9 @@
 
         if (e > 0 && s > 0) {
             if (direction === 'LONG' && s >= e) {
-                slWarning = 'Stop Loss phải nhỏ hơn giá Entry';
+                slWarning = 'Mức cắt lỗ phải thấp hơn giá vào lệnh';
             } else if (direction === 'SHORT' && s <= e) {
-                slWarning = 'Stop Loss phải lớn hơn giá Entry';
+                slWarning = 'Mức cắt lỗ phải cao hơn giá vào lệnh';
             } else {
                 slWarning = '';
             }
@@ -75,7 +75,7 @@
             rMultiple: 0,
             rResult: '0.00 R',
             isSell: false,
-            actionTitle: 'HOLD (TIẾP TỤC GIỮ)',
+            actionTitle: 'TIẾP TỤC NẮM GIỮ',
             actionBadge: 'badge-emerald',
             actionDesc: 'Vị thế vừa mở, hệ thống đang theo dõi cấu trúc nến 4H realtime.',
             actionBtnText: 'Chốt đóng vị thế',
@@ -101,14 +101,14 @@
                         class="dir-btn {direction === 'LONG' ? 'active-long' : ''}" 
                         on:click={() => { direction = 'LONG'; }}
                     >
-                        MUA (LONG)
+                        MUA
                     </button>
                     <button 
                         type="button" 
                         class="dir-btn {direction === 'SHORT' ? 'active-short' : ''}" 
                         on:click={() => { direction = 'SHORT'; }}
                     >
-                        BÁN (SHORT)
+                        BÁN
                     </button>
                 </div>
             </div>
@@ -143,7 +143,7 @@
             <!-- 2. 3 Mốc Giá Chiến Lược (Entry / SL / TP) -->
             <div class="params-card">
                 <div class="param-cell">
-                    <label for="p-entry" class="param-label">Giá Entry</label>
+                    <label for="p-entry" class="param-label">Giá Vào</label>
                     <div class="param-input-wrap">
                         <span class="param-prefix">$</span>
                         <input id="p-entry" type="number" step="any" bind:value={entry} placeholder="0.00" required />
@@ -151,7 +151,7 @@
                 </div>
 
                 <div class="param-cell divider">
-                    <label for="p-sl" class="param-label text-rose">Cắt Lỗ (SL)</label>
+                    <label for="p-sl" class="param-label text-rose">Cắt Lỗ</label>
                     <div class="param-input-wrap">
                         <span class="param-prefix text-rose">$</span>
                         <input id="p-sl" type="number" step="any" bind:value={sl} class="text-rose" placeholder="0.00" required />
@@ -159,7 +159,7 @@
                 </div>
 
                 <div class="param-cell">
-                    <label for="p-tp" class="param-label text-emerald">Chốt Lời (TP)</label>
+                    <label for="p-tp" class="param-label text-emerald">Chốt Lời</label>
                     <div class="param-input-wrap">
                         <span class="param-prefix text-emerald">$</span>
                         <input id="p-tp" type="number" step="any" bind:value={tp} class="text-emerald" placeholder="0.00" required />

@@ -154,7 +154,7 @@
     <!-- Card 2: Số Dư Khả Dụng -->
     <div class="card account-stat-card">
         <div class="card-header" style="margin-bottom: 0.35rem;">
-            <span class="price-label">Khả Dụng (USDT)</span>
+            <span class="price-label">Số Dư Khả Dụng</span>
         </div>
         <div class="stat-value text-emerald">
             ${summary.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -180,16 +180,16 @@
     <!-- Card 4: Tổng Tài Sản Equity & Winrate -->
     <div class="card account-stat-card">
         <div class="card-header" style="margin-bottom: 0.35rem;">
-            <span class="price-label">Tổng Tài Sản (Equity)</span>
+            <span class="price-label">Tổng Tài Sản</span>
             <span class="badge {roiPercent >= 0 ? 'badge-emerald' : 'badge-rose'}">
-                ROI: {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(1)}%
+                Hiệu Suất: {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(1)}%
             </span>
         </div>
         <div class="stat-value {summary.totalEquity >= summary.netCapital ? 'text-emerald' : 'text-rose'}">
             ${summary.totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         <div class="stat-sub" style="margin-top: 0.2rem;">
-            {summary.winCount}W - {summary.lossCount}L (Winrate {summary.winRate.toFixed(1)}%)
+            {summary.winCount} Thắng - {summary.lossCount} Thua (Tỷ lệ thắng {summary.winRate.toFixed(1)}%)
         </div>
     </div>
 

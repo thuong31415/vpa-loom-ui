@@ -236,9 +236,9 @@
         if (typedPhase === 'MARKDOWN') {
             return {
                 phaseId: 'MARKDOWN',
-                phaseBadge: 'ĐÈ GIÁ',
+                phaseBadge: 'GIẢM GIÁ',
                 phaseClass: 'markdown',
-                weatherTitle: 'Pha 4: Đè Giá',
+                weatherTitle: 'Pha 4: Giảm Giá',
                 weatherSummary: `Thị trường đang trong xu hướng giảm mạnh. Phe Bán hoàn toàn làm chủ cuộc chơi${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: 'Lực Xả Bán Tháo Toàn Diện',
                 stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
@@ -350,7 +350,7 @@
                 on:click={() => radarFilter = 'MARKDOWN'}
             >
                 <span class="dot-indicator dot-markd"></span>
-                Đè Giá ({phaseCounts.MARKDOWN})
+                Giảm Giá ({phaseCounts.MARKDOWN})
             </button>
             {#if phaseCounts.ACTIONABLE > 0}
                 <button 
@@ -529,13 +529,13 @@
 
                     <div class="hero-right">
                         <div class="hero-price-block">
-                            <div class="hero-price-label">GIÁ THỊ TRƯỜNG LIVE</div>
+                            <div class="hero-price-label">GIÁ THỊ TRƯỜNG</div>
                             <div class="hero-price-val {priceFlash || ''}">
                                 ${formatPrice(currentDisplayPrice)}
                             </div>
                             {#if livePrice && Math.abs(priceDiffPct) >= 0.01}
                                 <div class="hero-delta {priceDiff >= 0 ? 'text-emerald' : 'text-rose'}">
-                                    {priceDiff >= 0 ? '+' : ''}{priceDiffPct.toFixed(2)}% (so với nến 4H)
+                                    {priceDiff >= 0 ? '+' : ''}{priceDiffPct.toFixed(2)}% so với nến 4H
                                 </div>
                             {/if}
                         </div>
@@ -556,7 +556,7 @@
                                 <line x1="3" y1="9" x2="21" y2="9"/>
                                 <line x1="9" y1="21" x2="9" y2="9"/>
                             </svg>
-                            <span>Thước Đo Vùng Giá (Trading Range)</span>
+                            <span>Thước Đo Vùng Giá</span>
                         </span>
                         <span class="badge badge-neutral">Nến 4H</span>
                     </div>
@@ -594,7 +594,7 @@
                                     Cách: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)}</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(1)}%)
                                 </span>
                             {:else}
-                                <span style="font-size: 0.85rem; color: var(--text-muted);">Vùng trời mở (Open Air)</span>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Vùng giá mở tự do</span>
                             {/if}
                         </div>
                     </div>
@@ -652,7 +652,7 @@
                             <div style="background: var(--emerald-bg); border: 1px solid var(--emerald-border); border-radius: 8px; padding: 0.75rem 1rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                     <span class="badge badge-emerald">
-                                        KẾ HOẠCH {singleAnalysisData.plan.direction}
+                                        KẾ HOẠCH {singleAnalysisData.plan.direction === 'SHORT' ? 'BÁN' : 'MUA'}
                                     </span>
                                     <span style="font-size: 0.8rem; font-weight: 700; color: var(--emerald);">
                                         R:R: {singleAnalysisData.plan.reward_risk?.toFixed(2)} R
@@ -660,15 +660,15 @@
                                 </div>
                                 <div class="plan-price-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; text-align: center; margin-bottom: 0.6rem;">
                                     <div class="price-box" style="padding: 0.35rem;">
-                                        <span class="price-label">Entry</span>
+                                        <span class="price-label">Giá Vào</span>
                                         <span class="price-val" style="font-size: 0.825rem;">${formatPrice(singleAnalysisData.plan.entry)}</span>
                                     </div>
                                     <div class="price-box" style="padding: 0.35rem;">
-                                        <span class="price-label">Stop Loss</span>
+                                        <span class="price-label">Cắt Lỗ</span>
                                         <span class="price-val text-rose" style="font-size: 0.825rem;">${formatPrice(singleAnalysisData.plan.stop)}</span>
                                     </div>
                                     <div class="price-box" style="padding: 0.35rem;">
-                                        <span class="price-label">Take Profit</span>
+                                        <span class="price-label">Chốt Lời</span>
                                         <span class="price-val text-emerald" style="font-size: 0.825rem;">${formatPrice(singleAnalysisData.plan.target)}</span>
                                     </div>
                                 </div>

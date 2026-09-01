@@ -160,7 +160,7 @@ export async function createPositionApi({ symbol, direction, entry, sl, tp, risk
             protective_stop: parseFloat(sl),
             target: parseFloat(tp),
             quote_amount: parseFloat(risk),
-            notes: 'Mở vị thế thủ công từ Dashboard'
+            notes: 'Mở vị thế thủ công từ bảng điều khiển'
         };
 
         const url = `${BASE_URL}/api/v1/positions`;
@@ -314,7 +314,7 @@ export function formatVNTime(val) {
 }
 
 // -------------------------------------------------------------
-// 5. Human-Friendly Vietnamese Translators for Wyckoff / VPA Domain
+// 5. Human-Friendly Pure Vietnamese Translators (Zero English Jargon)
 // -------------------------------------------------------------
 
 export function translateTrend(trend) {
@@ -325,7 +325,7 @@ export function translateTrend(trend) {
         case 'MIXED': return 'Đi ngang';
         case 'MIXED_BULLISH': return 'Nghiêng Tăng';
         case 'MIXED_BEARISH': return 'Nghiêng Giảm';
-        case 'CONFLICTING': return 'Giằng co đa khung';
+        case 'CONFLICTING': return 'Giằng co';
         default: return trend;
     }
 }
@@ -344,9 +344,9 @@ export function translateLocation(loc) {
     switch (loc.toUpperCase()) {
         case 'AT_SUPPORT': return 'Sát Hỗ Trợ Đáy';
         case 'AT_RESISTANCE': return 'Sát Kháng Cự Đỉnh';
-        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return 'Lưng Chừng Giữa Range';
-        case 'ABOVE_RESISTANCE': return 'Vượt Kháng Cự (Open Air)';
-        case 'BELOW_SUPPORT': return 'Thủng Hỗ Trợ (Dò Đáy)';
+        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return 'Lưng Chừng Giữa 2 Cản';
+        case 'ABOVE_RESISTANCE': return 'Vượt Trên Kháng Cự';
+        case 'BELOW_SUPPORT': return 'Thủng Dưới Hỗ Trợ';
         default: return loc;
     }
 }
@@ -357,7 +357,7 @@ export function translateCyclePhase(phase) {
         case 'ACCUMULATION': return 'Tích Lũy';
         case 'MARKUP': return 'Đẩy Giá';
         case 'DISTRIBUTION': return 'Phân Phối';
-        case 'MARKDOWN': return 'Đè Giá (Giảm)';
+        case 'MARKDOWN': return 'Giảm Giá';
         case 'UNRESOLVED': return 'Chưa Rõ Pha';
         default: return phase;
     }
@@ -395,25 +395,25 @@ export function translateCycleReason(reason) {
         case 'TRANSITION_CONFIRMED': return 'Chuyển pha bứt phá xác nhận';
         case 'MARKDOWN_CONTINUATION': return 'Tiếp diễn xu hướng Giảm giá';
         case 'MARKUP_CONTINUATION': return 'Tiếp diễn xu hướng Đẩy giá';
-        case 'CLIMAX_STOPPING_CONFIRMED': return 'Xuất hiện nến cao trào chặn đà';
-        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy & lấy lại hỗ trợ (Spring)';
-        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh (UTAD)';
-        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến & Volume đồng thuận';
-        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng (CHoCH)';
-        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà (chưa bứt cản)';
+        case 'CLIMAX_STOPPING_CONFIRMED': return 'Xuất hiện nến cao trào hãm đà';
+        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ';
+        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh';
+        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến và khối lượng đồng thuận';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng';
+        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà chưa bứt cản';
         case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Hấp thụ cân bằng sau đà giảm';
         case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Tích tụ cân bằng sau đà tăng';
-        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Giằng co cân bằng trong Trading Range';
+        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Giằng co cân bằng trong biên độ';
         case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Hoàn tất chuỗi Tích Lũy';
         case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Hoàn tất chuỗi Phân Phối';
-        case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận (SOS)';
-        case 'BREAKDOWN_CONFIRMED': return 'Gãy thủng hỗ trợ xác nhận (SOW)';
+        case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận';
+        case 'BREAKDOWN_CONFIRMED': return 'Gãy thủng hỗ trợ xác nhận';
         case 'STAGE_ADVANCED': return 'Tiến trình giai đoạn hoàn tất';
         case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Tín hiệu chuyển pha chưa đồng thuận';
-        case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên Trading Range';
+        case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên độ';
         case 'BOOTSTRAP_RECONCILED':
         case 'BOOTSTRAP_RECONCILIATION': return 'Khởi đầu chu kỳ mới';
-        case 'CYCLE_REANCHORED': return 'Tái lập mốc biên độ Range';
+        case 'CYCLE_REANCHORED': return 'Tái lập mốc biên độ';
         case 'BOOTSTRAP_SELECTION': return 'Đang chọn lọc cấu trúc chu kỳ';
         case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc chu kỳ';
         case 'BOOTSTRAP_PROVISIONAL': return 'Cấu trúc đang phát triển';
@@ -443,7 +443,7 @@ export function translateSequencePattern(pattern) {
         case 'FLAT_MIXED': return 'Đi Ngang Giằng Co';
         case 'CONTINUATION_UP': return 'Tiếp Diễn Tăng';
         case 'CONTINUATION_DOWN': return 'Tiếp Diễn Giảm';
-        case 'RANGE_BOUND': return 'Dao Động Trong Biên Range';
+        case 'RANGE_BOUND': return 'Dao Động Trong Biên Độ';
         default: return pattern;
     }
 }
@@ -483,13 +483,13 @@ export function translateEffort(type) {
     if (!type) return 'Bình thường';
     switch (type.toUpperCase()) {
         case 'HIGH_EFFORT_LOW_RESULT':
-            return 'Cá mập hấp thụ (Volume lớn nến nén)';
+            return 'Cá mập hấp thụ nguồn cung';
         case 'HIGH_EFFORT_HIGH_RESULT':
-            return 'Dòng tiền bùng nổ (Đẩy giá mạnh mẽ)';
+            return 'Dòng tiền bùng nổ mạnh mẽ';
         case 'LOW_EFFORT_HIGH_RESULT':
-            return 'Cạn kiệt cản (Giá bay thanh thoát)';
+            return 'Cạn kiệt lực cản đối ứng';
         case 'LOW_EFFORT_LOW_RESULT':
-            return 'Thị trường cạn cung (Tích lũy thanh khoản thấp)';
+            return 'Thị trường cạn kiệt nguồn cung';
         default:
             return type;
     }
@@ -499,7 +499,7 @@ export function getFriendlyVPAStatus(effortResult) {
     if (!effortResult) {
         return {
             headline: 'Thanh khoản bình thường',
-            detail: 'Volume ổn định quanh mức trung bình',
+            detail: 'Khối lượng ổn định quanh mức trung bình',
             badgeClass: 'text-secondary'
         };
     }
@@ -513,30 +513,30 @@ export function getFriendlyVPAStatus(effortResult) {
         case 'HIGH_EFFORT_HIGH_RESULT':
             return {
                 headline: 'Dòng tiền bùng nổ',
-                detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
+                detail: `Khối lượng ${vol.toFixed(1)}x · Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-emerald'
             };
         case 'HIGH_EFFORT_LOW_RESULT':
             return {
-                headline: 'Cá mập hấp thụ (Bẫy cung)',
-                detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
+                headline: 'Cá mập hấp thụ nguồn cung',
+                detail: `Khối lượng ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-amber'
             };
         case 'LOW_EFFORT_HIGH_RESULT':
             return {
-                headline: 'Giá lướt cạn cản',
-                detail: `Vol ${vol.toFixed(1)}x · Nến ${spread.toFixed(1)} ATR ${candleState}`,
+                headline: 'Giá bay cạn lực cản',
+                detail: `Khối lượng ${vol.toFixed(1)}x · Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-emerald'
             };
         case 'LOW_EFFORT_LOW_RESULT':
             return {
-                headline: 'Thị trường cạn cung',
-                detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
+                headline: 'Thị trường cạn nguồn cung',
+                detail: `Khối lượng ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };
         default:
             return {
-                headline: `Thanh khoản ${vol.toFixed(1)}x trung bình`,
+                headline: `Khối lượng ${vol.toFixed(1)}x trung bình`,
                 detail: `Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };
@@ -546,7 +546,7 @@ export function getFriendlyVPAStatus(effortResult) {
 export function translateDecisionStatus(status) {
     if (!status) return 'Chưa rõ';
     switch (status.toUpperCase()) {
-        case 'PROPOSED': return 'Có Setup Hợp Lệ';
+        case 'PROPOSED': return 'Có Điểm Vào Lệnh';
         case 'WAITING_CONFIRMATION': return 'Chờ Xác Nhận';
         case 'REJECTED': return 'Chưa Đủ Điều Kiện';
         default: return status;
@@ -558,17 +558,16 @@ export function formatDecisionExplanation(data) {
 
     // 1. If actionable trade plan is available
     if (data.plan) {
-        const dir = data.plan.direction === 'SHORT' ? 'Bán (Short)' : 'Mua (Long)';
-        const policyKey = data.plan.policy_id || data.plan.policyId || data.plan.subtype || data.plan.behavior_subtype || data.plan.behaviorSubtype;
-        const setup = getFriendlyWyckoffTitle(policyKey, data.plan.direction);
-        const rr = data.plan.reward_risk ? data.plan.reward_risk.toFixed(2) : (data.plan.rewardRisk ? data.plan.rewardRisk.toFixed(2) : '2.0');
-        return `Kích hoạt kế hoạch ${dir} với tỷ lệ R:R = ${rr}R. Đã xác nhận ${setup}.`;
+        const dir = data.plan.direction === 'SHORT' ? 'Bán' : 'Mua';
+        const setup = getFriendlyWyckoffTitle(data.plan.policy_id, data.plan.direction);
+        const rr = data.plan.reward_risk ? data.plan.reward_risk.toFixed(2) : '2.0';
+        return `Kích hoạt kế hoạch ${dir} với tỷ lệ R:R = ${rr} R. Đã xác nhận mô hình: ${setup}.`;
     }
 
     // 2. If holding an open position
     if (data.position && data.position.status === 'OPEN') {
-        const dir = data.position.direction || 'LONG';
-        return `Đang nắm giữ vị thế ${dir}. Hệ thống theo dõi trailing stop và tín hiệu đảo chiều để tối ưu hóa lợi nhuận.`;
+        const dir = data.position.direction === 'SHORT' ? 'Bán' : 'Mua';
+        return `Đang nắm giữ vị thế ${dir}. Hệ thống theo dõi tín hiệu bảo vệ vốn và đảo chiều để tối ưu hóa lợi nhuận.`;
     }
 
     // 3. If in Waiting / No-Trade state
@@ -577,41 +576,41 @@ export function formatDecisionExplanation(data) {
     const isSupAvail = sup && sup.status === 'AVAILABLE';
     const isResAvail = res && res.status === 'AVAILABLE';
 
-    // Case 3a: Price discovery / Open air above resistance
+    // Case 3a: Price discovery above resistance
     if (!isResAvail && isSupAvail) {
-        return 'Giá vừa bứt phá vào vùng không gian mở (Open Air). Chờ nhịp Retest hoặc tích lũy cạn cung để thiết lập điểm vào lệnh an toàn.';
+        return 'Giá vừa bứt phá vượt vùng đỉnh. Chờ nhịp kiểm định lại hoặc tích lũy cạn cung để thiết lập điểm vào lệnh an toàn.';
     }
 
-    // Case 3b: Price discovery / Dò đáy mới below support
+    // Case 3b: Price discovery below support
     if (!isSupAvail && isResAvail) {
-        return 'Giá đang dò đáy mới. Chờ xuất hiện nến bán cao trào và cấu trúc tái tích lũy trước khi xem xét mở vị thế.';
+        return 'Giá đang trong vùng dò đáy mới. Chờ xuất hiện nến cao trào hãm đà và cấu trúc tái tích lũy trước khi mở vị thế.';
     }
 
     // Case 3c: Close to Support (distance <= 2.5%)
     if (isSupAvail && sup.distance_percent != null && sup.distance_percent <= 2.5) {
-        return `Giá đang phản ứng gần vùng Hỗ Trợ ($${formatPrice(sup.lower)} – $${formatPrice(sup.upper)}). Chờ nến 4H đóng xác nhận tín hiệu cạn cung/đảo chiều để kích hoạt Long.`;
+        return `Giá đang phản ứng gần vùng Hỗ Trợ ($${formatPrice(sup.lower)} – $${formatPrice(sup.upper)}). Chờ nến 4H đóng xác nhận tín hiệu cạn cung để kích hoạt lệnh Mua.`;
     }
 
     // Case 3d: Close to Resistance (distance <= 2.5%)
     if (isResAvail && res.distance_percent != null && res.distance_percent <= 2.5) {
-        return `Giá đang tiếp cận vùng Kháng Cự ($${formatPrice(res.lower)} – $${formatPrice(res.upper)}). Chờ nến 4H đóng xác nhận tín hiệu từ chối giá hoặc cạn cầu để kích hoạt Short.`;
+        return `Giá đang tiếp cận vùng Kháng Cự ($${formatPrice(res.lower)} – $${formatPrice(res.upper)}). Chờ nến 4H đóng xác nhận tín hiệu từ chối giá để kích hoạt lệnh Bán.`;
     }
 
-    // Case 3e: Between Support and Resistance (Lưng chừng biên)
+    // Case 3e: Between Support and Resistance
     if (isSupAvail && isResAvail) {
         return `Giá đang dao động lưng chừng giữa 2 cản ($${formatPrice(sup.upper)} – $${formatPrice(res.lower)}). Kiên nhẫn quan sát, không mở vị thế ở vùng giá bất lợi.`;
     }
 
-    return data.decision?.waiting_for || data.reason || 'Chưa đủ điều kiện kích hoạt setup Wyckoff. Chờ nến 4H đóng tiếp theo để xác nhận.';
+    return data.decision?.waiting_for || data.reason || 'Chưa đủ điều kiện vào lệnh. Chờ nến 4H tiếp theo để xác nhận.';
 }
 
 export function translateAction(action) {
-    if (!action) return { text: 'Chưa có lệnh', class: 'badge-neutral' };
+    if (!action) return { text: 'Quan sát', class: 'badge-neutral' };
     switch (action.toUpperCase()) {
         case 'BUY_READY':
-            return { text: 'Mua (Long)', class: 'badge-emerald' };
+            return { text: 'Sẵn Sàng Mua', class: 'badge-emerald' };
         case 'SHORT_READY':
-            return { text: 'Bán (Short)', class: 'badge-rose' };
+            return { text: 'Sẵn Sàng Bán', class: 'badge-rose' };
         case 'NO_TRADE':
         default:
             return { text: 'Quan sát', class: 'badge-neutral' };
@@ -619,39 +618,39 @@ export function translateAction(action) {
 }
 
 export function getFriendlyWyckoffTitle(policyId, direction = 'LONG') {
-    if (!policyId) return direction === 'LONG' ? 'Setup Mua Tích Lũy Wyckoff' : 'Setup Bán Phân Phối Wyckoff';
+    if (!policyId) return direction === 'LONG' ? 'Mô hình Gom Hàng Tích Lũy' : 'Mô hình Phân Phối Xả Hàng';
     
     switch (policyId.toUpperCase()) {
         case 'WYCKOFF_CLIMAX_BASE_ACCUMULATION_V1':
-            return 'Wyckoff Schematic 2: Climax Base — Gom Hàng Đáy Cạn Cung (Springless)';
+            return 'Gom Hàng Đáy Cạn Cung';
         case 'SC_SPRING_RECOVERY_V1':
         case 'SC_MARGINAL_SPRING_RECOVERY_V1':
-            return 'Wyckoff Spring Phase C — Bẫy Rũ Bỏ & Gom Hàng (Spring Recovery)';
+            return 'Bẫy Rũ Bỏ Đáy & Gom Hàng';
         case 'SC_SECONDARY_TEST_ABSORPTION_V1':
-            return 'Wyckoff Secondary Test Phase B — Hấp Thụ Cung Đáy (ST Absorption)';
+            return 'Kiểm Định Đáy & Hấp Thụ Cung';
         case 'SC_TERMINAL_ABSORPTION_REVERSAL_V1':
-            return 'Wyckoff Terminal Absorption — Đảo Chiều Hấp Thụ Cực Đại';
+            return 'Đảo Chiều Hấp Thụ Cực Đại';
         case 'SC_MARKUP_RECOVERY_V2':
-            return 'Wyckoff Markup Role Flip — Xác Nhận Đổi Vai Hỗ Trợ';
+            return 'Đổi Vai Kháng Cự Thành Hỗ Trợ';
         case 'SC_MARKDOWN_RECOVERY_V1':
-            return 'Wyckoff Markdown Retest — Chốt Lời Nhịp Rũ Hàng';
+            return 'Kiểm Định Lại Nhịp Rũ Hàng';
         case 'SHORT_BREAK_CONTINUATION_V1':
-            return 'Wyckoff Breakdown Phase D — Sập Tiếp Diễn Phá Hỗ Trợ';
+            return 'Phá Vỡ Hỗ Trợ Tiếp Diễn Đà Giảm';
         case 'POST_BREAK_RETEST_V2':
-            return 'Retest Vùng Phá Vỡ — Kiểm Tra Lại Cản (Post-Break Retest)';
+            return 'Kiểm Định Lại Vùng Vừa Phá Vỡ';
         case 'POST_BREAK_LOW_SUPPLY_ACCEPTANCE_V1':
-            return 'Wyckoff Post-Break Low Supply — Chấp Nhận Giá Cạn Cung';
+            return 'Cạn Cung Sau Phá Vỡ Cản';
         case 'RANGE_BREAK_IMPULSE_V1':
-            return 'Phá Vỡ Biên Range Tích Lũy — Xung Lực Bùng Nổ Volume (RBI)';
+            return 'Bứt Phá Biên Độ Tích Lũy';
         case 'RANGE_BREAK_CONTINUATION_V1':
-            return 'Phá Vỡ Biên Range Tiếp Diễn — Mở Rộng Biên Độ Sóng';
+            return 'Mở Rộng Biên Độ Sóng Tăng';
         case 'DIRECTIONAL_OPEN_SURFACE_V1':
         case 'DIRECTIONAL_OPEN_SURFACE_ACCEPTANCE_V1':
-            return 'Directional Open Surface — Bứt Phá Không Gian Mở (Khám Phá Giá)';
+            return 'Bứt Phá Khám Phá Vùng Giá Mới';
         case 'MICRO_SPRING_UPTHRUST_V1':
-            return 'Micro Spring / Upthrust — Bẫy Thanh Khoản Khung Nhỏ';
+            return 'Bẫy Thanh Khoản Đảo Chiều';
         default:
-            return direction === 'LONG' ? `Setup Mua Wyckoff (${policyId})` : `Setup Bán Wyckoff (${policyId})`;
+            return direction === 'LONG' ? 'Mô hình Mua Tích Lũy' : 'Mô hình Bán Phân Phối';
     }
 }
 
@@ -669,13 +668,13 @@ export function getFriendlyVPADesc(candidate) {
         || 0;
     
     if (effort === 'HIGH_EFFORT_LOW_RESULT') {
-        return `"Khối lượng giao dịch tăng cao (gấp ${vol.toFixed(2)}x SMA20) nhưng biên độ nến bị nén chặt. Lực đối ứng bị cá mập hấp thụ hoàn toàn, xác nhận bẫy thanh khoản và sẵn sàng cho nhịp đảo chiều."`;
+        return `"Khối lượng giao dịch tăng cao gấp ${vol.toFixed(2)}x mức trung bình nhưng nến bị nén chặt. Lực bán bị dòng tiền lớn hấp thụ hoàn toàn, sẵn sàng cho nhịp đảo chiều tăng."`;
     }
     if (effort === 'HIGH_EFFORT_HIGH_RESULT') {
-        return `"Khối lượng bùng nổ (gấp ${vol.toFixed(2)}x SMA20) đồng pha với thân nến mở rộng quyết liệt. Dòng tiền lớn tham gia xác nhận xu hướng bứt phá."`;
+        return `"Khối lượng bùng nổ gấp ${vol.toFixed(2)}x mức trung bình đồng pha với thân nến mở rộng quyết liệt. Dòng tiền lớn tham gia xác nhận xu hướng bứt phá."`;
     }
     if (effort === 'LOW_EFFORT_HIGH_RESULT') {
-        return `"Nguồn cung/cầu đối nghịch cạn kiệt hoàn toàn, giá di chuyển thanh thoát nhẹ nhàng mà không gặp lực cản đối ứng."`;
+        return `"Nguồn cung cạn kiệt hoàn toàn, giá di chuyển thanh thoát nhẹ nhàng mà không gặp lực cản đối ứng."`;
     }
-    return `"Cấu trúc nén chặt tại vùng cản trọng yếu ($${support ? formatPrice(support) : 'Support'} - $${resistance ? formatPrice(resistance) : 'Resistance'}), khối lượng kiểm định đạt chuẩn VPA, mở ra cơ hội giao dịch với tỷ lệ R:R tối ưu."`;
+    return `"Cấu trúc nén chặt tại vùng cản trọng yếu ($${support ? formatPrice(support) : 'Hỗ trợ'} – $${resistance ? formatPrice(resistance) : 'Kháng cự'}), khối lượng kiểm định đạt chuẩn, mở ra cơ hội vào lệnh an toàn."`;
 }

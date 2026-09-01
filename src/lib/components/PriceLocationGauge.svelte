@@ -75,11 +75,11 @@
 
         <!-- Clean Minimal Footer Status -->
         <div class="gauge-footer">
-            <span class="range-subtle-marker">ĐÁY RANGE (0%)</span>
+            <span class="range-subtle-marker">ĐÁY (0%)</span>
             <span class="gauge-center-tip {gauge.zoneClass}">
                 {gauge.zoneTip} ({gauge.percent.toFixed(0)}%)
             </span>
-            <span class="range-subtle-marker">ĐỈNH RANGE (100%)</span>
+            <span class="range-subtle-marker">ĐỈNH (100%)</span>
         </div>
     </div>
 {/if}

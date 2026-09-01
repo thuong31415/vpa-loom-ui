@@ -87,10 +87,10 @@
             {#if historyList.length > 0}
                 <div class="history-badges-wrap">
                     <span class="badge {totalRealizedR >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-weight: 700; font-family: var(--font-mono);">
-                        Lãi: {totalRealizedR >= 0 ? '+' : ''}{totalRealizedR.toFixed(2)} R ({totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toFixed(2)})
+                        Lãi Lũy Kế: {totalRealizedR >= 0 ? '+' : ''}{totalRealizedR.toFixed(2)} R ({totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toFixed(2)})
                     </span>
                     <span class="badge badge-neutral" style="font-size: 0.8rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
-                        Win Rate: <strong>{winRate.toFixed(1)}%</strong> ({winCount}/{historyList.length})
+                        Tỷ Lệ Thắng: <strong>{winRate.toFixed(1)}%</strong> ({winCount}/{historyList.length})
                     </span>
                 </div>
             {/if}
@@ -108,11 +108,11 @@
                     <tr style="border-bottom: 1px solid var(--border-card); text-align: left;">
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Mã Coin</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Hướng</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Setup Policy</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Entry</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Exit</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Lý Do Thoát</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Kết Quả R</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Chiến Lược</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Vào</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Đóng</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Lý Do Đóng</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Hiệu Suất</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Thời Gian Đóng</th>
                     </tr>
                 </thead>
@@ -123,10 +123,10 @@
                                 <strong style="font-weight: 800; color: var(--text-primary);">{cleanSymbol(item.symbol)}</strong>
                             </td>
                             <td style="padding: 0.85rem 0.75rem;">
-                                <span class="badge {item.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{item.direction}</span>
+                                <span class="badge {item.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{item.direction === 'SHORT' ? 'BÁN' : 'MUA'}</span>
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
-                                {item.policyId || 'MANUAL'}
+                                {item.policyId || 'THỦ CÔNG'}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-weight: 600; font-family: var(--font-mono);">
                                 ${formatPrice(item.entry)}
