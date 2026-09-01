@@ -559,8 +559,9 @@ export function formatDecisionExplanation(data) {
     // 1. If actionable trade plan is available
     if (data.plan) {
         const dir = data.plan.direction === 'SHORT' ? 'Bán (Short)' : 'Mua (Long)';
-        const setup = getFriendlyWyckoffTitle(data.plan.policy_id, data.plan.direction);
-        const rr = data.plan.reward_risk ? data.plan.reward_risk.toFixed(2) : '2.0';
+        const policyKey = data.plan.policy_id || data.plan.policyId || data.plan.subtype || data.plan.behavior_subtype || data.plan.behaviorSubtype;
+        const setup = getFriendlyWyckoffTitle(policyKey, data.plan.direction);
+        const rr = data.plan.reward_risk ? data.plan.reward_risk.toFixed(2) : (data.plan.rewardRisk ? data.plan.rewardRisk.toFixed(2) : '2.0');
         return `Kích hoạt kế hoạch ${dir} với tỷ lệ R:R = ${rr}R. Đã xác nhận ${setup}.`;
     }
 

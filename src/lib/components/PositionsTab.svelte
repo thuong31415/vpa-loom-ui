@@ -90,7 +90,7 @@
                     actionTitle = 'BÁN (CHẠM STOP LOSS)';
                     actionBadge = 'badge-rose';
                     actionDesc = 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Đóng vị thế ngay.';
-                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
+                } else if (engineRec === 'EXIT' || (typeof engineRec === 'string' && engineRec.startsWith('EXIT_ON_'))) {
                     isSell = true;
                     actionTitle = 'BÁN (ĐẢO CHIỀU CẤU TRÚC)';
                     actionBadge = 'badge-rose';
