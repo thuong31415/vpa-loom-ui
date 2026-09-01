@@ -277,14 +277,15 @@ export function cleanSymbol(symbol) {
 export function formatPrice(val) {
     if (val === null || val === undefined || isNaN(val)) return '0.00';
     const num = parseFloat(val);
+    if (Math.abs(num) < 0.000001) return '0.00';
     if (num >= 1000) {
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } else if (num >= 1) {
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
     } else if (num >= 0.0001) {
-        return num.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
     } else {
-        return num.toFixed(8);
+        return num.toFixed(6);
     }
 }
 
@@ -639,25 +640,25 @@ export function getFriendlyVPAStatus(effortResult) {
             };
         case 'HIGH_EFFORT_LOW_RESULT':
             return {
-                headline: 'Cá mập hấp thụ nguồn cung',
+                headline: 'Hấp thụ cạn cung',
                 detail: `Khối lượng ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-amber'
             };
         case 'LOW_EFFORT_HIGH_RESULT':
             return {
-                headline: 'Giá bay cạn lực cản',
+                headline: 'Giá bay cạn cản',
                 detail: `Khối lượng ${vol.toFixed(1)}x · Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-emerald'
             };
         case 'LOW_EFFORT_LOW_RESULT':
             return {
-                headline: 'Thị trường cạn nguồn cung',
+                headline: 'Thị trường cạn cung',
                 detail: `Khối lượng ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };
         default:
             return {
-                headline: `Khối lượng ${vol.toFixed(1)}x trung bình`,
+                headline: `Khối lượng ${vol.toFixed(1)}x`,
                 detail: `Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };

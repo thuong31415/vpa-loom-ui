@@ -75,11 +75,11 @@
 
         <!-- Clean Minimal Footer Status -->
         <div class="gauge-footer">
-            <span class="range-subtle-marker">ĐÁY (0%)</span>
+            <span class="range-subtle-marker">ĐÁY</span>
             <span class="gauge-center-tip {gauge.zoneClass}">
                 {gauge.zoneTip} ({gauge.percent.toFixed(0)}%)
             </span>
-            <span class="range-subtle-marker">ĐỈNH (100%)</span>
+            <span class="range-subtle-marker">ĐỈNH</span>
         </div>
     </div>
 {/if}
@@ -167,34 +167,40 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 0.4rem;
         margin-top: 0.45rem;
         font-family: var(--font-mono);
     }
     .range-subtle-marker {
-        font-size: 0.625rem;
+        font-size: 0.65rem;
         color: var(--text-muted);
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.02em;
+        flex-shrink: 0;
     }
     .gauge-center-tip {
-        font-size: 0.775rem;
+        font-size: 0.75rem;
         font-weight: 700;
         font-family: var(--font-main);
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     @media (max-width: 480px) {
         .gauge-container {
-            padding: 0.5rem 0.65rem;
+            padding: 0.45rem 0.6rem;
         }
         .pointer-bubble {
-            font-size: 0.65rem;
+            font-size: 0.625rem;
             padding: 0.1rem 0.35rem;
         }
         .range-subtle-marker {
             font-size: 0.58rem;
         }
         .gauge-center-tip {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
         }
     }
 </style>

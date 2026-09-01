@@ -569,18 +569,18 @@
                     />
 
                     <!-- Support & Resistance Cards -->
-                    <div class="support-res-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                    <div class="support-res-grid">
                         <div class="price-box" style="border-color: var(--emerald-border); background: var(--emerald-bg);">
                             <span class="price-label text-emerald">VÙNG HỖ TRỢ</span>
                             {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
                                 <span class="price-val text-emerald">
                                     ${formatPrice(singleAnalysisData.key_levels.support.lower)} – ${formatPrice(singleAnalysisData.key_levels.support.upper)}
                                 </span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">
-                                    Cách: <strong>${formatPrice(singleAnalysisData.key_levels.support.distance)}</strong> ({singleAnalysisData.key_levels.support.distance_percent?.toFixed(1)}%)
+                                <span class="distance-caption">
+                                    Cách: <strong>${formatPrice(singleAnalysisData.key_levels.support.distance)}</strong> ({singleAnalysisData.key_levels.support.distance_percent != null ? singleAnalysisData.key_levels.support.distance_percent.toFixed(1) : '0.0'}%)
                                 </span>
                             {:else}
-                                <span style="font-size: 0.85rem; color: var(--text-muted);">Đang dò đáy mới</span>
+                                <span class="distance-caption">Đang dò đáy mới</span>
                             {/if}
                         </div>
 
@@ -590,11 +590,11 @@
                                 <span class="price-val text-rose">
                                     ${formatPrice(singleAnalysisData.key_levels.resistance.lower)} – ${formatPrice(singleAnalysisData.key_levels.resistance.upper)}
                                 </span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">
-                                    Cách: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)}</strong> ({singleAnalysisData.key_levels.resistance.distance_percent?.toFixed(1)}%)
+                                <span class="distance-caption">
+                                    Cách: <strong>${formatPrice(singleAnalysisData.key_levels.resistance.distance)}</strong> ({singleAnalysisData.key_levels.resistance.distance_percent != null ? singleAnalysisData.key_levels.resistance.distance_percent.toFixed(1) : '0.0'}%)
                                 </span>
                             {:else}
-                                <span style="font-size: 0.85rem; color: var(--text-muted);">Vùng giá mở tự do</span>
+                                <span class="distance-caption">Vùng giá mở tự do</span>
                             {/if}
                         </div>
                     </div>
@@ -880,6 +880,33 @@
     .cockpit-col-card {
         padding: 1.35rem 1.5rem;
     }
+    .support-res-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    .support-res-grid .price-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .support-res-grid .price-val {
+        font-size: 0.875rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .distance-caption {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     /* Responsive Mobile Overrides */
     @media (max-width: 900px) {
@@ -952,14 +979,31 @@
         .cockpit-col-card {
             padding: 1rem;
         }
+        .support-res-grid {
+            gap: 0.45rem;
+        }
+        .support-res-grid .price-box {
+            padding: 0.45rem 0.5rem;
+        }
+        .support-res-grid .price-val {
+            font-size: 0.78rem;
+            letter-spacing: -0.02em;
+        }
+        .distance-caption {
+            font-size: 0.68rem;
+        }
         .telemetry-grid {
             gap: 0.35rem !important;
         }
         .telemetry-grid .price-box {
-            padding: 0.45rem 0.5rem;
+            padding: 0.45rem 0.35rem;
+            text-align: center;
         }
         .telemetry-grid .price-val {
-            font-size: 0.75rem !important;
+            font-size: 0.72rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .plan-price-grid {
             gap: 0.3rem !important;
