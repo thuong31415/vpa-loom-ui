@@ -1,376 +1,282 @@
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://103.167.88.197:8081';
-export const REMOTE_HOSTS = [
-    'http://103.167.88.197:8081'
-];
-export const REMOTE_API_HOST = REMOTE_HOSTS[0];
-
-// Supported Universe Coins (Sorted by Market Cap & Pillar status)
-export const UNIVERSE_COINS = [
-    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "LINKUSDT",
-    "UNIUSDT", "SUIUSDT", "NEARUSDT", "ADAUSDT", "LDOUSDT",
-    "TAOUSDT", "PEPEUSDT", "ZECUSDT", "ENAUSDT", "ZKUSDT"
-];
-
 /**
- * Robust Multi-Target JSON Fetcher:
- * Automatically rotates across candidate endpoints:
- * 1. Direct Backend API hosts (bypasses static Caddy 405 Method Not Allowed)
- * 2. Relative reverse proxy path
- * 3. Handles non-2xx (404, 405, 502) by trying the next target seamlessly
+ * API Service for vpa-loom-ui
+ * Nối trực tiếp tới Backend Engine Go tại http://103.167.88.197:8081
  */
-async function safeJsonFetch(endpoint, options = {}) {
-    const defaultHeaders = {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        ...(options.headers || {})
-    };
 
-    const fetchOptions = {
-        cache: 'no-store',
-        ...options,
-        headers: defaultHeaders
-    };
+// BASE_URL endpoint mặc định nối trực tiếp tới VPS Go Engine 8081
+export const BASE_URL = 'http://103.167.88.197:8081';
 
-    // Candidate URLs to try in order:
-    // 1. Explicit BASE_URL if set
-    // 2. Relative endpoint (works with Vite proxy or same-origin production deployment)
-    // 3. Localhost in development mode
-    // 4. Remote fallbacks
-    const candidates = [];
-    if (BASE_URL) {
-        candidates.push(`${BASE_URL}${endpoint}`);
+// Danh sách 15 Coin Universe theo dõi cốt lõi
+export const UNIVERSE_COINS = [
+    'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'LINKUSDT', 
+    'UNIUSDT', 'SUIUSDT', 'NEARUSDT', 'ADAUSDT', 'LDOUSDT', 
+    'TAOUSDT', 'PEPEUSDT', 'ZKUSDT', 'APTUSDT', 'AVAXUSDT'
+];
+
+export const REMOTE_API_HOST = 'http://103.167.88.197:8081';
+
+// -------------------------------------------------------------
+// 1. Core Market Analysis & Radar APIs
+// -------------------------------------------------------------
+
+export async function fetchAnalysis(symbol = 'BTCUSDT', interval = '4h', limit = 1000) {
+    try {
+        const url = `${BASE_URL}/api/v1/analysis?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.message || `HTTP ${res.status}: ${res.statusText}`);
+        }
+        const data = await res.json();
+        return { success: true, data };
+    } catch (err) {
+        console.warn(`[API] fetchAnalysis error for ${symbol}:`, err.message);
+        return { success: false, error: err.message };
     }
-    if (import.meta.env.DEV) {
-        candidates.push(`http://localhost:8081${endpoint}`);
-        candidates.push(`http://localhost:8080${endpoint}`);
+}
+
+export async function fetchScanCandidates() {
+    try {
+        const url = `${BASE_URL}/api/v1/scan/candidates`;
+        const res = await fetch(url);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        const data = await res.json();
+        return { success: true, data };
+    } catch (err) {
+        console.warn('[API] fetchScanCandidates error:', err.message);
+        return { success: false, error: err.message };
     }
-    candidates.push(endpoint);
-    REMOTE_HOSTS.forEach(host => {
-        candidates.push(`${host}${endpoint}`);
+}
+
+export async function fetchUniverseRadar(interval = '4h', limit = 1000) {
+    const promises = UNIVERSE_COINS.map(async (symbol) => {
+        try {
+            const res = await fetchAnalysis(symbol, interval, limit);
+            return {
+                symbol,
+                analysis: res.success ? res.data : null,
+                error: res.success ? null : res.error
+            };
+        } catch (e) {
+            return { symbol, analysis: null, error: e.message };
+        }
     });
 
-    let lastStatus = 0;
-    let lastError = null;
-
-    for (const targetUrl of candidates) {
-        try {
-            const response = await fetch(targetUrl, fetchOptions);
-            lastStatus = response.status;
-            
-            if (response.status === 204 || response.status === 205) {
-                return { ok: true, data: null, status: response.status, url: targetUrl };
-            }
-            if (!response.ok) {
-                // If 405 Method Not Allowed, 404, or 502, try next candidate
-                console.warn(`Target ${targetUrl} returned status ${response.status}, trying next candidate...`);
-                continue;
-            }
-            const text = await response.text();
-            if (!text || text.trim() === '') {
-                return { ok: true, data: null, status: response.status, url: targetUrl };
-            }
-            if (text.startsWith('{') || text.startsWith('[')) {
-                return { ok: true, data: JSON.parse(text), status: response.status, url: targetUrl };
-            }
-        } catch (err) {
-            console.warn(`Target ${targetUrl} failed with error:`, err.message);
-            lastError = err;
-        }
-    }
-
-    return { 
-        ok: false, 
-        status: lastStatus, 
-        error: lastError?.message || `Không thể kết nối Backend API (Mã lỗi: ${lastStatus || 'Network'})` 
-    };
+    return await Promise.all(promises);
 }
 
-/**
- * Fetch detailed analysis for a single symbol (e.g., ETH, BTC, SOL)
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=1000
- */
-export async function fetchAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 1000) {
-    const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
-    const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const endpoint = `/api/v1/analysis?symbol=${encodeURIComponent(cleanSymbol)}&interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
+// -------------------------------------------------------------
+// 2. Realtime Binance Tickers & Prices
+// -------------------------------------------------------------
 
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
-    if (res.ok) {
-        return { success: true, data: res.data, source: res.source };
-    }
-    return { success: false, error: res.error || 'Lỗi kết nối API phân tích' };
-}
-
-/**
- * Fetch live ticker price directly from Binance public API
- * GET https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT
- */
 export async function fetchBinanceLivePrice(symbol = 'BTCUSDT') {
     try {
-        const raw = (symbol || 'BTCUSDT').trim().toUpperCase();
-        const cleanSym = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${cleanSym}`, {
-            cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const url = `https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(symbol)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Binance HTTP ${res.status}`);
         const json = await res.json();
-        const price = parseFloat(json.price);
-        return { ok: true, price: isNaN(price) ? null : price };
+        return { ok: true, price: parseFloat(json.price) };
     } catch (err) {
         return { ok: false, price: null, error: err.message };
     }
 }
 
-/**
- * Fetch 24h ticker prices and price change percentages for Universe coins from Binance in 1 call
- */
 export async function fetchBinanceUniverse24hTickers() {
     try {
         const symbolsParam = JSON.stringify(UNIVERSE_COINS);
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsParam)}`, {
-            cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const list = await res.json();
+        const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsParam)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Binance 24h Ticker HTTP ${res.status}`);
+        const data = await res.json();
         const map = {};
-        if (Array.isArray(list)) {
-            for (const item of list) {
-                map[item.symbol] = {
-                    price: parseFloat(item.lastPrice),
-                    priceChangePercent: parseFloat(item.priceChangePercent),
-                    highPrice: parseFloat(item.highPrice),
-                    lowPrice: parseFloat(item.lowPrice),
-                    volume: parseFloat(item.volume)
+        if (Array.isArray(data)) {
+            data.forEach(t => {
+                map[t.symbol] = {
+                    price: parseFloat(t.lastPrice),
+                    priceChangePercent: parseFloat(t.priceChangePercent),
+                    volume: parseFloat(t.volume),
+                    quoteVolume: parseFloat(t.quoteVolume),
+                    highPrice: parseFloat(t.highPrice),
+                    lowPrice: parseFloat(t.lowPrice)
                 };
-            }
+            });
         }
         return { ok: true, data: map };
     } catch (err) {
-        return { ok: false, data: {}, error: err.message };
+        return { ok: false, error: err.message, data: {} };
     }
 }
 
-/**
- * Fetch full radar analysis across all Universe coins via single fast bulk endpoint
- * GET /api/v1/analysis/radar?interval=4h&limit=1000
- */
-export async function fetchUniverseRadar(interval = '4h', limit = 1000) {
-    const endpoint = `/api/v1/analysis/radar?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
-    if (res.ok && res.data && Array.isArray(res.data.items)) {
-        const itemMap = {};
-        for (const item of res.data.items) {
-            if (item && item.symbol) itemMap[item.symbol] = item;
-        }
-        return UNIVERSE_COINS.map(sym => ({
-            symbol: sym,
-            success: !!itemMap[sym],
-            analysis: itemMap[sym] || null
-        }));
-    }
+// -------------------------------------------------------------
+// 3. Position & Capital Management APIs
+// -------------------------------------------------------------
 
-    console.warn("fetchUniverseRadar: Backend bulk radar response not available", res.error);
-    return UNIVERSE_COINS.map(sym => ({
-        symbol: sym,
-        success: false,
-        analysis: null
-    }));
-}
-
-/**
- * Hydrate and resolve analysis for a single symbol
- * GET /api/v1/analysis?symbol=ETHUSDT&interval=4h&limit=1000
- */
-export async function resolveAnalysis(symbol = 'ETHUSDT', interval = '4h', limit = 1000) {
-    return fetchAnalysis(symbol, interval, limit);
-}
-
-/**
- * Fetch market scanner candidates across all 12 universe coins
- * GET /api/v1/analysis/scan?interval=4h&limit=1000
- */
-export async function fetchScanCandidates(interval = '4h', limit = 1000) {
-    const endpoint = `/api/v1/analysis/scan?interval=${encodeURIComponent(interval)}&limit=${limit}&_t=${Date.now()}`;
-
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
-    if (res.ok && res.data) {
-        return { data: res.data, source: res.source, success: true };
-    }
-
-    return {
-        data: {
-            interval: "4h",
-            limit: 360,
-            latest_evidence_cutoff: new Date().toISOString(),
-            scanned_count: UNIVERSE_COINS.length,
-            available_count: UNIVERSE_COINS.length,
-            actionable_count: 0,
-            no_trade_count: UNIVERSE_COINS.length,
-            universe: UNIVERSE_COINS,
-            candidates: [],
-            failures: []
-        },
-        source: 'OFFLINE_FALLBACK',
-        success: false
-    };
-}
-
-/**
- * Fetch open position for a symbol
- * GET /api/v1/positions?symbol=ETHUSDT
- */
-export async function fetchPositionsApi(symbol = 'ETHUSDT') {
-    const raw = (symbol || 'ETHUSDT').trim().toUpperCase();
-    const cleanSymbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
-    const endpoint = `/api/v1/positions?symbol=${encodeURIComponent(cleanSymbol)}`;
-
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
-    if (res.ok) {
-        return { success: true, data: res.data };
-    }
-    return { success: false, data: null };
-}
-
-/**
- * Fetch all open positions across the universe
- * GET /api/v1/positions/open
- */
 export async function fetchOpenPositionsApi() {
-    const res = await safeJsonFetch('/api/v1/positions/open');
-    if (res.ok && Array.isArray(res.data)) {
-        return { success: true, data: res.data };
+    try {
+        const url = `${BASE_URL}/api/v1/positions?status=OPEN`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const json = await res.json();
+        return { success: true, data: json.data || json || [] };
+    } catch (err) {
+        console.warn('[API] fetchOpenPositionsApi error:', err.message);
+        return { success: false, data: [], error: err.message };
     }
-    // Targeted fallback: check priority coins without flooding server connections
-    const priorityCoins = ['LINKUSDT', 'ETHUSDT', 'BTCUSDT', 'SOLUSDT'];
-    const results = [];
-    for (const sym of priorityCoins) {
-        const r = await fetchPositionsApi(sym);
-        if (r.success && r.data && r.data.id) {
-            results.push(r.data);
+}
+
+export async function fetchPositionsApi(status = 'ALL', limit = 100) {
+    try {
+        const statusQuery = status && status !== 'ALL' ? `&status=${status}` : '';
+        const url = `${BASE_URL}/api/v1/positions?limit=${limit}${statusQuery}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        return { success: true, data: json.data || json || [] };
+    } catch (err) {
+        return { success: false, data: [], error: err.message };
+    }
+}
+
+export async function fetchPositionHistoryApi(limit = 100) {
+    try {
+        const url = `${BASE_URL}/api/v1/positions?status=CLOSED&limit=${limit}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        return { success: true, data: json.data || json || [] };
+    } catch (err) {
+        return { success: false, data: [], error: err.message };
+    }
+}
+
+export async function createPositionApi({ symbol, direction, entry, sl, tp, risk = 200 }) {
+    try {
+        const payload = {
+            symbol: symbol || 'BTCUSDT',
+            direction: (direction || 'LONG').toUpperCase(),
+            entry_price: parseFloat(entry),
+            protective_stop: parseFloat(sl),
+            target: parseFloat(tp),
+            quote_amount: parseFloat(risk),
+            notes: 'Mở vị thế thủ công từ Dashboard'
+        };
+
+        const url = `${BASE_URL}/api/v1/positions`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.message || `HTTP ${res.status}`);
         }
+
+        const data = await res.json();
+        return { success: true, data: data.data || data };
+    } catch (err) {
+        console.warn('[API] createPositionApi error:', err.message);
+        return { success: false, error: err.message };
     }
-    return { success: true, data: results };
 }
 
-/**
- * Create a manual open position
- * POST /api/v1/positions
- */
-export async function createPositionApi(orderData) {
-    const endpoint = '/api/v1/positions';
-    const body = JSON.stringify({
-        symbol: orderData.symbol,
-        interval: orderData.interval || '4h',
-        direction: orderData.direction || 'LONG',
-        entryPrice: parseFloat(orderData.entry),
-        quoteAmount: parseFloat(orderData.risk || 200)
-    });
+export async function closePositionApi(positionId, exitPrice, exitReason = 'MANUAL_CLOSE') {
+    try {
+        const url = `${BASE_URL}/api/v1/positions/${positionId}/close`;
+        const payload = {
+            exit_price: parseFloat(exitPrice),
+            exit_reason: exitReason,
+            notes: 'Chốt lệnh từ giao diện'
+        };
 
-    const res = await safeJsonFetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body
-    });
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (res.ok) {
-        return { success: true, data: res.data };
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        return { success: true, data: data.data || data };
+    } catch (err) {
+        console.warn('[API] closePositionApi error:', err.message);
+        return { success: false, error: err.message };
     }
-    return { success: false };
 }
 
-/**
- * Close an active position
- * POST /api/v1/positions/{id}/close
- */
-export async function closePositionApi(id, exitPrice, reason = 'MANUAL_CLOSE') {
-    const endpoint = `/api/v1/positions/${id}/close`;
-    const body = JSON.stringify({
-        exitPrice: parseFloat(exitPrice),
-        reason
-    });
-
-    const res = await safeJsonFetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body
-    });
-
-    if (res.ok) {
-        return { success: true, data: res.data };
-    }
-    return { success: false };
-}
-
-/**
- * Fetch closed trade history from PostgreSQL database
- * GET /api/v1/positions/history?limit=50
- */
-export async function fetchPositionHistoryApi(limit = 50) {
-    const endpoint = `/api/v1/positions/history?limit=${limit}`;
-    const res = await safeJsonFetch(endpoint, { method: 'GET' });
-    if (res.ok && Array.isArray(res.data)) {
-        return { success: true, data: res.data };
-    }
-    return { success: false, data: [] };
-}
-
-/**
- * Fetch Capital Account Summary API
- * GET /api/v1/account/summary
- */
 export async function fetchAccountSummaryApi() {
-    const res = await safeJsonFetch('/api/v1/account/summary', { method: 'GET' });
-    if (res.ok && res.data) {
-        return { success: true, data: res.data };
+    try {
+        const url = `${BASE_URL}/api/v1/account/summary`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        return { success: true, data: json.data || json };
+    } catch (err) {
+        console.warn('[API] fetchAccountSummaryApi error:', err.message);
+        return { success: false, error: err.message };
     }
-    return { success: false, data: null };
 }
 
-export async function fetchCapitalTransactionsApi(limit = 50) {
-    const res = await safeJsonFetch(`/api/v1/account/transactions?limit=${limit}`, { method: 'GET' });
-    if (res.ok && Array.isArray(res.data)) {
-        return { success: true, data: res.data };
+export async function fetchCapitalTransactionsApi(limit = 100) {
+    try {
+        const url = `${BASE_URL}/api/v1/account/transactions?limit=${limit}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        return { success: true, data: json.data || json || [] };
+    } catch (err) {
+        console.warn('[API] fetchCapitalTransactionsApi error:', err.message);
+        return { success: false, data: [], error: err.message };
     }
-    return { success: false, data: [] };
 }
 
-/**
- * Create Capital Transaction API
- * POST /api/v1/account/transactions
- */
-export async function createCapitalTransactionApi(type, amount, note) {
-    const cleanType = type === 'WITHDRAWAL' ? 'WITHDRAW' : type;
-    const res = await safeJsonFetch('/api/v1/account/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: cleanType, amount: parseFloat(amount), note })
-    });
-    if (res.ok) {
-        return { success: true, data: res.data };
+export async function createCapitalTransactionApi(type, amount, note = '') {
+    try {
+        const payload = {
+            transaction_type: type.toUpperCase(),
+            amount: parseFloat(amount),
+            note: note || (type === 'DEPOSIT' ? 'Nạp vốn' : 'Rút vốn')
+        };
+
+        const url = `${BASE_URL}/api/v1/account/transactions`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        return { success: true, data: data.data || data };
+    } catch (err) {
+        console.warn('[API] createCapitalTransactionApi error:', err.message);
+        return { success: false, error: err.message };
     }
-    return { success: false };
 }
 
-/**
- * Clean Symbol name by stripping USDT suffix:
- * ETHUSDT -> ETH, BTCUSDT -> BTC
- */
-export function cleanSymbol(sym) {
-    if (!sym) return '';
-    return String(sym).replace(/USDT$/i, '').trim();
+// -------------------------------------------------------------
+// 4. Formatting & Helpers
+// -------------------------------------------------------------
+
+export function cleanSymbol(symbol) {
+    if (!symbol) return '';
+    return symbol.replace('USDT', '').replace('BUSD', '').replace('USDC', '');
 }
 
-/**
- * Format Price with dynamic decimal places:
- * - >= 1000: 2 decimals ($65,420.50)
- * - >= 1: 2 to 4 decimals ($2,450.25, $0.6756)
- * - < 1: 4 to 6 decimals ($0.008650, $0.000012)
- */
 export function formatPrice(val) {
-    if (val === null || val === undefined || val === '') return '-';
+    if (val === null || val === undefined || isNaN(val)) return '0.00';
     const num = parseFloat(val);
-    if (isNaN(num)) return String(val);
     if (num >= 1000) {
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } else if (num >= 1) {
@@ -382,10 +288,6 @@ export function formatPrice(val) {
     }
 }
 
-/**
- * Format timestamp to Vietnam Time (UTC+7):
- * Example: 2026-08-21 19:13
- */
 export function formatVNTime(val) {
     if (!val) return '—';
     try {
@@ -412,18 +314,18 @@ export function formatVNTime(val) {
 }
 
 // -------------------------------------------------------------
-// Human-Friendly Vietnamese Translators for Wyckoff / VPA Domain
+// 5. Human-Friendly Vietnamese Translators for Wyckoff / VPA Domain
 // -------------------------------------------------------------
 
 export function translateTrend(trend) {
     if (!trend || trend === 'UNAVAILABLE') return 'Chưa xác định';
     switch (trend.toUpperCase()) {
-        case 'BULLISH': return 'Tăng';
-        case 'BEARISH': return 'Giảm';
+        case 'BULLISH': return 'Tăng mạnh';
+        case 'BEARISH': return 'Giảm mạnh';
         case 'MIXED': return 'Đi ngang';
         case 'MIXED_BULLISH': return 'Nghiêng Tăng';
         case 'MIXED_BEARISH': return 'Nghiêng Giảm';
-        case 'CONFLICTING': return 'Xung đột đa khung';
+        case 'CONFLICTING': return 'Giằng co đa khung';
         default: return trend;
     }
 }
@@ -440,11 +342,11 @@ export function translateStructureBreak(msb) {
 export function translateLocation(loc) {
     if (!loc) return 'Chưa xác định';
     switch (loc.toUpperCase()) {
-        case 'AT_SUPPORT': return 'Tại Hỗ Trợ';
-        case 'AT_RESISTANCE': return 'Tại Kháng Cự';
-        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return 'Giữa 2 Cản';
-        case 'ABOVE_RESISTANCE': return 'Phá Trên Kháng Cự';
-        case 'BELOW_SUPPORT': return 'Thủng Dưới Hỗ Trợ';
+        case 'AT_SUPPORT': return 'Sát Hỗ Trợ Đáy';
+        case 'AT_RESISTANCE': return 'Sát Kháng Cự Đỉnh';
+        case 'BETWEEN_SUPPORT_AND_RESISTANCE': return 'Lưng Chừng Giữa Range';
+        case 'ABOVE_RESISTANCE': return 'Vượt Kháng Cự (Open Air)';
+        case 'BELOW_SUPPORT': return 'Thủng Hỗ Trợ (Dò Đáy)';
         default: return loc;
     }
 }
@@ -455,8 +357,8 @@ export function translateCyclePhase(phase) {
         case 'ACCUMULATION': return 'Tích Lũy';
         case 'MARKUP': return 'Đẩy Giá';
         case 'DISTRIBUTION': return 'Phân Phối';
-        case 'MARKDOWN': return 'Giảm Giá';
-        case 'UNRESOLVED': return 'Chưa Chốt Pha';
+        case 'MARKDOWN': return 'Đè Giá (Giảm)';
+        case 'UNRESOLVED': return 'Chưa Rõ Pha';
         default: return phase;
     }
 }
@@ -468,19 +370,20 @@ export function translateCycleStage(stage) {
         case 'MIDDLE':
         case 'MID': return 'Giai Đoạn Giữa';
         case 'LATE': return 'Giai Đoạn Cuối';
-        case 'MATURE': return 'Trưởng Thành';
-        case 'TRANSITION': return 'Chuyển Tiếp';
+        case 'MATURE': return 'Chín Muồi';
+        case 'TRANSITION': return 'Chuyển Pha';
         default: return stage;
     }
 }
 
 export function translateStrength(strength) {
-    if (!strength) return '';
+    if (!strength) return 'Chờ Xác Nhận';
     switch (strength.toUpperCase()) {
         case 'CONFIRMED': return 'Đã Xác Nhận';
-        case 'PROVISIONAL': return 'Tạm Thời';
-        case 'BOOTSTRAP_PROVISIONAL': return 'Sơ Bộ (Đang Định Hình)';
-        default: return strength;
+        case 'PROVISIONAL':
+        case 'BOOTSTRAP_PROVISIONAL':
+        default:
+            return 'Chờ Xác Nhận';
     }
 }
 
@@ -492,32 +395,32 @@ export function translateCycleReason(reason) {
         case 'TRANSITION_CONFIRMED': return 'Chuyển pha bứt phá xác nhận';
         case 'MARKDOWN_CONTINUATION': return 'Tiếp diễn xu hướng Giảm giá';
         case 'MARKUP_CONTINUATION': return 'Tiếp diễn xu hướng Đẩy giá';
-        case 'CLIMAX_STOPPING_CONFIRMED': return 'Cao trào hãm đà xác nhận';
-        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ & lấy lại hỗ trợ (Spring)';
-        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá đỉnh (UTAD)';
-        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc & dòng tiền đồng thuận';
-        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng';
-        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền có hướng (chưa bứt cản)';
-        case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Cân bằng hấp thụ sau đà giảm';
-        case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Cân bằng tích tụ sau đà tăng';
-        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Cân bằng giằng co trong biên độ';
-        case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Đầy đủ chuỗi tích lũy';
-        case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Đầy đủ chuỗi phân phối';
-        case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận';
-        case 'BREAKDOWN_CONFIRMED': return 'Thủng đáy hỗ trợ xác nhận';
+        case 'CLIMAX_STOPPING_CONFIRMED': return 'Xuất hiện nến cao trào chặn đà';
+        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy & lấy lại hỗ trợ (Spring)';
+        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh (UTAD)';
+        case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến & Volume đồng thuận';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng (CHoCH)';
+        case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà (chưa bứt cản)';
+        case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Hấp thụ cân bằng sau đà giảm';
+        case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Tích tụ cân bằng sau đà tăng';
+        case 'DETERMINISTIC_BALANCE_FALLBACK': return 'Giằng co cân bằng trong Trading Range';
+        case 'COMPLETE_ACCUMULATION_SEQUENCE': return 'Hoàn tất chuỗi Tích Lũy';
+        case 'COMPLETE_DISTRIBUTION_SEQUENCE': return 'Hoàn tất chuỗi Phân Phối';
+        case 'BREAKOUT_CONFIRMED': return 'Bứt phá kháng cự xác nhận (SOS)';
+        case 'BREAKDOWN_CONFIRMED': return 'Gãy thủng hỗ trợ xác nhận (SOW)';
         case 'STAGE_ADVANCED': return 'Tiến trình giai đoạn hoàn tất';
-        case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Xung đột bằng chứng chuyển pha';
-        case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên cấu trúc';
+        case 'CONFLICTING_TRANSITION_EVIDENCE': return 'Tín hiệu chuyển pha chưa đồng thuận';
+        case 'DISLOCATED_PRICE_ACTION': return 'Biến động lệch ngoài biên Trading Range';
         case 'BOOTSTRAP_RECONCILED':
-        case 'BOOTSTRAP_RECONCILIATION': return 'Đồng thuận cấu trúc ban đầu';
-        case 'CYCLE_REANCHORED': return 'Tái thiết lập mốc chu kỳ';
-        case 'BOOTSTRAP_SELECTION': return 'Chọn lọc cấu trúc ban đầu';
-        case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc ban đầu';
-        case 'BOOTSTRAP_PROVISIONAL': return 'Cấu trúc chu kỳ sơ bộ';
+        case 'BOOTSTRAP_RECONCILIATION': return 'Khởi đầu chu kỳ mới';
+        case 'CYCLE_REANCHORED': return 'Tái lập mốc biên độ Range';
+        case 'BOOTSTRAP_SELECTION': return 'Đang chọn lọc cấu trúc chu kỳ';
+        case 'BOOTSTRAP_AUTHORITY': return 'Xác thực cấu trúc chu kỳ';
+        case 'BOOTSTRAP_PROVISIONAL': return 'Cấu trúc đang phát triển';
         case 'BOOTSTRAP_V1_HINT':
         case 'V1_HINT':
-        case 'BOOTSTRAP_HINT': return 'Định hình xu hướng ban đầu';
-        case 'BOOTSTRAP_CREATED': return 'Khởi tạo cấu trúc chu kỳ';
+        case 'BOOTSTRAP_HINT': return 'Mới chớm hình thành pha';
+        case 'BOOTSTRAP_CREATED': return 'Bắt đầu chu kỳ mới';
         case 'CONTINUATION': return 'Tiếp diễn đà giá';
         case 'MARKUP': return 'Tiếp diễn xu hướng Đẩy giá';
         case 'MARKDOWN': return 'Tiếp diễn xu hướng Giảm giá';
@@ -540,7 +443,7 @@ export function translateSequencePattern(pattern) {
         case 'FLAT_MIXED': return 'Đi Ngang Giằng Co';
         case 'CONTINUATION_UP': return 'Tiếp Diễn Tăng';
         case 'CONTINUATION_DOWN': return 'Tiếp Diễn Giảm';
-        case 'RANGE_BOUND': return 'Dao Động Trong Biên';
+        case 'RANGE_BOUND': return 'Dao Động Trong Biên Range';
         default: return pattern;
     }
 }
@@ -580,13 +483,13 @@ export function translateEffort(type) {
     if (!type) return 'Bình thường';
     switch (type.toUpperCase()) {
         case 'HIGH_EFFORT_LOW_RESULT':
-            return 'Cá mập hấp thụ (Bẫy thanh khoản)';
+            return 'Cá mập hấp thụ (Volume lớn nến nén)';
         case 'HIGH_EFFORT_HIGH_RESULT':
-            return 'Dòng tiền bùng nổ (Đẩy giá mạnh)';
+            return 'Dòng tiền bùng nổ (Đẩy giá mạnh mẽ)';
         case 'LOW_EFFORT_HIGH_RESULT':
-            return 'Cạn kiệt cản (Giá bay nhẹ)';
+            return 'Cạn kiệt cản (Giá bay thanh thoát)';
         case 'LOW_EFFORT_LOW_RESULT':
-            return 'Thị trường cạn cung (Tích lũy)';
+            return 'Thị trường cạn cung (Tích lũy thanh khoản thấp)';
         default:
             return type;
     }
@@ -596,7 +499,7 @@ export function getFriendlyVPAStatus(effortResult) {
     if (!effortResult) {
         return {
             headline: 'Thanh khoản bình thường',
-            detail: 'Volume ổn định quanh trung bình',
+            detail: 'Volume ổn định quanh mức trung bình',
             badgeClass: 'text-secondary'
         };
     }
@@ -615,7 +518,7 @@ export function getFriendlyVPAStatus(effortResult) {
             };
         case 'HIGH_EFFORT_LOW_RESULT':
             return {
-                headline: 'Cá mập hấp thụ',
+                headline: 'Cá mập hấp thụ (Bẫy cung)',
                 detail: `Vol ${vol.toFixed(1)}x · Nến nén ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-amber'
             };
@@ -643,17 +546,13 @@ export function getFriendlyVPAStatus(effortResult) {
 export function translateDecisionStatus(status) {
     if (!status) return 'Chưa rõ';
     switch (status.toUpperCase()) {
-        case 'PROPOSED': return 'Có Kèo Hợp Lệ';
+        case 'PROPOSED': return 'Có Setup Hợp Lệ';
         case 'WAITING_CONFIRMATION': return 'Chờ Xác Nhận';
         case 'REJECTED': return 'Chưa Đủ Điều Kiện';
         default: return status;
     }
 }
 
-/**
- * Concise, actionable human-friendly Decision synthesizer.
- * Eliminates redundant metric dumps and explains clearly what the system is waiting for.
- */
 export function formatDecisionExplanation(data) {
     if (!data) return 'Đang quan sát thị trường.';
 
@@ -702,7 +601,6 @@ export function formatDecisionExplanation(data) {
         return `Giá đang dao động lưng chừng giữa 2 cản ($${formatPrice(sup.upper)} – $${formatPrice(res.lower)}). Kiên nhẫn quan sát, không mở vị thế ở vùng giá bất lợi.`;
     }
 
-    // Fallback: If backend provides a custom concise string or default
     return data.decision?.waiting_for || data.reason || 'Chưa đủ điều kiện kích hoạt setup Wyckoff. Chờ nến 4H đóng tiếp theo để xác nhận.';
 }
 

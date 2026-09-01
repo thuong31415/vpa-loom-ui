@@ -190,8 +190,8 @@
         const reason = cycle?.reason || '';
         const pattern = cycle?.sequence_pattern || '';
 
-        const stageVi = translateCycleStage(stage);
-        const strengthVi = translateStrength(strength);
+        const stageVi = translateCycleStage(stage) || 'Giai Đoạn Đầu';
+        const strengthVi = translateStrength(strength) || 'Chờ Xác Nhận';
         const validityVi = translateCycleValidity(validity);
         const progressVi = translateCycleProgress(progress);
         const reasonVi = translateCycleReason(reason);
@@ -439,7 +439,7 @@
                                 {weather.phaseBadge}
                             </span>
                             <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">
-                                {weather.stageVi || 'Giai đoạn đầu'}
+                                {weather.stageVi || 'Giai Đoạn Đầu'}
                             </span>
                         {/if}
                     </div>
@@ -462,7 +462,7 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--text-muted);">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                         </svg>
-                        <span>{weather?.reasonVi || 'Định hình xu hướng ban đầu'}</span>
+                        <span>{weather?.reasonVi || 'Mới chớm hình thành pha'}</span>
                     </div>
 
                     <!-- Footer Action -->
@@ -514,10 +514,10 @@
                                 {marketWeather.phaseBadge}
                             </span>
                             <span class="badge badge-neutral">
-                                {marketWeather.stageVi || 'Giai đoạn đầu'}
+                                {marketWeather.stageVi || 'Giai Đoạn Đầu'}
                             </span>
                             <span class="badge {marketWeather.strength === 'CONFIRMED' ? 'badge-emerald' : 'badge-amber'}">
-                                {marketWeather.strengthVi || 'Thăm Dò'}
+                                {marketWeather.strengthVi || 'Chờ Xác Nhận'}
                             </span>
                         </div>
 
