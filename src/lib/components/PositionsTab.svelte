@@ -273,18 +273,13 @@
                 </div>
 
                 <!-- Strategic Action Banner -->
-                <div style="margin-top: 1rem; padding: 0.85rem 1.15rem; background: {pos.isSell ? 'var(--phase-markdown-bg)' : 'var(--phase-markup-bg)'}; border: 1px solid {pos.isSell ? 'var(--phase-markdown-border)' : 'var(--phase-markup-border)'}; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                    <div>
-                        <div style="font-size: 0.925rem; font-weight: 800; color: {pos.isSell ? 'var(--rose)' : 'var(--emerald)'};">
-                            {pos.actionTitle}
-                        </div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
-                            {pos.actionDesc}
-                        </div>
+                <div style="margin-top: 0.85rem; padding: 0.85rem 1.15rem; background: {pos.isSell ? 'var(--phase-markdown-bg)' : 'var(--phase-markup-bg)'}; border: 1px solid {pos.isSell ? 'var(--phase-markdown-border)' : 'var(--phase-markup-border)'}; border-radius: 8px;">
+                    <div style="font-size: 0.9rem; font-weight: 800; color: {pos.isSell ? 'var(--rose)' : 'var(--emerald)'};">
+                        {pos.actionTitle}
                     </div>
-                    <span class="badge {pos.actionBadge}" style="font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.75rem;">
-                        {pos.isSell ? 'BÁN' : 'HOLD'}
-                    </span>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.45;">
+                        {pos.actionDesc}
+                    </div>
                 </div>
 
                 {#if pos.entryTime}

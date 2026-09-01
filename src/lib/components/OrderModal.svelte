@@ -68,10 +68,6 @@
             nextStatus: 'CLOSED'
         };
 
-        if (res.success) {
-            alert(`Vị thế ${direction} ${symbol} @ $${entry} đã được ghi nhận trực tiếp vào Backend 8081!`);
-        }
-
         onSubmitOrderSuccess(newPos);
         onClose();
     }

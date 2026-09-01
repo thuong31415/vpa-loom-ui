@@ -40,10 +40,6 @@
             note: note || (type === 'DEPOSIT' ? 'Nạp thêm vốn' : 'Rút chốt lời')
         };
 
-        if (res.success) {
-            alert(`Giao dịch ${type === 'DEPOSIT' ? 'NẠP' : 'RÚT'} $${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT thành công!`);
-        }
-
         onSubmitDeposit(data);
         amount = '';
         note = '';

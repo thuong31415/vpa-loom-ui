@@ -420,10 +420,7 @@
                 >
                     <!-- Header: Symbol + Live Price -->
                     <div class="station-header">
-                        <div class="station-symbol-group">
-                            <span class="station-symbol">{sym}</span>
-                            <span class="station-quote">/USDT</span>
-                        </div>
+                        <span class="station-symbol">{sym}</span>
                         <div class="station-price-group">
                             <div class="station-price">${formatPrice(liveP)}</div>
                             <div class="station-change {changePct >= 0 ? 'text-emerald' : 'text-rose'}">
@@ -470,8 +467,8 @@
                         <span class="badge {analysis?.action === 'BUY_READY' ? 'badge-emerald' : analysis?.action === 'SHORT_READY' ? 'badge-rose' : 'badge-neutral'}">
                             {act.text}
                         </span>
-                        <span style="font-size: 0.775rem; color: var(--text-primary); font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem;">
-                            Chi tiết &rarr;
+                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 700;">
+                            &rarr;
                         </span>
                     </div>
                 </div>
@@ -532,7 +529,7 @@
 
                     <div class="hero-right">
                         <div class="hero-price-block">
-                            <div class="hero-price-label">{cleanSymbol(selectedSymbol)} / USDT LIVE</div>
+                            <div class="hero-price-label">GIÁ THỊ TRƯỜNG LIVE</div>
                             <div class="hero-price-val {priceFlash || ''}">
                                 ${formatPrice(currentDisplayPrice)}
                             </div>
@@ -611,7 +608,7 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                                 </svg>
-                                <span>Cảm Biến VPA & Quyết Định Thuật Toán</span>
+                                <span>Tín Hiệu VPA & Hành Động</span>
                             </span>
                             <span class="badge {act.class}">{act.text}</span>
                         </div>
@@ -619,19 +616,19 @@
                         <!-- 3 Mini Telemetry Cards -->
                         <div class="telemetry-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.85rem;">
                             <div class="price-box">
-                                <span class="price-label">Xu Hướng Bias</span>
+                                <span class="price-label">Xu Hướng</span>
                                 <span class="price-val" style="font-size: 0.85rem;">
                                     {translateTrend(singleAnalysisData.market_state?.trend)}
                                 </span>
                             </div>
                             <div class="price-box">
-                                <span class="price-label">Cấu Trúc Nến</span>
+                                <span class="price-label">Cấu Trúc</span>
                                 <span class="price-val" style="font-size: 0.85rem;">
                                     {translateStructureBreak(singleAnalysisData.market_state?.structure_break)}
                                 </span>
                             </div>
                             <div class="price-box">
-                                <span class="price-label">Áp Lực VPA</span>
+                                <span class="price-label">Tín Hiệu VPA</span>
                                 <span class="price-val" style="font-size: 0.85rem;" title="{vpa.headline}">
                                     {vpa.headline}
                                 </span>

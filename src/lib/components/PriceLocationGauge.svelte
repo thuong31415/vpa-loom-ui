@@ -12,9 +12,7 @@
         if (isNaN(p) || p <= 0) return null;
 
         const supUpper = sup && sup.upper ? parseFloat(sup.upper) : null;
-        const supLower = sup && sup.lower ? parseFloat(sup.lower) : null;
         const resLower = res && res.lower ? parseFloat(res.lower) : null;
-        const resUpper = res && res.upper ? parseFloat(res.upper) : null;
 
         if (supUpper === null || resLower === null || resLower <= supUpper) {
             return null;
@@ -24,38 +22,28 @@
         const rawPercent = ((p - supUpper) / totalRange) * 100;
         const clampedPercent = Math.max(0, Math.min(100, rawPercent));
 
-        let zoneLabel = '';
-        let zoneClass = '';
-        let zoneTip = '';
+        let zoneClass = 'text-amber';
+        let zoneTip = 'Lưng chừng Trading Range';
 
         if (p <= supUpper) {
-            zoneLabel = 'Sát Vùng Hỗ Trợ Đáy';
             zoneClass = 'text-emerald';
-            zoneTip = 'Đang ở hỗ trợ đáy';
+            zoneTip = 'Phản ứng tại Hỗ Trợ Đáy';
         } else if (p >= resLower) {
-            zoneLabel = 'Sát Vùng Kháng Cự Đỉnh';
             zoneClass = 'text-rose';
-            zoneTip = 'Đang ở kháng cự đỉnh';
+            zoneTip = 'Phản ứng tại Kháng Cự Đỉnh';
         } else if (clampedPercent <= 30) {
-            zoneLabel = 'Vùng Thấp Nghiêng Hỗ Trợ';
             zoneClass = 'text-emerald';
-            zoneTip = 'Nghiêng hỗ trợ';
+            zoneTip = 'Vùng thấp cận Hỗ Trợ';
         } else if (clampedPercent >= 70) {
-            zoneLabel = 'Vùng Cao Cận Kháng Cự';
             zoneClass = 'text-rose';
-            zoneTip = 'Nghiêng kháng cự';
+            zoneTip = 'Vùng cao cận Kháng Cự';
         } else {
-            zoneLabel = 'Vùng Lưng Chừng Biên';
             zoneClass = 'text-amber';
-            zoneTip = 'Lưng chừng Range';
+            zoneTip = 'Lưng chừng giữa 2 cản';
         }
 
         return {
             percent: clampedPercent,
-            rawPercent,
-            supUpper,
-            resLower,
-            zoneLabel,
             zoneClass,
             zoneTip
         };
@@ -85,19 +73,13 @@
             </div>
         </div>
 
-        <!-- Labels at edges -->
-        <div class="gauge-labels">
-            <div class="gauge-edge-label">
-                <span class="label-title">HỖ TRỢ ĐÁY</span>
-                <span class="label-val text-emerald">${formatPrice(gauge.supUpper)}</span>
-            </div>
-            <div class="gauge-center-tip {gauge.zoneClass}">
-                {gauge.zoneTip} ({gauge.percent.toFixed(0)}% Range)
-            </div>
-            <div class="gauge-edge-label right">
-                <span class="label-title">KHÁNG CỰ ĐỈNH</span>
-                <span class="label-val text-rose">${formatPrice(gauge.resLower)}</span>
-            </div>
+        <!-- Clean Minimal Footer Status -->
+        <div class="gauge-footer">
+            <span class="range-subtle-marker">ĐÁY RANGE (0%)</span>
+            <span class="gauge-center-tip {gauge.zoneClass}">
+                {gauge.zoneTip} ({gauge.percent.toFixed(0)}%)
+            </span>
+            <span class="range-subtle-marker">ĐỈNH RANGE (100%)</span>
         </div>
     </div>
 {/if}
@@ -181,36 +163,23 @@
         border-style: solid;
         border-color: var(--text-primary) transparent transparent transparent;
     }
-    .gauge-labels {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
+    .gauge-footer {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
         margin-top: 0.45rem;
-        gap: 0.5rem;
-    }
-    .gauge-edge-label {
-        display: flex;
-        flex-direction: column;
-        text-align: left;
-    }
-    .gauge-edge-label.right {
-        text-align: right;
-    }
-    .label-title {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        font-weight: 700;
-        letter-spacing: 0.03em;
-    }
-    .label-val {
-        font-size: 0.825rem;
-        font-weight: 700;
         font-family: var(--font-mono);
     }
+    .range-subtle-marker {
+        font-size: 0.625rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
     .gauge-center-tip {
-        text-align: center;
-        font-size: 0.75rem;
+        font-size: 0.775rem;
         font-weight: 700;
+        font-family: var(--font-main);
     }
 
     @media (max-width: 480px) {
@@ -221,17 +190,11 @@
             font-size: 0.65rem;
             padding: 0.1rem 0.35rem;
         }
-        .gauge-labels {
-            gap: 0.25rem;
-        }
-        .label-title {
-            font-size: 0.6rem;
-        }
-        .label-val {
-            font-size: 0.75rem;
+        .range-subtle-marker {
+            font-size: 0.58rem;
         }
         .gauge-center-tip {
-            font-size: 0.68rem;
+            font-size: 0.7rem;
         }
     }
 </style>

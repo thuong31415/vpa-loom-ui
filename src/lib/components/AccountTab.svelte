@@ -155,7 +155,6 @@
     <div class="card account-stat-card">
         <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Khả Dụng (USDT)</span>
-            <span class="badge badge-emerald">Ví tự do</span>
         </div>
         <div class="stat-value text-emerald">
             ${summary.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -169,7 +168,6 @@
     <div class="card account-stat-card">
         <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Ký Quỹ Vị Thế</span>
-            <span class="badge badge-cyan">Margin</span>
         </div>
         <div class="stat-value">
             ${summary.inPositions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
