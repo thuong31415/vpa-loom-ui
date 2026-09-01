@@ -7,7 +7,7 @@
     export let entry = '';
     export let sl = '';
     export let tp = '';
-    export let risk = 200;
+    export let risk = 100;
     export let onClose = () => {};
     export let onSubmitOrderSuccess = (newPos) => {};
 
@@ -28,9 +28,9 @@
 
         if (e > 0 && s > 0) {
             if (direction === 'LONG' && s >= e) {
-                slWarning = 'SL phải thấp hơn giá Entry đối với lệnh Long';
+                slWarning = 'Stop Loss phải nhỏ hơn giá Entry';
             } else if (direction === 'SHORT' && s <= e) {
-                slWarning = 'SL phải cao hơn giá Entry đối với lệnh Short';
+                slWarning = 'Stop Loss phải lớn hơn giá Entry';
             } else {
                 slWarning = '';
             }
@@ -69,7 +69,7 @@
             currentPrice: parseFloat(entry) || entryNum,
             sl: parseFloat(sl) || slNum,
             tp: parseFloat(tp) || tpNum,
-            risk: parseFloat(risk) || 200,
+            risk: parseFloat(risk) || 100,
             pnlPercent: 0,
             pnlUsdt: 0,
             rMultiple: 0,
@@ -90,155 +90,110 @@
 
 {#if isOpen}
 <div class="modal-overlay" on:click|self={onClose} on:keydown={(e) => e.key === 'Escape' && onClose()} role="dialog" aria-modal="true" tabindex="-1">
-    <div class="modal-card order-modal-box">
-        <!-- Minimal Top Bar: Direction Selector + Symbol + Close -->
-        <div class="order-top-bar">
-            <div class="dir-toggle">
-                <button 
-                    type="button" 
-                    class="dir-btn {direction === 'LONG' ? 'active long' : ''}" 
-                    on:click={() => { direction = 'LONG'; }}
-                >
-                    MUA (LONG)
-                </button>
-                <button 
-                    type="button" 
-                    class="dir-btn {direction === 'SHORT' ? 'active short' : ''}" 
-                    on:click={() => { direction = 'SHORT'; }}
-                >
-                    BÁN (SHORT)
-                </button>
+    <div class="order-ticket">
+        <!-- Minimal Header -->
+        <div class="ticket-header">
+            <div class="ticket-title-group">
+                <span class="ticket-symbol">{cleanSymbol(symbol)}</span>
+                <div class="dir-toggle">
+                    <button 
+                        type="button" 
+                        class="dir-btn {direction === 'LONG' ? 'active-long' : ''}" 
+                        on:click={() => { direction = 'LONG'; }}
+                    >
+                        MUA (LONG)
+                    </button>
+                    <button 
+                        type="button" 
+                        class="dir-btn {direction === 'SHORT' ? 'active-short' : ''}" 
+                        on:click={() => { direction = 'SHORT'; }}
+                    >
+                        BÁN (SHORT)
+                    </button>
+                </div>
             </div>
-
-            <div class="order-sym-badge">
-                {cleanSymbol(symbol)}
-            </div>
-
-            <button type="button" class="order-close-btn" on:click={onClose} aria-label="Đóng">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
+            <button type="button" class="ticket-close" on:click={onClose} aria-label="Đóng">✕</button>
         </div>
 
-        <form on:submit={handleSubmit} class="order-form">
-            <!-- Row 1: Entry & Vốn -->
-            <div class="input-grid">
-                <div class="order-field">
-                    <label for="entry-price">Giá Vào (Entry)</label>
-                    <div class="input-wrap">
-                        <span class="currency-prefix">$</span>
+        <form on:submit={handleSubmit} class="ticket-body">
+            <!-- 1. Vốn ký quỹ Hero input -->
+            <div class="risk-section">
+                <span class="section-label">Vốn Ký Quỹ</span>
+                <div class="risk-input-row">
+                    <div class="risk-amount-box">
+                        <span class="dollar-sign">$</span>
                         <input 
                             type="number" 
                             step="any" 
-                            id="entry-price" 
-                            bind:value={entry} 
-                            placeholder="0.00"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div class="order-field">
-                    <label for="risk-amount">Vốn Phân Bổ</label>
-                    <div class="input-wrap">
-                        <span class="currency-prefix">$</span>
-                        <input 
-                            type="number" 
-                            step="any" 
-                            id="risk-amount" 
                             bind:value={risk} 
-                            placeholder="200"
-                            required
+                            class="risk-num-input" 
+                            placeholder="100"
+                            required 
                         />
+                    </div>
+                    <div class="quick-chips">
+                        <button type="button" class="chip {risk === 100 ? 'selected' : ''}" on:click={() => setQuickRisk(100)}>100</button>
+                        <button type="button" class="chip {risk === 200 ? 'selected' : ''}" on:click={() => setQuickRisk(200)}>200</button>
+                        <button type="button" class="chip {risk === 500 ? 'selected' : ''}" on:click={() => setQuickRisk(500)}>500</button>
+                        <button type="button" class="chip {risk === 1000 ? 'selected' : ''}" on:click={() => setQuickRisk(1000)}>1K</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Risk Chips -->
-            <div class="quick-risk-row">
-                <span class="quick-risk-label">Mức vốn nhanh:</span>
-                <button type="button" class="risk-chip {risk === 100 ? 'active' : ''}" on:click={() => setQuickRisk(100)}>$100</button>
-                <button type="button" class="risk-chip {risk === 200 ? 'active' : ''}" on:click={() => setQuickRisk(200)}>$200</button>
-                <button type="button" class="risk-chip {risk === 500 ? 'active' : ''}" on:click={() => setQuickRisk(500)}>$500</button>
-                <button type="button" class="risk-chip {risk === 1000 ? 'active' : ''}" on:click={() => setQuickRisk(1000)}>$1,000</button>
-            </div>
-
-            <!-- Row 2: Stop Loss & Take Profit -->
-            <div class="input-grid">
-                <div class="order-field">
-                    <label for="sl-price" class="text-rose">Cắt Lỗ (SL)</label>
-                    <div class="input-wrap sl-wrap">
-                        <span class="currency-prefix text-rose">$</span>
-                        <input 
-                            type="number" 
-                            step="any" 
-                            id="sl-price" 
-                            bind:value={sl} 
-                            class="text-rose"
-                            placeholder="0.00"
-                            required
-                        />
+            <!-- 2. 3 Mốc Giá Chiến Lược (Entry / SL / TP) -->
+            <div class="params-card">
+                <div class="param-cell">
+                    <label for="p-entry" class="param-label">Giá Entry</label>
+                    <div class="param-input-wrap">
+                        <span class="param-prefix">$</span>
+                        <input id="p-entry" type="number" step="any" bind:value={entry} placeholder="0.00" required />
                     </div>
                 </div>
 
-                <div class="order-field">
-                    <label for="tp-price" class="text-emerald">Chốt Lời (TP)</label>
-                    <div class="input-wrap tp-wrap">
-                        <span class="currency-prefix text-emerald">$</span>
-                        <input 
-                            type="number" 
-                            step="any" 
-                            id="tp-price" 
-                            bind:value={tp} 
-                            class="text-emerald"
-                            placeholder="0.00"
-                            required
-                        />
+                <div class="param-cell divider">
+                    <label for="p-sl" class="param-label text-rose">Cắt Lỗ (SL)</label>
+                    <div class="param-input-wrap">
+                        <span class="param-prefix text-rose">$</span>
+                        <input id="p-sl" type="number" step="any" bind:value={sl} class="text-rose" placeholder="0.00" required />
+                    </div>
+                </div>
+
+                <div class="param-cell">
+                    <label for="p-tp" class="param-label text-emerald">Chốt Lời (TP)</label>
+                    <div class="param-input-wrap">
+                        <span class="param-prefix text-emerald">$</span>
+                        <input id="p-tp" type="number" step="any" bind:value={tp} class="text-emerald" placeholder="0.00" required />
                     </div>
                 </div>
             </div>
 
-            <!-- Gentle inline warning if SL is invalid -->
+            <!-- 3. Dòng tóm tắt R:R thanh thoát -->
+            <div class="metrics-summary">
+                <div class="m-col">
+                    <span class="m-label">Tỷ Lệ R:R</span>
+                    <span class="m-val text-emerald">{rr} R</span>
+                </div>
+                <div class="m-col">
+                    <span class="m-label">Kỳ Vọng Lãi</span>
+                    <span class="m-val text-emerald">+${estReward}</span>
+                </div>
+                <div class="m-col">
+                    <span class="m-label">Rủi Ro Tối Đa</span>
+                    <span class="m-val text-rose">-${risk || 0}</span>
+                </div>
+            </div>
+
             {#if slWarning}
-                <div class="sl-warn-box">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <span>{slWarning}</span>
-                </div>
+                <div class="sl-inline-warn">{slWarning}</div>
             {/if}
 
-            <!-- Smart Telemetry Summary Bar -->
-            <div class="order-telemetry-bar">
-                <div class="telemetry-item">
-                    <span class="t-label">Tỷ Lệ R:R</span>
-                    <span class="t-val text-emerald">{rr} R</span>
-                </div>
-                <div class="telemetry-item">
-                    <span class="t-label">Kỳ Vọng Lãi</span>
-                    <span class="t-val text-emerald">+${estReward}</span>
-                </div>
-                <div class="telemetry-item">
-                    <span class="t-label">Rủi Ro Tối Đa</span>
-                    <span class="t-val text-rose">-${risk || 0}</span>
-                </div>
-            </div>
-
-            <!-- Single Confident Primary Action Button -->
+            <!-- 4. Nút Action Tinh Giản -->
             <button 
                 type="submit" 
-                class="btn {direction === 'LONG' ? 'btn-emerald' : 'btn-rose'} order-submit-btn" 
+                class="submit-btn {direction === 'LONG' ? 'btn-emerald' : 'btn-rose'}" 
                 disabled={isLoading || !!slWarning}
             >
-                {#if isLoading}
-                    Đang thiết lập vị thế...
-                {:else}
-                    Mở Vị Thế {direction === 'LONG' ? 'Mua' : 'Bán'} {cleanSymbol(symbol)} (${risk || 0})
-                {/if}
+                {isLoading ? 'Đang gửi lệnh...' : 'Xác Nhận Mở Lệnh'}
             </button>
         </form>
     </div>
@@ -246,126 +201,203 @@
 {/if}
 
 <style>
-    .order-modal-box {
-        max-width: 440px;
-        padding: 1.35rem 1.5rem;
+    .order-ticket {
         background: #FFFFFF;
-        border-radius: 14px;
+        border: 1px solid var(--border-card);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        padding: 1.25rem 1.35rem;
         box-shadow: var(--shadow-lg);
+        animation: ticketIn 0.15s ease-out;
+    }
+    @keyframes ticketIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Top Bar */
-    .order-top-bar {
+    /* Header */
+    .ticket-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.25rem;
-        padding-bottom: 0.75rem;
+        padding-bottom: 0.85rem;
         border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 1rem;
+    }
+    .ticket-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .ticket-symbol {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
     }
     .dir-toggle {
-        display: inline-flex;
+        display: flex;
         background: var(--bg-subtle);
-        padding: 0.2rem;
-        border-radius: 8px;
         border: 1px solid var(--border-card);
+        border-radius: 6px;
+        padding: 0.15rem;
         gap: 0.15rem;
     }
     .dir-btn {
         background: transparent;
         border: none;
-        padding: 0.3rem 0.65rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        color: var(--text-secondary);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        color: var(--text-muted);
         cursor: pointer;
         transition: all 0.15s ease;
     }
-    .dir-btn.active.long {
+    .dir-btn.active-long {
         background: var(--phase-markup);
         color: #FFFFFF;
     }
-    .dir-btn.active.short {
+    .dir-btn.active-short {
         background: var(--phase-markdown);
         color: #FFFFFF;
     }
-
-    .order-sym-badge {
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        letter-spacing: -0.01em;
-    }
-
-    .order-close-btn {
+    .ticket-close {
         background: transparent;
         border: none;
         color: var(--text-muted);
+        font-size: 1rem;
         cursor: pointer;
-        padding: 0.3rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
         transition: color 0.15s ease;
     }
-    .order-close-btn:hover {
+    .ticket-close:hover {
         color: var(--text-primary);
-        background: var(--bg-subtle);
     }
 
-    /* Order Form */
-    .order-form {
+    /* Body */
+    .ticket-body {
         display: flex;
         flex-direction: column;
-        gap: 0.85rem;
+        gap: 0.9rem;
     }
 
-    .input-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+    /* Risk / Amount Section */
+    .risk-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .risk-input-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         gap: 0.75rem;
     }
-
-    .order-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-    }
-    .order-field label {
-        font-size: 0.725rem;
-        font-weight: 700;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-    }
-
-    .input-wrap {
+    .risk-amount-box {
         display: flex;
         align-items: center;
         background: var(--bg-subtle);
         border: 1px solid var(--border-card);
         border-radius: 8px;
-        padding: 0.45rem 0.65rem;
-        transition: border-color 0.15s ease;
+        padding: 0.35rem 0.65rem;
+        flex: 1;
     }
-    .input-wrap:focus-within {
-        border-color: var(--text-primary);
-        background: #FFFFFF;
-    }
-    .currency-prefix {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
+    .dollar-sign {
+        font-size: 1rem;
         font-weight: 700;
+        color: var(--text-muted);
         margin-right: 0.25rem;
+        font-family: var(--font-mono);
     }
-    .input-wrap input {
+    .risk-num-input {
         border: none;
         background: transparent;
         font-family: var(--font-mono);
-        font-size: 0.95rem;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        width: 100%;
+        outline: none;
+        padding: 0;
+    }
+
+    .quick-chips {
+        display: flex;
+        gap: 0.25rem;
+    }
+    .chip {
+        background: #FFFFFF;
+        border: 1px solid var(--border-card);
+        border-radius: 6px;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.725rem;
+        font-weight: 600;
+        font-family: var(--font-mono);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .chip:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+    }
+    .chip.selected {
+        background: var(--text-primary);
+        color: #FFFFFF;
+        border-color: var(--text-primary);
+    }
+
+    /* Price Parameters (3 inline columns) */
+    .params-card {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: var(--bg-subtle);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        padding: 0.5rem 0.4rem;
+    }
+    .param-cell {
+        display: flex;
+        flex-direction: column;
+        padding: 0.15rem 0.4rem;
+    }
+    .param-cell.divider {
+        border-left: 1px solid var(--border-card);
+        border-right: 1px solid var(--border-card);
+    }
+    .param-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.15rem;
+    }
+    .param-input-wrap {
+        display: flex;
+        align-items: baseline;
+    }
+    .param-prefix {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-right: 0.15rem;
+        font-family: var(--font-mono);
+    }
+    .param-input-wrap input {
+        border: none;
+        background: transparent;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
         font-weight: 700;
         color: var(--text-primary);
         width: 100%;
@@ -373,102 +405,88 @@
         padding: 0;
     }
 
-    /* Quick Risk Chips */
-    .quick-risk-row {
+    /* Metrics summary */
+    .metrics-summary {
         display: flex;
+        justify-content: space-around;
         align-items: center;
-        gap: 0.35rem;
-        margin-top: -0.25rem;
-    }
-    .quick-risk-label {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        font-weight: 600;
-    }
-    .risk-chip {
-        background: #FFFFFF;
-        border: 1px solid var(--border-card);
-        border-radius: 4px;
-        font-size: 0.7rem;
-        padding: 0.15rem 0.4rem;
-        color: var(--text-secondary);
+        padding: 0.25rem 0;
         font-family: var(--font-mono);
+    }
+    .m-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+    }
+    .m-label {
+        font-size: 0.625rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-family: var(--font-main);
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.15s ease;
     }
-    .risk-chip:hover {
-        border-color: var(--text-primary);
-        color: var(--text-primary);
-    }
-    .risk-chip.active {
-        background: var(--text-primary);
-        color: #FFFFFF;
-        border-color: var(--text-primary);
+    .m-val {
+        font-size: 0.825rem;
+        font-weight: 800;
     }
 
-    /* SL Warning */
-    .sl-warn-box {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.75rem;
+    .sl-inline-warn {
+        font-size: 0.725rem;
         color: var(--rose);
+        text-align: center;
         background: var(--rose-bg);
         border: 1px solid var(--rose-border);
-        padding: 0.45rem 0.65rem;
+        padding: 0.35rem;
         border-radius: 6px;
     }
 
-    /* Telemetry Summary Bar */
-    .order-telemetry-bar {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        background: var(--bg-subtle);
-        border: 1px solid var(--border-card);
-        border-radius: 8px;
-        padding: 0.55rem 0.75rem;
-        text-align: center;
-        margin-top: 0.25rem;
-    }
-    .telemetry-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.1rem;
-    }
-    .telemetry-item:not(:last-child) {
-        border-right: 1px solid var(--border-card);
-    }
-    .t-label {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    .t-val {
-        font-size: 0.825rem;
-        font-weight: 800;
-        font-family: var(--font-mono);
-    }
-
     /* Submit Button */
-    .order-submit-btn {
+    .submit-btn {
         width: 100%;
         padding: 0.65rem;
         font-size: 0.875rem;
         font-weight: 700;
         border-radius: 8px;
-        margin-top: 0.35rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: none;
+        color: #FFFFFF;
+        margin-top: 0.2rem;
+    }
+    .submit-btn.btn-emerald {
+        background: var(--emerald);
+    }
+    .submit-btn.btn-emerald:hover {
+        background: #14522B;
+    }
+    .submit-btn.btn-rose {
+        background: var(--rose);
+    }
+    .submit-btn.btn-rose:hover {
+        background: #801C1E;
+    }
+    .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
-    @media (max-width: 480px) {
-        .order-modal-box {
-            padding: 1.15rem;
+    @media (max-width: 440px) {
+        .order-ticket {
+            padding: 1.1rem;
+            max-width: 100%;
             margin: 0.5rem;
         }
-        .input-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
+        .params-card {
+            grid-template-columns: 1fr;
+            gap: 0.4rem;
+        }
+        .param-cell.divider {
+            border-left: none;
+            border-right: none;
+            border-top: 1px solid var(--border-card);
+            border-bottom: 1px solid var(--border-card);
+            padding: 0.35rem 0.4rem;
         }
     }
 </style>
