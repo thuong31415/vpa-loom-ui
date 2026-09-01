@@ -572,7 +572,7 @@
                     />
 
                     <!-- Support & Resistance Cards -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                    <div class="support-res-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
                         <div class="price-box" style="border-color: var(--emerald-border); background: var(--emerald-bg);">
                             <span class="price-label text-emerald">VÙNG HỖ TRỢ</span>
                             {#if singleAnalysisData.key_levels?.support?.status === 'AVAILABLE'}
@@ -617,7 +617,7 @@
                         </div>
 
                         <!-- 3 Mini Telemetry Cards -->
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.85rem;">
+                        <div class="telemetry-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.85rem;">
                             <div class="price-box">
                                 <span class="price-label">Xu Hướng Bias</span>
                                 <span class="price-val" style="font-size: 0.85rem;">
@@ -661,7 +661,7 @@
                                         R:R: {singleAnalysisData.plan.reward_risk?.toFixed(2)} R
                                     </span>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; text-align: center; margin-bottom: 0.6rem;">
+                                <div class="plan-price-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; text-align: center; margin-bottom: 0.6rem;">
                                     <div class="price-box" style="padding: 0.35rem;">
                                         <span class="price-label">Entry</span>
                                         <span class="price-val" style="font-size: 0.825rem;">${formatPrice(singleAnalysisData.plan.entry)}</span>
@@ -761,6 +761,9 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.15s ease;
+        white-space: nowrap;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .coin-pill-btn:hover {
         border-color: var(--border-highlight);
@@ -881,20 +884,88 @@
         padding: 1.35rem 1.5rem;
     }
 
+    /* Responsive Mobile Overrides */
     @media (max-width: 900px) {
         .hero-weather-banner {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 1.25rem;
         }
         .hero-right {
             text-align: left;
-            align-items: flex-start;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 0.75rem;
         }
         .hero-price-block {
             align-items: flex-start;
         }
+        .hero-price-val {
+            font-size: 1.65rem;
+        }
         .cockpit-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .top-control-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+        .view-toggle-group {
+            width: 100%;
+        }
+        .view-toggle-group .pill-btn {
+            flex: 1;
+            justify-content: center;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.775rem;
+        }
+        .radar-filters-row {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+            padding-bottom: 3px;
+        }
+        .radar-filters-row::-webkit-scrollbar {
+            display: none;
+        }
+        .coin-selector-strip {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+            padding-bottom: 3px;
+        }
+        .coin-selector-strip::-webkit-scrollbar {
+            display: none;
+        }
+        .hero-title {
+            font-size: 1.15rem;
+        }
+        .hero-narrative {
+            font-size: 0.8rem;
+        }
+        .cockpit-col-card {
+            padding: 1rem;
+        }
+        .telemetry-grid {
+            gap: 0.35rem !important;
+        }
+        .telemetry-grid .price-box {
+            padding: 0.45rem 0.5rem;
+        }
+        .telemetry-grid .price-val {
+            font-size: 0.75rem !important;
+        }
+        .plan-price-grid {
+            gap: 0.3rem !important;
         }
     }
 

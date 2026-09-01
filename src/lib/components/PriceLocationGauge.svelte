@@ -47,7 +47,7 @@
         } else {
             zoneLabel = 'Vùng Lưng Chừng Biên';
             zoneClass = 'text-amber';
-            zoneTip = 'Lưng chừng biên Range';
+            zoneTip = 'Lưng chừng Range';
         }
 
         return {
@@ -107,7 +107,7 @@
         background: var(--bg-subtle);
         border: 1px solid var(--border-card);
         border-radius: 8px;
-        padding: 0.65rem 1rem 0.65rem 1rem;
+        padding: 0.65rem 0.85rem;
         margin: 0.5rem 0;
     }
     .track-wrapper {
@@ -211,5 +211,27 @@
         text-align: center;
         font-size: 0.75rem;
         font-weight: 700;
+    }
+
+    @media (max-width: 480px) {
+        .gauge-container {
+            padding: 0.5rem 0.65rem;
+        }
+        .pointer-bubble {
+            font-size: 0.65rem;
+            padding: 0.1rem 0.35rem;
+        }
+        .gauge-labels {
+            gap: 0.25rem;
+        }
+        .label-title {
+            font-size: 0.6rem;
+        }
+        .label-val {
+            font-size: 0.75rem;
+        }
+        .gauge-center-tip {
+            font-size: 0.68rem;
+        }
     }
 </style>

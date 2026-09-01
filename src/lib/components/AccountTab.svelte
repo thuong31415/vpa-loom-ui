@@ -139,49 +139,49 @@
 
 <div class="bento-grid">
     <!-- Card 1: Tổng Vốn Đã Nạp -->
-    <div class="card" style="grid-column: span 3;">
-        <div class="card-header" style="margin-bottom: 0.4rem;">
+    <div class="card account-stat-card">
+        <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Tổng Vốn Đã Nạp</span>
         </div>
         <div class="stat-value">
             ${summary.totalDeposited.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem;">
+        <div class="stat-sub" style="margin-top: 0.2rem;">
             Vốn ròng: ${summary.netCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
     </div>
 
     <!-- Card 2: Số Dư Khả Dụng -->
-    <div class="card" style="grid-column: span 3;">
-        <div class="card-header" style="margin-bottom: 0.4rem;">
+    <div class="card account-stat-card">
+        <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Khả Dụng (USDT)</span>
             <span class="badge badge-emerald">Ví tự do</span>
         </div>
         <div class="stat-value text-emerald">
             ${summary.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem;">
+        <div class="stat-sub" style="margin-top: 0.2rem;">
             Sẵn sàng mở vị thế
         </div>
     </div>
 
     <!-- Card 3: Đang Ký Quỹ -->
-    <div class="card" style="grid-column: span 3;">
-        <div class="card-header" style="margin-bottom: 0.4rem;">
+    <div class="card account-stat-card">
+        <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Ký Quỹ Vị Thế</span>
             <span class="badge badge-cyan">Margin</span>
         </div>
         <div class="stat-value">
             ${summary.inPositions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem;">
+        <div class="stat-sub" style="margin-top: 0.2rem;">
             Đang phân bổ trong lệnh
         </div>
     </div>
 
     <!-- Card 4: Tổng Tài Sản Equity & Winrate -->
-    <div class="card" style="grid-column: span 3;">
-        <div class="card-header" style="margin-bottom: 0.4rem;">
+    <div class="card account-stat-card">
+        <div class="card-header" style="margin-bottom: 0.35rem;">
             <span class="price-label">Tổng Tài Sản (Equity)</span>
             <span class="badge {roiPercent >= 0 ? 'badge-emerald' : 'badge-rose'}">
                 ROI: {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(1)}%
@@ -190,16 +190,16 @@
         <div class="stat-value {summary.totalEquity >= summary.netCapital ? 'text-emerald' : 'text-rose'}">
             ${summary.totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div class="stat-sub" style="margin-top: 0.25rem;">
+        <div class="stat-sub" style="margin-top: 0.2rem;">
             {summary.winCount}W - {summary.lossCount}L (Winrate {summary.winRate.toFixed(1)}%)
         </div>
     </div>
 
     <!-- Table: Sổ Cái Biến Động Số Dư (Ledger) -->
-    <div class="card" style="grid-column: span 12;">
+    <div class="card account-table-card">
         <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; align-items: center;">
             <!-- Quick Filters for Ledger -->
-            <div class="filter-pills" style="margin-bottom: 0;">
+            <div class="filter-pills ledger-filters" style="margin-bottom: 0;">
                 <button 
                     class="pill-btn {selectedFilter === 'ALL' ? 'active' : ''}" 
                     on:click={() => selectedFilter = 'ALL'}
@@ -267,3 +267,19 @@
         {/if}
     </div>
 </div>
+
+<style>
+    @media (max-width: 640px) {
+        .ledger-filters {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+            padding-bottom: 2px;
+        }
+        .ledger-filters::-webkit-scrollbar {
+            display: none;
+        }
+    }
+</style>

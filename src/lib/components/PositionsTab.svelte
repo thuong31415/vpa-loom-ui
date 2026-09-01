@@ -90,7 +90,7 @@
                     actionTitle = 'BÁN (CHẠM STOP LOSS)';
                     actionBadge = 'badge-rose';
                     actionDesc = 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Đóng vị thế ngay.';
-                } else if (engineRec === 'EXIT' || (typeof engineRec === 'string' && engineRec.startsWith('EXIT_ON_'))) {
+                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
                     isSell = true;
                     actionTitle = 'BÁN (ĐẢO CHIỀU CẤU TRÚC)';
                     actionBadge = 'badge-rose';
@@ -184,24 +184,26 @@
 
 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
     <!-- Compact Summary Header -->
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <div class="card pos-summary-card">
+        <div class="pos-summary-left">
             <span style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
                 Vị Thế Đang Mở ({positions.length})
             </span>
             {#if positions.length > 0}
-                <span class="badge {totalPnlUsdt >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; padding: 0.25rem 0.65rem; font-family: var(--font-mono);">
-                    P&L: {totalPnlPercent >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}% ({totalPnlUsdt >= 0 ? '+' : ''}${totalPnlUsdt.toFixed(2)})
-                </span>
-                <span class="badge badge-emerald" style="font-size: 0.85rem; padding: 0.25rem 0.65rem; font-family: var(--font-mono);">
-                    {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)} R
-                </span>
-                <span class="badge badge-neutral" style="font-size: 0.8rem; font-family: var(--font-mono);">
-                    Vốn: ${totalCapital.toFixed(2)} USDT
-                </span>
+                <div class="pos-badges-wrap">
+                    <span class="badge {totalPnlUsdt >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
+                        P&L: {totalPnlPercent >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}% ({totalPnlUsdt >= 0 ? '+' : ''}${totalPnlUsdt.toFixed(2)})
+                    </span>
+                    <span class="badge badge-emerald" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
+                        {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)} R
+                    </span>
+                    <span class="badge badge-neutral" style="font-size: 0.8rem; font-family: var(--font-mono);">
+                        Vốn: ${totalCapital.toFixed(2)}
+                    </span>
+                </div>
             {/if}
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="pos-summary-actions">
             <button class="btn btn-outline" on:click={loadLivePositions} disabled={isLoading} style="padding: 0.4rem 0.85rem; font-size: 0.825rem;">
                 {isLoading ? 'Đang tải...' : 'Làm mới'}
             </button>
@@ -312,3 +314,46 @@
     onClose={handleCloseModal} 
     onConfirmClose={handleConfirmClose} 
 />
+
+<style>
+    .pos-summary-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+    }
+    .pos-summary-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .pos-badges-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+    .pos-summary-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .pos-summary-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+        .pos-summary-actions {
+            width: 100%;
+        }
+        .pos-summary-actions button {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+</style>

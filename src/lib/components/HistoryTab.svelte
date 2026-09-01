@@ -79,18 +79,20 @@
 
 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
     <!-- Header with Live Stats -->
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <div class="card history-header-card">
+        <div class="history-header-left">
             <span style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
                 Lệnh Đã Đóng ({historyList.length})
             </span>
             {#if historyList.length > 0}
-                <span class="badge {totalRealizedR >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.85rem; padding: 0.25rem 0.65rem; font-weight: 700; font-family: var(--font-mono);">
-                    Lãi Lũy Kế: {totalRealizedR >= 0 ? '+' : ''}{totalRealizedR.toFixed(2)} R ({totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toFixed(2)})
-                </span>
-                <span class="badge badge-neutral" style="font-size: 0.825rem; padding: 0.25rem 0.65rem; font-family: var(--font-mono);">
-                    Win Rate: <strong>{winRate.toFixed(1)}%</strong> ({winCount}/{historyList.length})
-                </span>
+                <div class="history-badges-wrap">
+                    <span class="badge {totalRealizedR >= 0 ? 'badge-emerald' : 'badge-rose'}" style="font-size: 0.825rem; padding: 0.25rem 0.6rem; font-weight: 700; font-family: var(--font-mono);">
+                        Lãi: {totalRealizedR >= 0 ? '+' : ''}{totalRealizedR.toFixed(2)} R ({totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toFixed(2)})
+                    </span>
+                    <span class="badge badge-neutral" style="font-size: 0.8rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">
+                        Win Rate: <strong>{winRate.toFixed(1)}%</strong> ({winCount}/{historyList.length})
+                    </span>
+                </div>
             {/if}
         </div>
         <button class="btn btn-outline" on:click={loadHistory} disabled={isLoading} style="padding: 0.4rem 0.85rem; font-size: 0.825rem;">
@@ -162,3 +164,38 @@
         {/if}
     </div>
 </div>
+
+<style>
+    .history-header-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+    }
+    .history-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .history-badges-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+        .history-header-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+        .history-header-card button {
+            width: 100%;
+        }
+    }
+</style>
