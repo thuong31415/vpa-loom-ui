@@ -65,23 +65,23 @@
         if (!reason) return 'Chốt đóng thủ công';
         const norm = reason.toUpperCase().trim();
         switch (norm) {
-            case 'DYNAMIC_CLOSE_FILLED': return 'Khớp Chốt Lời Động';
-            case 'TAKE_PROFIT': return 'Chốt Lời (TP)';
-            case 'STOP_LOSS': return 'Cắt Lỗ (SL)';
+            case 'DYNAMIC_CLOSE_FILLED': return 'Khớp Chốt Lời Tự Động';
+            case 'TAKE_PROFIT': return 'Chốt Lời Đạt Mục Tiêu';
+            case 'STOP_LOSS': return 'Cắt Lỗ Bảo Vệ Vốn';
             case 'BREAKEVEN':
-            case 'BREAK_EVEN': return 'Hòa Vốn (BE)';
+            case 'BREAK_EVEN': return 'Hòa Vốn';
             case 'TRAILED_STOP':
-            case 'TRAILING_STOP': return 'Chốt Lời Dời SL';
-            case 'EXIT_ON_OPPOSITE_SIGNAL': return 'Đảo Chiều Tín Hiệu';
-            case 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS': return 'Gãy Cấu Trúc Đẩy';
-            case 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL': return 'Đảo Chiều Vùng Đỉnh';
-            case 'SC_SPRING_AMBIGUITY_RESOLVED_EXIT': return 'Thoát Nghi Ngờ Đảo Chiều';
-            case 'SC_SPRING_FAILING_SUPPORT_EXIT': return 'Thoát Lệnh Gãy Hỗ Trợ';
+            case 'TRAILING_STOP': return 'Chốt Lời Dời Chặn Lãi';
+            case 'EXIT_ON_OPPOSITE_SIGNAL': return 'Đóng Khi Có Tín Hiệu Ngược';
+            case 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS': return 'Đóng Khi Gãy Cấu Trúc Sóng';
+            case 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL': return 'Chốt Lời Khi Đảo Chiều Đỉnh';
+            case 'SC_SPRING_AMBIGUITY_RESOLVED_EXIT': return 'Đóng Lệnh Phòng Ngừa Rủi Ro';
+            case 'SC_SPRING_FAILING_SUPPORT_EXIT': return 'Cắt Lỗ Khi Thủng Hỗ Trợ';
             case 'INVALIDATED':
-            case 'INVALIDATION': return 'Gãy Cấu Trúc Mô Hình';
+            case 'INVALIDATION': return 'Mô Hình Bị Phủ Nhận';
             case 'TIME_EXPIRATION':
-            case 'TIMEOUT': return 'Hết Thời Gian Chờ';
-            case 'FORCE_CLOSE': return 'Đóng Bắt Buộc';
+            case 'TIMEOUT': return 'Quá Thời Gian Nắm Giữ';
+            case 'FORCE_CLOSE': return 'Đóng Lệnh Khẩn Cấp';
             case 'MANUAL_DASHBOARD_CLOSE':
             case 'MANUAL_CLOSE': return 'Đóng Thủ Công';
             default: return reason;

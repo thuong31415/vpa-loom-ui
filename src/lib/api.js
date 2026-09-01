@@ -277,15 +277,15 @@ export function cleanSymbol(symbol) {
 export function formatPrice(val) {
     if (val === null || val === undefined || isNaN(val)) return '0.00';
     const num = parseFloat(val);
-    if (Math.abs(num) < 0.000001) return '0.00';
+    if (num === 0) return '0.00';
     if (num >= 1000) {
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } else if (num >= 1) {
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
     } else if (num >= 0.0001) {
-        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+        return num.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
     } else {
-        return num.toFixed(6);
+        return num.toFixed(8);
     }
 }
 
@@ -368,26 +368,26 @@ export function translateCycleStage(stage) {
     if (!stage) return '';
     const norm = stage.toUpperCase().trim();
     switch (norm) {
-        case 'PHASE_A': return 'Pha A (Hãm Đà)';
-        case 'PHASE_B': return 'Pha B (Tích Lũy Nền)';
-        case 'PHASE_C': return 'Pha C (Rũ Bỏ / Kiểm Định)';
-        case 'PHASE_D': return 'Pha D (Bứt Phá Nội Biên)';
-        case 'PHASE_E': return 'Pha E (Thoát Biên)';
+        case 'PHASE_A': return 'Pha A: Chặn Đà Giảm';
+        case 'PHASE_B': return 'Pha B: Tích Lũy Xây Nền';
+        case 'PHASE_C': return 'Pha C: Rũ Bỏ & Kiểm Định';
+        case 'PHASE_D': return 'Pha D: Bứt Phá Trong Biên Độ';
+        case 'PHASE_E': return 'Pha E: Bứt Phá Thoát Biên';
         case 'EARLY': return 'Giai Đoạn Đầu';
         case 'MIDDLE':
         case 'MID': return 'Giai Đoạn Giữa';
         case 'LATE': return 'Giai Đoạn Cuối';
         case 'MATURE': return 'Chín Muồi';
-        case 'STRUCTURAL_MATURITY': return 'Độ Chín Cấu Trúc';
+        case 'STRUCTURAL_MATURITY': return 'Cấu Trúc Hoàn Thiện';
         case 'STAGE_ADVANCED':
-        case 'STAGE_ADVANCE': return 'Chuyển Tiến Trình';
+        case 'STAGE_ADVANCE': return 'Chuyển Giai Đoạn';
         case 'TRANSITION': return 'Chuyển Pha';
         default: {
-            if (norm.includes('PHASE_A')) return 'Pha A (Hãm Đà)';
-            if (norm.includes('PHASE_B')) return 'Pha B (Tích Lũy Nền)';
-            if (norm.includes('PHASE_C')) return 'Pha C (Rũ Bỏ / Kiểm Định)';
-            if (norm.includes('PHASE_D')) return 'Pha D (Bứt Phá Nội Biên)';
-            if (norm.includes('PHASE_E')) return 'Pha E (Thoát Biên)';
+            if (norm.includes('PHASE_A')) return 'Pha A: Chặn Đà Giảm';
+            if (norm.includes('PHASE_B')) return 'Pha B: Tích Lũy Xây Nền';
+            if (norm.includes('PHASE_C')) return 'Pha C: Rũ Bỏ & Kiểm Định';
+            if (norm.includes('PHASE_D')) return 'Pha D: Bứt Phá Trong Biên Độ';
+            if (norm.includes('PHASE_E')) return 'Pha E: Bứt Phá Thoát Biên';
             return norm.replace(/_/g, ' ');
         }
     }
@@ -409,38 +409,38 @@ export function translateCycleReason(reason) {
     if (!reason) return '';
     const norm = reason.toUpperCase().trim();
 
-    // 1. Exact Matches for Wyckoff Events & Reasons
+    // 1. Khớp chính xác các sự kiện Wyckoff thuần tiếng Việt
     switch (norm) {
         case 'ACCUMULATION_SUSTAINED_DOWN_INVALIDATION': return 'Thủng hỗ trợ, gãy cấu trúc Tích Lũy';
-        case 'MARKUP_SUSTAINED_DOWN_INVALIDATION': return 'Gãy sóng tăng, đảo chiều Giảm';
+        case 'MARKUP_SUSTAINED_DOWN_INVALIDATION': return 'Gãy sóng tăng, đảo chiều sang Giảm Giá';
         case 'DISTRIBUTION_SUSTAINED_UP_INVALIDATION': return 'Vượt kháng cự, gãy cấu trúc Phân Phối';
-        case 'MARKDOWN_SUSTAINED_UP_INVALIDATION': return 'Bứt phá cản, đảo chiều Tăng';
+        case 'MARKDOWN_SUSTAINED_UP_INVALIDATION': return 'Bứt phá cản, đảo chiều sang Tăng Giá';
         case 'SUSTAINED_DOWN_INVALIDATION': return 'Thủng đáy, gãy hỗ trợ xác nhận';
-        case 'SUSTAINED_UP_INVALIDATION': return 'Bứt đỉnh, vượt cản xác nhận';
-        case 'THESIS_INVALIDATION': return 'Gãy cấu trúc xu hướng giả định';
+        case 'SUSTAINED_UP_INVALIDATION': return 'Bứt đỉnh, vượt kháng cự xác nhận';
+        case 'THESIS_INVALIDATION': return 'Kịch bản xu hướng bị phủ nhận';
         case 'SUSTAINED_INVALIDATION': return 'Cấu trúc trước đó bị phá vỡ hoàn toàn';
 
         case 'STRUCTURAL_MATURITY': return 'Cấu trúc nén đạt độ chín muồi';
         case 'STARTED_BALANCE':
-        case 'BALANCE_START': return 'Bắt đầu tích tụ cân bằng';
-        case 'COMPLETED_PATH': return 'Hoàn thành đường dẫn chu kỳ';
+        case 'BALANCE_START': return 'Bắt đầu tích tụ cân bằng cung cầu';
+        case 'COMPLETED_PATH': return 'Hoàn tất lộ trình chu kỳ';
         case 'SOS_BREAKOUT':
-        case 'SIGN_OF_STRENGTH': return 'Bứt phá điểm mạnh (SOS)';
+        case 'SIGN_OF_STRENGTH': return 'Bứt phá xác nhận lực cầu mạnh';
         case 'SOW_BREAKDOWN':
-        case 'SIGN_OF_WEAKNESS': return 'Thủng đáy điểm yếu (SOW)';
+        case 'SIGN_OF_WEAKNESS': return 'Thủng đáy xác nhận áp lực bán';
         case 'SPRING_RECLAIM':
-        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ (Spring)';
+        case 'SPRING_RECLAIM_CONFIRMED': return 'Rũ bỏ đáy và lấy lại hỗ trợ';
         case 'UTAD_REJECTION':
-        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá đỉnh từ chối (UTAD)';
-        case 'TYPED_UTAD_ATTEMPT': return 'Xác nhận nỗ lực bẫy đỉnh (UTAD)';
-        case 'UTAD_ATTEMPT_SUPERSEDED': return 'Bẫy UTAD bị triệt tiêu';
+        case 'UPTHRUST_REJECTION_CONFIRMED': return 'Bẫy tăng giá vùng đỉnh bị từ chối';
+        case 'TYPED_UTAD_ATTEMPT': return 'Xuất hiện bẫy tăng giá vùng đỉnh';
+        case 'UTAD_ATTEMPT_SUPERSEDED': return 'Bẫy tăng giá vùng đỉnh bị triệt tiêu';
         case 'STAGE_ADVANCE':
-        case 'STAGE_ADVANCED': return 'Chuyển tiến trình giai đoạn';
+        case 'STAGE_ADVANCED': return 'Chuyển sang giai đoạn tiếp theo';
         case 'CYCLE_DISLOCATION':
-        case 'DISLOCATION': return 'Lệch biên độ cấu trúc';
-        case 'SUSTAINED_DISLOCATION': return 'Gãy cấu trúc kéo dài';
-        case 'CONFLICT_RESOLUTION': return 'Đã giải quyết xung đột đa khung';
-        case 'OPTIONAL_FACTS_DEGRADED': return 'Dữ liệu phụ suy giảm';
+        case 'DISLOCATION': return 'Giá biến động lệch ngoài biên độ';
+        case 'SUSTAINED_DISLOCATION': return 'Giá lệch ngoài biên độ kéo dài';
+        case 'CONFLICT_RESOLUTION': return 'Đã xác nhận hướng đi đa khung';
+        case 'OPTIONAL_FACTS_DEGRADED': return 'Độ tin cậy của tín hiệu suy giảm';
 
         case 'ACCUMULATION_RESOLVED_INTO_MARKUP': return 'Tích lũy hoàn tất ➔ Vào pha Đẩy giá';
         case 'DISTRIBUTION_RESOLVED_INTO_MARKDOWN': return 'Phân phối hoàn tất ➔ Vào pha Giảm giá';
@@ -448,10 +448,10 @@ export function translateCycleReason(reason) {
         case 'MARKDOWN_CONTINUATION': return 'Tiếp diễn xu hướng Giảm giá';
         case 'MARKUP_CONTINUATION': return 'Tiếp diễn xu hướng Đẩy giá';
         case 'CLIMAX_STOPPING_CONFIRMED':
-        case 'SELLING_CLIMAX': return 'Xuất hiện nến cao trào hãm đà (SC)';
-        case 'BUYING_CLIMAX': return 'Xuất hiện nến cao trào mua đỉnh (BC)';
+        case 'SELLING_CLIMAX': return 'Xuất hiện nến cao trào bán hãm đà';
+        case 'BUYING_CLIMAX': return 'Xuất hiện nến cao trào mua vùng đỉnh';
         case 'STRUCTURE_AND_SEQUENCE_ALIGNED': return 'Cấu trúc nến và khối lượng đồng thuận';
-        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất sóng (CHoCH)';
+        case 'SEQUENCE_CHANGE_OF_CHARACTER': return 'Đổi tính chất xu hướng sóng';
         case 'DIRECTIONAL_SEQUENCE_WITHOUT_STRUCTURE': return 'Dòng tiền tạo đà chưa bứt cản';
         case 'BALANCE_AFTER_PRIOR_MARKDOWN': return 'Hấp thụ cân bằng sau đà giảm';
         case 'BALANCE_AFTER_PRIOR_MARKUP': return 'Tích tụ cân bằng sau đà tăng';
@@ -484,12 +484,12 @@ export function translateCycleReason(reason) {
         case 'NO_TRANSITION': return 'Duy trì trạng thái hiện tại';
     }
 
-    // 2. Smart Fuzzy Pattern Matchers (Guarantees zero raw English codes ever leak to UI)
+    // 2. Bộ lọc thông minh phòng ngừa chuỗi động từ Backend
     if (norm.includes('INVALIDATION')) {
         if (norm.includes('ACCUMULATION') && norm.includes('DOWN')) return 'Thủng hỗ trợ, gãy cấu trúc Tích Lũy';
-        if (norm.includes('MARKUP') && norm.includes('DOWN')) return 'Gãy sóng tăng, đảo chiều Giảm';
+        if (norm.includes('MARKUP') && norm.includes('DOWN')) return 'Gãy sóng tăng, đảo chiều sang Giảm';
         if (norm.includes('DISTRIBUTION') && norm.includes('UP')) return 'Vượt kháng cự, gãy cấu trúc Phân Phối';
-        if (norm.includes('MARKDOWN') && norm.includes('UP')) return 'Bứt phá cản, đảo chiều Tăng';
+        if (norm.includes('MARKDOWN') && norm.includes('UP')) return 'Bứt phá cản, đảo chiều sang Tăng';
         if (norm.includes('DOWN')) return 'Thủng đáy, gãy hỗ trợ xác nhận';
         if (norm.includes('UP')) return 'Vượt đỉnh, gãy cấu trúc cản';
         return 'Gãy cấu trúc chu kỳ';
@@ -498,11 +498,11 @@ export function translateCycleReason(reason) {
     if (norm.includes('DISLOCATION')) {
         if (norm.includes('DOWN')) return 'Biến động thủng biên dưới';
         if (norm.includes('UP')) return 'Biến động vượt biên trên';
-        return 'Lệch biên độ cấu trúc';
+        return 'Giá biến động lệch ngoài biên độ';
     }
 
-    if (norm.includes('SPRING')) return 'Rũ bỏ đáy gom hàng (Spring)';
-    if (norm.includes('UTAD') || norm.includes('UPTHRUST')) return 'Bẫy tăng giá đỉnh (UTAD)';
+    if (norm.includes('SPRING')) return 'Rũ bỏ đáy gom hàng';
+    if (norm.includes('UTAD') || norm.includes('UPTHRUST')) return 'Bẫy tăng giá vùng đỉnh';
     if (norm.includes('CLIMAX')) return 'Nến cao trào hãm đà';
     if (norm.includes('BALANCE')) return 'Tích tụ cân bằng trong biên độ';
     if (norm.includes('BREAKOUT') || norm.includes('BREAK_UP')) return 'Bứt phá kháng cự xác nhận';
@@ -514,7 +514,7 @@ export function translateCycleReason(reason) {
     if (norm.includes('MARKUP')) return 'Đẩy giá tăng trưởng';
     if (norm.includes('MARKDOWN')) return 'Giảm giá xả hàng';
 
-    // 3. Clean fallback
+    // 3. Fallback sạch sẽ
     return norm.replace(/_/g, ' ');
 }
 
@@ -572,31 +572,31 @@ export function translateRejectionReason(reason) {
     if (!reason) return 'Chưa đủ điều kiện vào lệnh.';
     const norm = reason.toUpperCase().trim();
     switch (norm) {
-        case 'CONTEXT_UNAVAILABLE': return 'Dữ liệu ngữ cảnh chưa sẵn sàng';
-        case 'UNSUPPORTED_SCOPE': return 'Khung thời gian không hỗ trợ';
-        case 'LOCATION_UNAVAILABLE': return 'Vị trí giá chưa thuận lợi';
-        case 'STALE_EVIDENCE': return 'Dữ liệu cũ chưa cập nhật';
-        case 'CONFLICTING_CONFIRMED_EVIDENCE': return 'Tín hiệu đa khung xung đột';
-        case 'NO_CONFIRMED_MICRO_TRIGGER': return 'Chưa có nến kích hoạt đạt chuẩn';
-        case 'NO_CONFIRMED_POST_BREAK_RETEST': return 'Chưa xác nhận nhịp kiểm định sau phá vỡ';
-        case 'NO_CONFIRMED_RANGE_BREAK_CONTINUATION': return 'Chưa xác nhận tiếp diễn phá vỡ biên độ';
-        case 'NO_CONFIRMED_SC_SPRING_RECOVERY': return 'Chưa xác nhận nhịp phục hồi sau Spring';
-        case 'NO_CONFIRMED_SC_MARKUP_RECOVERY': return 'Chưa xác nhận nhịp phục hồi đẩy giá';
-        case 'SC_MARKUP_RECOVERY_INVALIDATED': return 'Mô hình phục hồi đẩy giá bị gãy';
-        case 'SC_MARKUP_ROLE_FLIP_UNAVAILABLE': return 'Chưa xác nhận đảo vai cản thành hỗ trợ';
-        case 'NO_CONFIRMED_SHORT_MARKDOWN_RECOVERY': return 'Chưa xác nhận nhịp phục hồi giảm giá';
-        case 'NO_CONFIRMED_SHORT_BREAK_CONTINUATION': return 'Chưa xác nhận tiếp diễn phá đáy';
-        case 'NO_CONFIRMED_RANGE_BREAK_IMPULSE': return 'Chưa có xung lực bứt phá biên độ';
-        case 'SC_MARKDOWN_RECOVERY_INVALIDATED': return 'Mô hình phục hồi giảm giá bị gãy';
-        case 'SHORT_EPOCH_SUPERSEDED': return 'Chu kỳ giảm đã bị thay thế';
-        case 'NO_POLICY_PROPOSAL': return 'Chưa có mô hình đạt chuẩn vào lệnh';
-        case 'INSUFFICIENT_BREAKOUT_EFFORT': return 'Khối lượng bứt phá chưa đủ lớn';
-        case 'RBI_PROMPT_VALUE_LOCATION_UNAVAILABLE': return 'Vị trí giá chưa tối ưu để bứt phá';
-        case 'CYCLE_PHASE_BOOTSTRAP': return 'Chu kỳ đang trong giai đoạn khởi tạo';
-        case 'CYCLE_PHASE_CONFLICT': return 'Chu kỳ đang có xung đột cấu trúc';
-        case 'CYCLE_PHASE_DISLOCATED': return 'Chu kỳ bị lệch ngoài biên độ';
-        case 'CYCLE_TIMELINE_LAG': return 'Chu kỳ bị trễ nhịp thời gian';
-        case 'CYCLE_PHASE_NOT_DIRECTIONALLY_CONFIRMED': return 'Chu kỳ chưa xác nhận cùng chiều lệnh';
+        case 'CONTEXT_UNAVAILABLE': return 'Chưa đủ dữ liệu thị trường để đánh giá';
+        case 'UNSUPPORTED_SCOPE': return 'Khung thời gian hiện tại chưa hỗ trợ';
+        case 'LOCATION_UNAVAILABLE': return 'Vị trí giá hiện tại chưa tối ưu';
+        case 'STALE_EVIDENCE': return 'Tín hiệu thị trường đã quá cũ';
+        case 'CONFLICTING_CONFIRMED_EVIDENCE': return 'Tín hiệu đa khung thời gian đang xung đột';
+        case 'NO_CONFIRMED_MICRO_TRIGGER': return 'Chưa có nến xác nhận đạt chuẩn để vào lệnh';
+        case 'NO_CONFIRMED_POST_BREAK_RETEST': return 'Chưa có nhịp kiểm định lại sau khi phá vỡ cản';
+        case 'NO_CONFIRMED_RANGE_BREAK_CONTINUATION': return 'Chưa xác nhận sóng tiếp diễn sau khi phá biên độ';
+        case 'NO_CONFIRMED_SC_SPRING_RECOVERY': return 'Chưa xác nhận nhịp phục hồi sau cú rũ bỏ đáy';
+        case 'NO_CONFIRMED_SC_MARKUP_RECOVERY': return 'Chưa xác nhận nhịp phục hồi tiếp diễn đà tăng';
+        case 'SC_MARKUP_RECOVERY_INVALIDATED': return 'Kịch bản phục hồi đà tăng đã bị gãy';
+        case 'SC_MARKUP_ROLE_FLIP_UNAVAILABLE': return 'Kháng cự cũ chưa xác nhận đảo vai thành hỗ trợ';
+        case 'NO_CONFIRMED_SHORT_MARKDOWN_RECOVERY': return 'Chưa có nhịp kiểm định cản để vào lệnh Bán';
+        case 'NO_CONFIRMED_SHORT_BREAK_CONTINUATION': return 'Chưa xác nhận tiếp diễn phá vỡ đáy';
+        case 'NO_CONFIRMED_RANGE_BREAK_IMPULSE': return 'Chưa có xung lực bứt phá khỏi vùng tích lũy';
+        case 'SC_MARKDOWN_RECOVERY_INVALIDATED': return 'Kịch bản giảm giá hồi phục đã bị phủ nhận';
+        case 'SHORT_EPOCH_SUPERSEDED': return 'Chu kỳ giảm cũ đã kết thúc và chuyển pha mới';
+        case 'NO_POLICY_PROPOSAL': return 'Chưa có mô hình nến đạt chuẩn để vào lệnh';
+        case 'INSUFFICIENT_BREAKOUT_EFFORT': return 'Khối lượng bứt phá chưa đủ lớn để xác nhận';
+        case 'RBI_PROMPT_VALUE_LOCATION_UNAVAILABLE': return 'Vị trí giá chưa an toàn để kích hoạt lệnh bứt phá';
+        case 'CYCLE_PHASE_BOOTSTRAP': return 'Chu kỳ thị trường đang trong giai đoạn khởi tạo';
+        case 'CYCLE_PHASE_CONFLICT': return 'Chu kỳ đang có xung đột cấu trúc cung cầu';
+        case 'CYCLE_PHASE_DISLOCATED': return 'Giá đang biến động lệch ngoài biên độ tích lũy';
+        case 'CYCLE_TIMELINE_LAG': return 'Tín hiệu chu kỳ đang bị trễ nhịp thời gian';
+        case 'CYCLE_PHASE_NOT_DIRECTIONALLY_CONFIRMED': return 'Hướng chu kỳ chưa đồng thuận với hướng vào lệnh';
         default: return translateCycleReason(reason) || reason;
     }
 }
@@ -658,7 +658,7 @@ export function getFriendlyVPAStatus(effortResult) {
             };
         default:
             return {
-                headline: `Khối lượng ${vol.toFixed(1)}x`,
+                headline: `Khối lượng ${vol.toFixed(1)}x trung bình`,
                 detail: `Biên độ ${spread.toFixed(1)} ATR ${candleState}`,
                 badgeClass: 'text-secondary'
             };
