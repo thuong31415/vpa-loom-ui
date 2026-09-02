@@ -692,38 +692,43 @@ export function formatDecisionExplanation(data) {
         return `Đang nắm giữ vị thế ${dir}. Hệ thống theo dõi tín hiệu bảo vệ vốn và đảo chiều để tối ưu hóa lợi nhuận.`;
     }
 
-    // 3. If in Waiting / No-Trade state
+    // 3. Priority: Render the smart decision.waiting_for directly from backend API
+    if (data.decision?.waiting_for) {
+        return data.decision.waiting_for;
+    }
+
+    // 4. Fallback if in Waiting / No-Trade state
     const sup = data.key_levels?.support;
     const res = data.key_levels?.resistance;
     const isSupAvail = sup && sup.status === 'AVAILABLE';
     const isResAvail = res && res.status === 'AVAILABLE';
 
-    // Case 3a: Price discovery above resistance
+    // Case 4a: Price discovery above resistance
     if (!isResAvail && isSupAvail) {
         return 'Giá vừa bứt phá vượt vùng đỉnh. Chờ nhịp kiểm định lại hoặc tích lũy cạn cung để thiết lập điểm vào lệnh an toàn.';
     }
 
-    // Case 3b: Price discovery below support
+    // Case 4b: Price discovery below support
     if (!isSupAvail && isResAvail) {
         return 'Giá đang trong vùng dò đáy mới. Chờ xuất hiện nến cao trào hãm đà và cấu trúc tái tích lũy trước khi mở vị thế.';
     }
 
-    // Case 3c: Close to Support (distance <= 2.5%)
+    // Case 4c: Close to Support (distance <= 2.5%)
     if (isSupAvail && sup.distance_percent != null && sup.distance_percent <= 2.5) {
         return `Giá đang phản ứng gần vùng Hỗ Trợ ($${formatPrice(sup.lower)} – $${formatPrice(sup.upper)}). Chờ nến 4H đóng xác nhận tín hiệu cạn cung để kích hoạt lệnh Mua.`;
     }
 
-    // Case 3d: Close to Resistance (distance <= 2.5%)
+    // Case 4d: Close to Resistance (distance <= 2.5%)
     if (isResAvail && res.distance_percent != null && res.distance_percent <= 2.5) {
         return `Giá đang tiếp cận vùng Kháng Cự ($${formatPrice(res.lower)} – $${formatPrice(res.upper)}). Chờ nến 4H đóng xác nhận tín hiệu từ chối giá để kích hoạt lệnh Bán.`;
     }
 
-    // Case 3e: Between Support and Resistance
+    // Case 4e: Between Support and Resistance
     if (isSupAvail && isResAvail) {
         return `Giá đang dao động lưng chừng giữa 2 cản ($${formatPrice(sup.upper)} – $${formatPrice(res.lower)}). Kiên nhẫn quan sát, không mở vị thế ở vùng giá bất lợi.`;
     }
 
-    const rawReason = data.decision?.waiting_for || data.decision?.reason || data.reason;
+    const rawReason = data.decision?.reason || data.reason;
     if (rawReason) {
         return translateRejectionReason(rawReason);
     }

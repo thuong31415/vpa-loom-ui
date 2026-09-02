@@ -197,14 +197,17 @@
         const reasonVi = translateCycleReason(reason);
         const patternVi = translateSequencePattern(pattern);
 
+        const displayTitle = cycle?.display_title;
+        const displayDesc = cycle?.display_description;
+
         if (typedPhase === 'MARKUP') {
             return {
                 phaseId: 'MARKUP',
                 phaseBadge: 'ĐẨY GIÁ',
                 phaseClass: 'markup',
-                weatherTitle: 'Pha 2: Đẩy Giá',
-                weatherSummary: `Cấu trúc sóng tăng đẩy giá. Phe Mua kiểm soát đà tăng${reasonVi ? ` · ${reasonVi}` : ''}.`,
-                pressure: 'Lực Cầu Hoàn Toàn Kiểm Soát',
+                weatherTitle: displayTitle || 'Pha 2: Đẩy Giá',
+                weatherSummary: displayDesc || `Cấu trúc sóng tăng đẩy giá. Phe Mua kiểm soát đà tăng${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                pressure: (displayDesc && displayDesc.includes('điều chỉnh')) ? 'Đang Điều Chỉnh Trong Range' : 'Lực Cầu Hoàn Toàn Kiểm Soát',
                 stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
             };
         }
@@ -214,8 +217,8 @@
                 phaseId: 'ACCUMULATION',
                 phaseBadge: 'TÍCH LŨY',
                 phaseClass: 'accumulation',
-                weatherTitle: 'Pha 1: Tích Lũy',
-                weatherSummary: `Smart Money đang hấp thụ cạn kiệt nguồn cung trong vùng Trading Range${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                weatherTitle: displayTitle || 'Pha 1: Tích Lũy',
+                weatherSummary: displayDesc || `Smart Money đang hấp thụ cạn kiệt nguồn cung trong vùng Trading Range${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: 'Đang Hấp Thụ Cung Vùng Đáy',
                 stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
             };
@@ -226,8 +229,8 @@
                 phaseId: 'DISTRIBUTION',
                 phaseBadge: 'PHÂN PHỐI',
                 phaseClass: 'distribution',
-                weatherTitle: 'Pha 3: Phân Phối',
-                weatherSummary: `Áp lực xả hàng ngầm của Smart Money ở vùng đỉnh. Rủi ro gãy sóng tăng cao${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                weatherTitle: displayTitle || 'Pha 3: Phân Phối',
+                weatherSummary: displayDesc || `Áp lực xả hàng ngầm của Smart Money ở vùng đỉnh. Rủi ro gãy sóng tăng cao${reasonVi ? ` · ${reasonVi}` : ''}.`,
                 pressure: 'Lực Cung Áp Đảo (Xả Ngầm)',
                 stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
             };
@@ -238,9 +241,9 @@
                 phaseId: 'MARKDOWN',
                 phaseBadge: 'GIẢM GIÁ',
                 phaseClass: 'markdown',
-                weatherTitle: 'Pha 4: Giảm Giá',
-                weatherSummary: `Thị trường đang trong xu hướng giảm mạnh. Phe Bán hoàn toàn làm chủ cuộc chơi${reasonVi ? ` · ${reasonVi}` : ''}.`,
-                pressure: 'Lực Xả Bán Tháo Toàn Diện',
+                weatherTitle: displayTitle || 'Pha 4: Giảm Giá',
+                weatherSummary: displayDesc || `Thị trường đang trong xu hướng giảm mạnh. Phe Bán hoàn toàn làm chủ cuộc chơi${reasonVi ? ` · ${reasonVi}` : ''}.`,
+                pressure: (displayDesc && displayDesc.includes('hồi phục')) ? 'Đang Hồi Phục Trong Range' : 'Lực Xả Bán Tháo Toàn Diện',
                 stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
             };
         }
@@ -249,8 +252,8 @@
             phaseId: 'UNRESOLVED',
             phaseBadge: 'CHƯA RÕ PHA',
             phaseClass: 'unresolved',
-            weatherTitle: 'Đang Định Hình Biên Độ',
-            weatherSummary: `Giá đang kiểm tra lại các ngưỡng hỗ trợ/kháng cự. Đang chờ dòng tiền xác nhận hướng đi.`,
+            weatherTitle: displayTitle || 'Đang Định Hình Biên Độ',
+            weatherSummary: displayDesc || `Giá đang kiểm tra lại các ngưỡng hỗ trợ/kháng cự. Đang chờ dòng tiền xác nhận hướng đi.`,
             pressure: 'Cung Cầu Cân Bằng / Giằng Co',
             stage, stageVi, strength, strengthVi, validity, validityVi, progress, progressVi, effectiveFrom, reasonVi, patternVi
         };
