@@ -1,5 +1,6 @@
 <script>
     import { createPositionApi, cleanSymbol, formatPrice } from '../api.js';
+    import { savePositionMeta } from '../stores.js';
 
     export let isOpen = false;
     export let symbol = 'BTCUSDT';
@@ -153,6 +154,17 @@
             nextStatus: 'CLOSED',
             entryTime: data.entry_time || new Date().toISOString()
         };
+
+        savePositionMeta(newPos.symbol, {
+            symbol: newPos.symbol,
+            margin: marginNum,
+            leverage: levNum,
+            notional: notionalSize,
+            entry: newPos.entry,
+            sl: newPos.sl,
+            tp: newPos.tp,
+            direction: newPos.direction
+        });
 
         onSubmitOrderSuccess(newPos);
         onClose();

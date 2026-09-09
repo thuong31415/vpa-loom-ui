@@ -177,6 +177,8 @@ export async function createPositionApi({ symbol, interval = '4h', direction, en
             protective_stop: parseFloat(sl),
             target: parseFloat(tp),
             quote_amount: quoteAmount,
+            margin: effectiveMargin,
+            leverage: effectiveLeverage,
             notes: JSON.stringify(metadata)
         };
 
