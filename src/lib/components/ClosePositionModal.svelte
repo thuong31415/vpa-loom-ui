@@ -19,19 +19,21 @@
         if (!pos) return { pnlUsdt: '0.00', pnlPercent: '0.00%', isPositive: true };
         const exit = parseFloat(exitPriceStr);
         const entry = parseFloat(pos.entry);
-        const risk = parseFloat(pos.risk) || 0;
+        const leverage = Math.max(1, parseInt(pos.leverage) || 1);
+        const notional = parseFloat(pos.notional) || (pos.margin ? pos.margin * leverage : (parseFloat(pos.risk) || 0));
         if (isNaN(exit) || isNaN(entry) || entry <= 0) {
             return { pnlUsdt: '0.00', pnlPercent: '0.00%', isPositive: true };
         }
 
         const isLong = pos.direction === 'LONG' || pos.direction === 'BUY';
         const diffPercent = isLong ? (exit - entry) / entry : (entry - exit) / entry;
-        const pnlUsdt = risk * diffPercent;
+        const pnlUsdt = notional * diffPercent;
+        const pnlPercent = diffPercent * 100 * leverage;
         const isPositive = pnlUsdt >= 0;
 
         return {
             pnlUsdt: pnlUsdt.toFixed(2),
-            pnlPercent: `${isPositive ? '+' : ''}${(diffPercent * 100).toFixed(2)}%`,
+            pnlPercent: `${isPositive ? '+' : ''}${pnlPercent.toFixed(2)}%`,
             isPositive
         };
     }

@@ -33,7 +33,23 @@
                 const entry = parseFloat(p.entry_price ?? p.entryPrice ?? p.entry) || 0;
                 const sl = parseFloat(p.protective_stop ?? p.protectiveStop ?? p.protective_stop_price ?? p.sl) || 0;
                 const tp = parseFloat(p.target ?? p.target_price ?? p.tp) || 0;
-                const risk = parseFloat(p.quote_amount ?? p.quoteAmount ?? p.notional_amount ?? p.risk) || 200;
+                const rawRisk = parseFloat(p.quote_amount ?? p.quoteAmount ?? p.notional_amount ?? p.risk) || 200;
+                let leverage = 1;
+                let margin = rawRisk;
+
+                const rawNotes = p.notes || p.userNotes;
+                if (rawNotes) {
+                    try {
+                        const meta = typeof rawNotes === 'string' ? JSON.parse(rawNotes) : rawNotes;
+                        if (meta.leverage) leverage = Math.max(1, parseInt(meta.leverage) || 1);
+                        if (meta.margin) margin = parseFloat(meta.margin) || (rawRisk / leverage);
+                    } catch (_) {}
+                } else if (p.leverage) {
+                    leverage = Math.max(1, parseInt(p.leverage) || 1);
+                    margin = parseFloat(p.margin) || (rawRisk / leverage);
+                }
+
+                const notional = margin * leverage;
                 const direction = (p.direction || 'LONG').toUpperCase();
 
                 let currentPrice = entry;
@@ -65,15 +81,17 @@
                 let rMultiple = 0;
 
                 if (entry > 0) {
+                    const diffRatio = direction === 'LONG'
+                        ? (currentPrice - entry) / entry
+                        : (entry - currentPrice) / entry;
+                    pnlUsdt = notional * diffRatio;
+                    pnlPercent = diffRatio * 100 * leverage;
+
                     if (direction === 'LONG') {
-                        pnlPercent = ((currentPrice - entry) / entry) * 100;
-                        pnlUsdt = risk * (pnlPercent / 100);
                         if (entry > sl && sl > 0) {
                             rMultiple = (currentPrice - entry) / (entry - sl);
                         }
                     } else {
-                        pnlPercent = ((entry - currentPrice) / entry) * 100;
-                        pnlUsdt = risk * (pnlPercent / 100);
                         if (sl > entry && sl > 0) {
                             rMultiple = (entry - currentPrice) / (sl - entry);
                         }
@@ -118,7 +136,10 @@
                     currentPrice: currentPrice,
                     sl: sl,
                     tp: tp,
-                    risk: risk,
+                    margin: margin,
+                    leverage: leverage,
+                    notional: notional,
+                    risk: margin,
                     policyId: p.policy_id || p.policyId || '',
                     entryTime: p.entry_time || p.entryTime || '',
                     pnlPercent: pnlPercent,
@@ -138,7 +159,7 @@
             positions = livePositions;
 
             totalPnlUsdt = positions.reduce((acc, curr) => acc + curr.pnlUsdt, 0);
-            totalCapital = positions.reduce((acc, curr) => acc + curr.risk, 0);
+            totalCapital = positions.reduce((acc, curr) => acc + (curr.margin || curr.risk || 0), 0);
             totalR = positions.reduce((acc, curr) => acc + curr.rMultiple, 0);
             totalPnlPercent = totalCapital > 0 ? (totalPnlUsdt / totalCapital) * 100 : 0;
 
@@ -220,6 +241,9 @@
                 <div class="position-header">
                     <div class="position-title-group">
                         <span class="station-symbol">{cleanSymbol(pos.symbol)}</span>
+                        {#if pos.leverage && pos.leverage > 1}
+                            <span class="badge badge-neutral" style="font-family: var(--font-mono); font-weight: 700;">{pos.leverage}x</span>
+                        {/if}
                         <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{pos.direction === 'SHORT' ? 'BÁN' : 'MUA'}</span>
                         <span class="badge {pos.statusClass}">{pos.statusLabel}</span>
                         {#if pos.policyId}
@@ -284,7 +308,7 @@
 
                 {#if pos.entryTime}
                     <div style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.75rem; font-family: var(--font-mono);">
-                        Thời gian mở: <strong>{formatVNTime(pos.entryTime)}</strong> · Vốn phân bổ: <strong>${pos.risk.toFixed(2)}</strong>
+                        Thời gian mở: <strong>{formatVNTime(pos.entryTime)}</strong> · Ký quỹ: <strong>${(pos.margin || pos.risk).toFixed(2)}</strong>{#if pos.leverage && pos.leverage > 1} (Vị thế: <strong>${(pos.notional || (pos.margin || pos.risk) * pos.leverage).toFixed(2)}</strong>){/if}
                     </div>
                 {/if}
             </div>

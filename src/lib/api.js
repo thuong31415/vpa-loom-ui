@@ -151,16 +151,27 @@ export async function fetchPositionHistoryApi(limit = 100) {
     }
 }
 
-export async function createPositionApi({ symbol, direction, entry, sl, tp, risk = 200 }) {
+export async function createPositionApi({ symbol, interval = '4h', direction, entry, sl, tp, margin, leverage = 1, risk = 200, notes = '' }) {
     try {
+        const effectiveMargin = parseFloat(margin ?? risk) || 200;
+        const effectiveLeverage = Math.max(1, parseInt(leverage) || 1);
+        const quoteAmount = effectiveMargin * effectiveLeverage;
+
+        const metadata = {
+            margin: effectiveMargin,
+            leverage: effectiveLeverage,
+            userNotes: notes || 'Mở vị thế thủ công từ bảng điều khiển'
+        };
+
         const payload = {
             symbol: symbol || 'BTCUSDT',
+            interval: interval || '4h',
             direction: (direction || 'LONG').toUpperCase(),
             entry_price: parseFloat(entry),
             protective_stop: parseFloat(sl),
             target: parseFloat(tp),
-            quote_amount: parseFloat(risk),
-            notes: 'Mở vị thế thủ công từ bảng điều khiển'
+            quote_amount: quoteAmount,
+            notes: JSON.stringify(metadata)
         };
 
         const url = `${BASE_URL}/api/v1/positions`;
