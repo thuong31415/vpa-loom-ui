@@ -115,11 +115,11 @@ export async function fetchBinanceUniverse24hTickers() {
 
 export async function fetchOpenPositionsApi() {
     try {
-        const url = `${BASE_URL}/api/v1/positions?status=OPEN`;
+        const url = `${BASE_URL}/api/v1/positions/open`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const json = await res.json();
-        return { success: true, data: json.data || json || [] };
+        return { success: true, data: Array.isArray(json) ? json : (json.data || []) };
     } catch (err) {
         console.warn('[API] fetchOpenPositionsApi error:', err.message);
         return { success: false, data: [], error: err.message };
@@ -128,12 +128,17 @@ export async function fetchOpenPositionsApi() {
 
 export async function fetchPositionsApi(status = 'ALL', limit = 100) {
     try {
-        const statusQuery = status && status !== 'ALL' ? `&status=${status}` : '';
-        const url = `${BASE_URL}/api/v1/positions?limit=${limit}${statusQuery}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        return { success: true, data: json.data || json || [] };
+        if (status === 'OPEN') {
+            return fetchOpenPositionsApi();
+        } else if (status === 'CLOSED') {
+            return fetchPositionHistoryApi(limit);
+        }
+        const [openRes, histRes] = await Promise.all([
+            fetchOpenPositionsApi(),
+            fetchPositionHistoryApi(limit)
+        ]);
+        const all = [...(openRes.data || []), ...(histRes.data || [])];
+        return { success: true, data: all };
     } catch (err) {
         return { success: false, data: [], error: err.message };
     }
@@ -141,12 +146,13 @@ export async function fetchPositionsApi(status = 'ALL', limit = 100) {
 
 export async function fetchPositionHistoryApi(limit = 100) {
     try {
-        const url = `${BASE_URL}/api/v1/positions?status=CLOSED&limit=${limit}`;
+        const url = `${BASE_URL}/api/v1/positions/history?limit=${limit}`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const json = await res.json();
-        return { success: true, data: json.data || json || [] };
+        return { success: true, data: Array.isArray(json) ? json : (json.data || []) };
     } catch (err) {
+        console.warn('[API] fetchPositionHistoryApi error:', err.message);
         return { success: false, data: [], error: err.message };
     }
 }

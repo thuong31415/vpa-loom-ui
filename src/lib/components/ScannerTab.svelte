@@ -32,8 +32,10 @@
         formatVNTime 
     } from '../api.js';
     import PriceLocationGauge from './PriceLocationGauge.svelte';
+    import { openPositions, openSymbols } from '../stores.js';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
+    export let onSelectTab = (tab) => {};
 
     // Navigation state: 'radar' (default) | 'single'
     let activeView = 'radar';
@@ -50,6 +52,7 @@
     let singleAnalysisData = null;
     let isSingleLoading = false;
     let singleError = null;
+    $: openPos = ($openPositions || []).find(p => p.symbol === selectedSymbol);
 
     // Realtime Binance Live Price state
     let livePrice = null;
@@ -380,10 +383,13 @@
         <div class="coin-selector-strip">
             {#each UNIVERSE_COINS as sym}
                 <button 
-                    class="coin-pill-btn {selectedSymbol === sym ? 'selected' : ''}"
+                    class="coin-pill-btn {selectedSymbol === sym ? 'selected' : ''} {$openSymbols.has(sym) ? 'held' : ''}"
                     on:click={() => selectSymbol(sym)}
                 >
                     {cleanSymbol(sym)}
+                    {#if $openSymbols.has(sym)}
+                        <span class="pill-dot" title="Đang nắm giữ vị thế">●</span>
+                    {/if}
                 </button>
             {/each}
         </div>
@@ -423,7 +429,14 @@
                 >
                     <!-- Header: Symbol + Live Price -->
                     <div class="station-header">
-                        <span class="station-symbol">{sym}</span>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <span class="station-symbol">{sym}</span>
+                            {#if $openSymbols.has(item.symbol)}
+                                <span class="badge badge-emerald" style="font-size: 0.65rem; padding: 2px 6px; font-weight: 700;">
+                                    NẮM GIỮ
+                                </span>
+                            {/if}
+                        </div>
                         <div class="station-price-group">
                             <div class="station-price">${formatPrice(liveP)}</div>
                             <div class="station-change {changePct >= 0 ? 'text-emerald' : 'text-rose'}">
@@ -448,8 +461,8 @@
                     {#if sup && res && sup.status === 'AVAILABLE' && res.status === 'AVAILABLE'}
                         <div class="mini-range-container">
                             <div class="mini-range-labels">
-                                <span>Đáy: ${formatPrice(sup.lower)}</span>
-                                <span>Đỉnh: ${formatPrice(res.upper)}</span>
+                                <span class="text-emerald" style="font-size: 0.65rem; font-weight: 600;">Hỗ trợ ${formatPrice(sup.lower)}</span>
+                                <span class="text-rose" style="font-size: 0.65rem; font-weight: 600;">Kháng cự ${formatPrice(res.upper)}</span>
                             </div>
                             <div class="mini-range-track">
                                 <div class="mini-range-fill" style="width: {Math.min(100, Math.max(0, ((liveP - sup.lower) / (res.upper - sup.lower)) * 100))}%;"></div>
@@ -467,9 +480,15 @@
 
                     <!-- Footer Action -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.35rem; border-top: 1px solid var(--border-subtle);">
-                        <span class="badge {analysis?.action === 'BUY_READY' ? 'badge-emerald' : analysis?.action === 'SHORT_READY' ? 'badge-rose' : 'badge-neutral'}">
-                            {act.text}
-                        </span>
+                        {#if $openSymbols.has(item.symbol)}
+                            <span class="badge badge-emerald" style="font-weight: 700;">
+                                ✓ ĐANG NẮM GIỮ
+                            </span>
+                        {:else}
+                            <span class="badge {analysis?.action === 'BUY_READY' ? 'badge-emerald' : analysis?.action === 'SHORT_READY' ? 'badge-rose' : 'badge-neutral'}">
+                                {act.text}
+                            </span>
+                        {/if}
                         <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 700;">
                             &rarr;
                         </span>
@@ -510,6 +529,11 @@
                 <div class="card hero-weather-banner {marketWeather.phaseClass}">
                     <div class="hero-left">
                         <div class="hero-badge-row">
+                            {#if openPos}
+                                <span class="badge badge-emerald" style="font-weight: 800; border: 1px solid var(--emerald); padding: 0.25rem 0.6rem;">
+                                    ✓ ĐANG NẮM GIỮ {openPos.direction || 'LONG'} {openPos.leverage ? `${openPos.leverage}x` : ''}
+                                </span>
+                            {/if}
                             <span class="weather-badge {marketWeather.phaseClass}">
                                 {marketWeather.phaseBadge}
                             </span>
@@ -651,7 +675,39 @@
 
                     <!-- Action / Order Button -->
                     <div>
-                        {#if singleAnalysisData.plan}
+                        {#if openPos}
+                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--emerald); border-radius: 8px; padding: 0.85rem 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <span class="badge badge-emerald" style="font-weight: 700;">
+                                        ✓ ĐANG CÓ VỊ THẾ MỞ ({openPos.direction || 'LONG'})
+                                    </span>
+                                    {#if openPos.leverage}
+                                        <span class="badge badge-neutral">{openPos.leverage}x</span>
+                                    {/if}
+                                </div>
+                                <div class="plan-price-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; text-align: center; margin-bottom: 0.6rem;">
+                                    <div class="price-box" style="padding: 0.35rem;">
+                                        <span class="price-label">Giá Vào</span>
+                                        <span class="price-val" style="font-size: 0.825rem;">${formatPrice(openPos.entry)}</span>
+                                    </div>
+                                    <div class="price-box" style="padding: 0.35rem;">
+                                        <span class="price-label">Cắt Lỗ</span>
+                                        <span class="price-val text-rose" style="font-size: 0.825rem;">${formatPrice(openPos.sl || openPos.stopLoss)}</span>
+                                    </div>
+                                    <div class="price-box" style="padding: 0.35rem;">
+                                        <span class="price-label">Chốt Lời</span>
+                                        <span class="price-val text-emerald" style="font-size: 0.825rem;">${formatPrice(openPos.tp || openPos.takeProfit)}</span>
+                                    </div>
+                                </div>
+                                <button 
+                                    class="btn btn-outline" 
+                                    style="width: 100%; font-weight: 700; border-color: var(--emerald); color: var(--emerald);"
+                                    on:click={() => onSelectTab('positions')}
+                                >
+                                    👉 Quản Lý Vị Thế Tại Tab Vị Thế
+                                </button>
+                            </div>
+                        {:else if singleAnalysisData.plan}
                             <div style="background: var(--emerald-bg); border: 1px solid var(--emerald-border); border-radius: 8px; padding: 0.75rem 1rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                     <span class="badge badge-emerald">
@@ -775,6 +831,15 @@
         color: #FFFFFF;
         border-color: var(--text-primary);
         font-weight: 700;
+    }
+    .coin-pill-btn.held {
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+    .pill-dot {
+        color: var(--emerald);
+        font-size: 0.6rem;
+        margin-left: 0.25rem;
+        vertical-align: middle;
     }
 
     /* Mini Range Visualizer */

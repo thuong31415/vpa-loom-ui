@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
     import Header from './lib/components/Header.svelte';
     import ScannerTab from './lib/components/ScannerTab.svelte';
     import PositionsTab from './lib/components/PositionsTab.svelte';
@@ -6,8 +7,13 @@
     import AccountTab from './lib/components/AccountTab.svelte';
     import OrderModal from './lib/components/OrderModal.svelte';
     import DepositModal from './lib/components/DepositModal.svelte';
+    import { refreshOpenPositions, openPositions } from './lib/stores.js';
 
     let activeTab = 'scanner';
+
+    onMount(() => {
+        refreshOpenPositions();
+    });
 
     // Order Modal state
     let isOrderModalOpen = false;
@@ -30,6 +36,8 @@
             accountTabRef.loadAccountData();
         } else if (tab === 'positions' && positionsTabRef && positionsTabRef.loadLivePositions) {
             positionsTabRef.loadLivePositions();
+        } else if (tab === 'scanner') {
+            refreshOpenPositions();
         }
     }
 
@@ -50,6 +58,7 @@
         if (positionsTabRef && positionsTabRef.addPosition) {
             positionsTabRef.addPosition(newPos);
         }
+        openPositions.update(p => [newPos, ...(p || [])]);
         activeTab = 'positions';
     }
 
@@ -73,7 +82,7 @@
 
 <main>
     {#if activeTab === 'scanner'}
-        <ScannerTab onOpenOrderModal={handleOpenOrderModal} />
+        <ScannerTab onOpenOrderModal={handleOpenOrderModal} onSelectTab={handleSelectTab} />
     {:else if activeTab === 'positions'}
         <PositionsTab bind:this={positionsTabRef} onOpenOrderModal={handleOpenOrderModal} />
     {:else if activeTab === 'history'}

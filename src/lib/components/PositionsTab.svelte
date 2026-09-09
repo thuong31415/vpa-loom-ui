@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, closePositionApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
+    import { openPositions } from '../stores.js';
     import ClosePositionModal from './ClosePositionModal.svelte';
 
     export let onOpenOrderModal = (symbol, direction, entry, sl, tp) => {};
@@ -21,6 +22,7 @@
 
             if (rawPositions.length === 0) {
                 positions = [];
+                openPositions.set([]);
                 totalPnlUsdt = 0;
                 totalPnlPercent = 0;
                 totalR = 0;
@@ -157,6 +159,7 @@
 
             const livePositions = await Promise.all(enrichedPromises);
             positions = livePositions;
+            openPositions.set(livePositions);
 
             totalPnlUsdt = positions.reduce((acc, curr) => acc + curr.pnlUsdt, 0);
             totalCapital = positions.reduce((acc, curr) => acc + (curr.margin || curr.risk || 0), 0);
@@ -179,6 +182,7 @@
 
     export function addPosition(newPos) {
         positions = [newPos, ...positions];
+        openPositions.update(p => [newPos, ...p]);
     }
 
     function handleOpenCloseModal(pos) {
@@ -199,6 +203,7 @@
             }
         }
         positions = positions.filter(p => p.id !== pos.id);
+        openPositions.update(list => (list || []).filter(p => p.id !== pos.id && p.rawId !== pos.rawId));
         await loadLivePositions();
     }
 </script>
