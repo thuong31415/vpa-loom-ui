@@ -182,7 +182,7 @@
 
     export function addPosition(newPos) {
         positions = [newPos, ...positions];
-        openPositions.update(p => [newPos, ...p]);
+        openPositions.update(p => [newPos, ...(p || [])]);
     }
 
     function handleOpenCloseModal(pos) {
@@ -203,7 +203,11 @@
             }
         }
         positions = positions.filter(p => p.id !== pos.id);
-        openPositions.update(list => (list || []).filter(p => p.id !== pos.id && p.rawId !== pos.rawId));
+        openPositions.update(list => (list || []).filter(p => {
+            const pRaw = p.rawId ?? (typeof p.id === 'number' ? p.id : parseInt(String(p.id).replace('pos-', '')));
+            const targetRaw = pos.rawId ?? (typeof pos.id === 'number' ? pos.id : parseInt(String(pos.id).replace('pos-', '')));
+            return pRaw && targetRaw ? pRaw !== targetRaw : p.id !== pos.id;
+        }));
         await loadLivePositions();
     }
 </script>

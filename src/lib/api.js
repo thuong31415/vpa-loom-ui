@@ -3,8 +3,8 @@
  * Nối trực tiếp tới Backend Engine Go tại http://103.167.88.197:8081
  */
 
-// BASE_URL endpoint mặc định nối trực tiếp tới VPS Go Engine 8081
-export const BASE_URL = 'http://103.167.88.197:8081';
+// BASE_URL endpoint mặc định nối trực tiếp tới VPS Engine 8081 hoặc qua reverse proxy env
+export const BASE_URL = import.meta.env?.VITE_BACKEND_URL || 'http://103.167.88.197:8081';
 
 // Danh sách 15 Coin Universe theo dõi cốt lõi
 export const UNIVERSE_COINS = [
@@ -13,7 +13,7 @@ export const UNIVERSE_COINS = [
     'TAOUSDT', 'PEPEUSDT', 'ZECUSDT', 'ENAUSDT', 'ZKUSDT'
 ];
 
-export const REMOTE_API_HOST = 'http://103.167.88.197:8081';
+export const REMOTE_API_HOST = import.meta.env?.VITE_BACKEND_URL || 'http://103.167.88.197:8081';
 
 // -------------------------------------------------------------
 // 1. Core Market Analysis & Radar APIs

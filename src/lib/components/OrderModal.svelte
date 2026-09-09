@@ -97,6 +97,10 @@
         e.preventDefault();
         validateInputs();
         if (slWarning || isLiquidationRisk) return;
+        if (!entryNum || entryNum <= 0 || !slNum || slNum <= 0 || !marginNum || marginNum <= 0) {
+            apiError = 'Vui lòng điền đầy đủ và chính xác Giá vào lệnh, Cắt lỗ và Ký quỹ!';
+            return;
+        }
 
         isLoading = true;
         apiError = '';
@@ -133,6 +137,7 @@
             tp: parseFloat(data.target) || tpNum,
             margin: marginNum,
             leverage: levNum,
+            notional: notionalSize,
             notionalAmount: notionalSize,
             risk: marginNum,
             policyId: data.policy_id || '',
