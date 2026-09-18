@@ -15,6 +15,91 @@
     let totalCapital = 0;
     let totalNotional = 0;
     let liveTickerTimer = null;
+    let isUpdatingLivePrices = false;
+
+    function evaluateActionBanner({ engineRec, reachedStop, reachedTarget, suggestedStop, anaReason, direction, sl, tp, rMultiple, rText, effortType }) {
+        let isSell = false;
+        let actionTitle = 'TIẾP TỤC NẮM GIỮ';
+        let actionBadge = 'badge-emerald';
+        let actionDesc = anaReason || `Vị thế an toàn, xu hướng được bảo toàn (${rText}). Tiếp tục nắm giữ theo sóng.`;
+        let bannerBg = 'var(--phase-markup-bg)';
+        let bannerBorder = 'var(--phase-markup-border)';
+        let bannerColor = 'var(--emerald)';
+        let actionBtnText = 'Chốt đóng vị thế';
+        let actionBtnClass = 'btn-outline';
+
+        // 1. Capital defense / Stop Loss takes absolute precedence
+        if (engineRec === 'STOP_LOSS' || reachedStop) {
+            isSell = true;
+            actionTitle = 'CẮT LỖ BẢO VỆ VỐN';
+            actionBadge = 'badge-rose';
+            bannerBg = 'var(--phase-markdown-bg)';
+            bannerBorder = 'var(--phase-markdown-border)';
+            bannerColor = 'var(--rose)';
+            actionBtnText = 'Cắt lỗ ngay';
+            actionBtnClass = 'btn-rose';
+            actionDesc = reachedStop && sl > 0
+                ? `Giá đã chạm ngưỡng cắt lỗ bảo vệ ($${formatPrice(sl)}). Khuyến nghị đóng vị thế ngay.`
+                : (anaReason || 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Khuyến nghị đóng vị thế ngay.');
+        } else if (engineRec === 'TAKE_PROFIT' || reachedTarget) {
+            isSell = true;
+            actionTitle = 'CHỐT LỜI (ĐẠT MỤC TIÊU)';
+            actionBadge = 'badge-cyan';
+            bannerBg = 'var(--phase-accum-bg)';
+            bannerBorder = 'var(--phase-accum-border)';
+            bannerColor = 'var(--cyan)';
+            actionBtnText = 'Chốt lời ngay';
+            actionBtnClass = 'btn-emerald';
+            actionDesc = reachedTarget && tp > 0
+                ? `Vị thế đã chạm mục tiêu chốt lời ($${formatPrice(tp)}). Khuyến nghị chốt lời đóng vị thế để bảo toàn thành quả.`
+                : (anaReason || 'Vị thế đã đạt vùng chốt lời mục tiêu. Khuyến nghị chốt lời đóng vị thế.');
+        } else if (engineRec === 'TIGHTEN_STOP') {
+            isSell = false;
+            actionTitle = 'NÂNG STOP-LOSS BẢO VỆ LÃI';
+            actionBadge = 'badge-amber';
+            bannerBg = 'var(--phase-dist-bg)';
+            bannerBorder = 'var(--phase-dist-border)';
+            bannerColor = 'var(--amber)';
+            actionBtnText = 'Chốt đóng vị thế';
+            actionBtnClass = 'btn-outline';
+            const moveDir = direction === 'SHORT' ? 'xuống' : 'lên';
+            actionDesc = suggestedStop
+                ? `Vị thế bứt phá tốt (${rText}). Khuyến nghị dời Stop-loss ${moveDir} $${formatPrice(suggestedStop)} để bảo vệ lợi nhuận.`
+                : (anaReason || `Vị thế đang có lãi (${rText}). Khuyến nghị dời Stop-loss về giá vào lệnh (Hòa vốn).`);
+        } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL' || engineRec === 'EXIT') {
+            isSell = true;
+            actionTitle = 'CHỐT LỜI / THOÁT VỊ THẾ';
+            actionBadge = 'badge-rose';
+            bannerBg = 'var(--phase-markdown-bg)';
+            bannerBorder = 'var(--phase-markdown-border)';
+            bannerColor = 'var(--rose)';
+            actionBtnText = 'Thoát vị thế';
+            actionBtnClass = 'btn-rose';
+            actionDesc = anaReason || 'Nến 4H đã đóng xác nhận tín hiệu thoát vị thế. Đóng vị thế ngay.';
+        } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
+            isSell = true;
+            actionTitle = 'CHỐT LỜI KHI BỊ XẢ HÀNG';
+            actionBadge = 'badge-rose';
+            bannerBg = 'var(--phase-markdown-bg)';
+            bannerBorder = 'var(--phase-markdown-border)';
+            bannerColor = 'var(--rose)';
+            actionBtnText = 'Bán ngay';
+            actionBtnClass = 'btn-rose';
+            actionDesc = 'Nến đóng có áp lực xả hàng lớn của dòng tiền lớn. Đóng vị thế chốt lời ngay.';
+        }
+
+        return {
+            isSell,
+            actionTitle,
+            actionBadge,
+            actionDesc,
+            bannerBg,
+            bannerBorder,
+            bannerColor,
+            actionBtnText,
+            actionBtnClass
+        };
+    }
 
     export async function loadLivePositions() {
         isLoading = true;
@@ -70,6 +155,8 @@
                 let effortType = 'NORMAL';
                 let trend = 'BULLISH';
                 let engineRec = null;
+                let anaReason = null;
+                let suggestedStop = null;
 
                 try {
                     const [anaRes, liveRes] = await Promise.allSettled([
@@ -89,8 +176,17 @@
                         if (d.market_state?.trend) {
                             trend = d.market_state.trend;
                         }
-                        if (d.position?.recommendation) {
-                            engineRec = d.position.recommendation;
+                        if (d.position) {
+                            anaReason = d.position.reason || d.reason;
+                            if (d.position.recommendation) {
+                                engineRec = d.position.recommendation;
+                            }
+                            const rawStop = d.position.suggested_stop ?? d.position.suggestedStop;
+                            if (rawStop != null && !isNaN(parseFloat(rawStop))) {
+                                suggestedStop = parseFloat(rawStop);
+                            }
+                        } else if (d.action === 'MANAGE_POSITION') {
+                            anaReason = d.reason;
                         }
                     }
                 } catch (e) {
@@ -127,31 +223,29 @@
                         : entry * (1 + 1 / leverage);
                 }
 
-                let isSell = false;
-                let actionTitle = 'TIẾP TỤC NẮM GIỮ';
-                let actionBadge = 'badge-emerald';
-                let actionDesc = `Vị thế an toàn, xu hướng được bảo toàn (+${rMultiple.toFixed(2)} R). Tiếp tục nắm giữ theo sóng.`;
+                const reachedTarget = tp > 0 && (
+                    (direction === 'LONG' && currentPrice >= tp) ||
+                    (direction === 'SHORT' && currentPrice <= tp)
+                );
+                const reachedStop = sl > 0 && (
+                    (direction === 'LONG' && currentPrice <= sl) ||
+                    (direction === 'SHORT' && currentPrice >= sl)
+                );
+                const rText = `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`;
 
-                if (engineRec === 'STOP_LOSS') {
-                    isSell = true;
-                    actionTitle = 'CẮT LỖ BẢO VỆ VỐN';
-                    actionBadge = 'badge-rose';
-                    actionDesc = 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Đóng vị thế ngay.';
-                } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL') {
-                    isSell = true;
-                    actionTitle = 'CHỐT LỜI KHI ĐẢO CHIỀU';
-                    actionBadge = 'badge-rose';
-                    actionDesc = 'Nến 4H đã đóng xác nhận tín hiệu đảo chiều. Đóng vị thế chốt lời ngay.';
-                } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
-                    isSell = true;
-                    actionTitle = 'CHỐT LỜI KHI BỊ XẢ HÀNG';
-                    actionBadge = 'badge-rose';
-                    actionDesc = 'Nến đóng có áp lực xả hàng lớn của dòng tiền lớn. Đóng vị thế chốt lời ngay.';
-                } else if (direction === 'LONG' && tp > 0 && currentPrice >= tp) {
-                    actionTitle = 'TIẾP TỤC GỒNG LÃI';
-                    actionBadge = 'badge-emerald';
-                    actionDesc = `Giá ($${currentPrice.toFixed(3)}) đã vượt mục tiêu ($${tp.toFixed(3)}), sóng vẫn đang mạnh (+${rMultiple.toFixed(2)} R). Tiếp tục gồng lãi cho đến khi xuất hiện nến đảo chiều.`;
-                }
+                const banner = evaluateActionBanner({
+                    engineRec,
+                    reachedStop,
+                    reachedTarget,
+                    suggestedStop,
+                    anaReason,
+                    direction,
+                    sl,
+                    tp,
+                    rMultiple,
+                    rText,
+                    effortType
+                });
 
                 return {
                     id: `pos-${p.id}`,
@@ -164,6 +258,7 @@
                     entry: entry,
                     currentPrice: currentPrice,
                     sl: sl,
+                    suggestedStop: suggestedStop,
                     tp: tp,
                     margin: margin,
                     leverage: leverage,
@@ -175,12 +270,11 @@
                     pnlPercent: pnlPercent,
                     pnlUsdt: pnlUsdt,
                     rMultiple: rMultiple,
-                    rResult: `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`,
-                    isSell: isSell,
-                    actionTitle: actionTitle,
-                    actionBadge: actionBadge,
-                    actionDesc: actionDesc,
-                    actionBtnText: isSell ? 'Bán Ngay' : 'Chốt đóng vị thế',
+                    rResult: rText,
+                    engineRec: engineRec,
+                    effortType: effortType,
+                    anaReason: anaReason,
+                    ...banner,
                     nextStatus: 'CLOSED'
                 };
             });
@@ -218,45 +312,86 @@
     }
 
     async function updateLivePrices() {
-        if (!positions || positions.length === 0) return;
-        let hasUpdates = false;
-        const updated = await Promise.all(positions.map(async (pos) => {
-            try {
-                const res = await fetchBinanceLivePrice(pos.symbol);
-                if (res.ok && res.price && Math.abs(res.price - pos.currentPrice) > 0.0000001) {
-                    hasUpdates = true;
-                    const currentPrice = res.price;
-                    const diffRatio = pos.direction === 'LONG'
-                        ? (currentPrice - pos.entry) / pos.entry
-                        : (pos.entry - currentPrice) / pos.entry;
-                    const pnlUsdt = pos.notional * diffRatio;
-                    const pnlPercent = diffRatio * 100 * pos.leverage;
-                    let rMultiple = 0;
-                    if (pos.direction === 'LONG' && pos.entry > pos.sl && pos.sl > 0) {
-                        rMultiple = (currentPrice - pos.entry) / (pos.entry - pos.sl);
-                    } else if (pos.direction === 'SHORT' && pos.sl > pos.entry && pos.sl > 0) {
-                        rMultiple = (pos.entry - currentPrice) / (pos.sl - pos.entry);
+        if (!positions || positions.length === 0 || isUpdatingLivePrices || isLoading) return;
+        isUpdatingLivePrices = true;
+        try {
+            let hasUpdates = false;
+            const currentPositionIds = new Set(positions.map(p => p.id));
+            const updated = await Promise.all(positions.map(async (pos) => {
+                try {
+                    const res = await fetchBinanceLivePrice(pos.symbol);
+                    if (res.ok && res.price && Math.abs(res.price - pos.currentPrice) > 0.0000001) {
+                        hasUpdates = true;
+                        const currentPrice = res.price;
+                        let pnlUsdt = 0;
+                        let pnlPercent = 0;
+                        let rMultiple = 0;
+
+                        if (pos.entry > 0) {
+                            const diffRatio = pos.direction === 'LONG'
+                                ? (currentPrice - pos.entry) / pos.entry
+                                : (pos.entry - currentPrice) / pos.entry;
+                            pnlUsdt = pos.notional * diffRatio;
+                            pnlPercent = diffRatio * 100 * pos.leverage;
+
+                            if (pos.direction === 'LONG' && pos.entry > pos.sl && pos.sl > 0) {
+                                rMultiple = (currentPrice - pos.entry) / (pos.entry - pos.sl);
+                            } else if (pos.direction === 'SHORT' && pos.sl > pos.entry && pos.sl > 0) {
+                                rMultiple = (pos.entry - currentPrice) / (pos.sl - pos.entry);
+                            }
+                        }
+
+                        const rText = `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`;
+                        const reachedTarget = pos.tp > 0 && (
+                            (pos.direction === 'LONG' && currentPrice >= pos.tp) ||
+                            (pos.direction === 'SHORT' && currentPrice <= pos.tp)
+                        );
+                        const reachedStop = pos.sl > 0 && (
+                            (pos.direction === 'LONG' && currentPrice <= pos.sl) ||
+                            (pos.direction === 'SHORT' && currentPrice >= pos.sl)
+                        );
+
+                        const banner = evaluateActionBanner({
+                            engineRec: pos.engineRec,
+                            reachedStop,
+                            reachedTarget,
+                            suggestedStop: pos.suggestedStop,
+                            anaReason: pos.anaReason,
+                            direction: pos.direction,
+                            sl: pos.sl,
+                            tp: pos.tp,
+                            rMultiple,
+                            rText,
+                            effortType: pos.effortType
+                        });
+
+                        return {
+                            ...pos,
+                            currentPrice,
+                            pnlUsdt,
+                            pnlPercent,
+                            rMultiple,
+                            rResult: rText,
+                            ...banner
+                        };
                     }
-                    return {
-                        ...pos,
-                        currentPrice,
-                        pnlUsdt,
-                        pnlPercent,
-                        rMultiple,
-                        rResult: `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`
-                    };
+                } catch (_) {}
+                return pos;
+            }));
+
+            // Filter out any positions that were closed while async fetch was in-flight
+            const validUpdated = updated.filter(p => currentPositionIds.has(p.id));
+            if (hasUpdates) {
+                positions = validUpdated;
+                openPositions.set(validUpdated);
+                totalPnlUsdt = positions.reduce((acc, curr) => acc + curr.pnlUsdt, 0);
+                totalR = positions.reduce((acc, curr) => acc + curr.rMultiple, 0);
+                if (totalCapital > 0) {
+                    totalPnlPercent = (totalPnlUsdt / totalCapital) * 100;
                 }
-            } catch (_) {}
-            return pos;
-        }));
-        if (hasUpdates) {
-            positions = updated;
-            openPositions.set(updated);
-            totalPnlUsdt = positions.reduce((acc, curr) => acc + curr.pnlUsdt, 0);
-            totalR = positions.reduce((acc, curr) => acc + curr.rMultiple, 0);
-            if (totalCapital > 0) {
-                totalPnlPercent = (totalPnlUsdt / totalCapital) * 100;
             }
+        } finally {
+            isUpdatingLivePrices = false;
         }
     }
 
@@ -352,7 +487,7 @@
                             <span class="badge badge-neutral">Chiến Lược: {pos.policyId}</span>
                         {/if}
                     </div>
-                    <button class="btn {pos.isSell ? 'btn-rose' : 'btn-outline'}" style="font-size: 0.825rem; padding: 0.35rem 0.85rem;" on:click={() => handleOpenCloseModal(pos)}>
+                    <button class="btn {pos.actionBtnClass || (pos.isSell ? 'btn-rose' : 'btn-outline')}" style="font-size: 0.825rem; padding: 0.35rem 0.85rem;" on:click={() => handleOpenCloseModal(pos)}>
                         {pos.actionBtnText}
                     </button>
                 </div>
@@ -373,6 +508,11 @@
                     <div class="p-metric-item">
                         <span class="p-metric-label">Cắt Lỗ</span>
                         <span class="p-metric-val text-rose">${formatPrice(pos.sl)}</span>
+                        {#if pos.suggestedStop && Math.abs(pos.suggestedStop - pos.sl) > 0.00001}
+                            <span style="font-size: 0.72rem; color: var(--amber); display: block; font-weight: 700; margin-top: 2px;" title="Khuyến nghị dời Stop-loss">
+                                ➔ Đề xuất: ${formatPrice(pos.suggestedStop)}
+                            </span>
+                        {/if}
                     </div>
 
                     <div class="p-metric-item">
@@ -408,8 +548,8 @@
                 </div>
 
                 <!-- Strategic Action Banner -->
-                <div style="margin-top: 0.85rem; padding: 0.85rem 1.15rem; background: {pos.isSell ? 'var(--phase-markdown-bg)' : 'var(--phase-markup-bg)'}; border: 1px solid {pos.isSell ? 'var(--phase-markdown-border)' : 'var(--phase-markup-border)'}; border-radius: 8px;">
-                    <div style="font-size: 0.9rem; font-weight: 800; color: {pos.isSell ? 'var(--rose)' : 'var(--emerald)'};">
+                <div style="margin-top: 0.85rem; padding: 0.85rem 1.15rem; background: {pos.bannerBg || (pos.isSell ? 'var(--phase-markdown-bg)' : 'var(--phase-markup-bg)')}; border: 1px solid {pos.bannerBorder || (pos.isSell ? 'var(--phase-markdown-border)' : 'var(--phase-markup-border)')}; border-radius: 8px;">
+                    <div style="font-size: 0.9rem; font-weight: 800; color: {pos.bannerColor || (pos.isSell ? 'var(--rose)' : 'var(--emerald)')};">
                         {pos.actionTitle}
                     </div>
                     <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.45;">
