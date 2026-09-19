@@ -230,6 +230,34 @@ export async function closePositionApi(positionId, exitPrice, exitReason = 'MANU
     }
 }
 
+export async function updatePositionStopApi(positionId, stopPrice, currentPrice = null, reason = 'DISCRETIONARY') {
+    try {
+        const url = `${BASE_URL}/api/v1/positions/${positionId}/stop`;
+        const payload = {
+            stop_price: parseFloat(stopPrice),
+            current_price: currentPrice != null ? parseFloat(currentPrice) : null,
+            reason: reason || 'DISCRETIONARY'
+        };
+
+        const res = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        return { success: true, data: data.data || data };
+    } catch (err) {
+        console.warn('[API] updatePositionStopApi error:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
 export async function fetchAccountSummaryApi() {
     try {
         const url = `${BASE_URL}/api/v1/account/summary`;

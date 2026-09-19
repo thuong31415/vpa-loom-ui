@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, fetchBinanceLivePrice, closePositionApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, fetchBinanceLivePrice, closePositionApi, updatePositionStopApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
     import { openPositions, getPositionMeta, savePositionMeta, removePositionMeta } from '../stores.js';
     import ClosePositionModal from './ClosePositionModal.svelte';
 
@@ -122,6 +122,7 @@
                 const sym = p.symbol || 'LINKUSDT';
                 const entry = parseFloat(p.entry_price ?? p.entryPrice ?? p.entry) || 0;
                 const sl = parseFloat(p.protective_stop ?? p.protectiveStop ?? p.protective_stop_price ?? p.sl) || 0;
+                const initialSl = parseFloat(p.initial_protective_stop ?? p.initialProtectiveStop ?? p.initial_protective_stop_price) || sl;
                 const tp = parseFloat(p.target ?? p.target_price ?? p.tp) || 0;
                 const rawRisk = parseFloat(p.quote_amount ?? p.quoteAmount ?? p.notional_amount ?? p.risk) || 200;
                 const direction = (p.direction || 'LONG').toUpperCase();
@@ -157,6 +158,7 @@
                 let engineRec = null;
                 let anaReason = null;
                 let suggestedStop = null;
+                let stopAction = 'MAINTAIN_STOP';
 
                 try {
                     const [anaRes, liveRes] = await Promise.allSettled([
@@ -180,6 +182,9 @@
                             anaReason = d.position.reason || d.reason;
                             if (d.position.recommendation) {
                                 engineRec = d.position.recommendation;
+                            }
+                            if (d.position.stop_action ?? d.position.stopAction) {
+                                stopAction = d.position.stop_action ?? d.position.stopAction;
                             }
                             const rawStop = d.position.suggested_stop ?? d.position.suggestedStop;
                             if (rawStop != null && !isNaN(parseFloat(rawStop))) {
@@ -205,12 +210,12 @@
                     pnlPercent = diffRatio * 100 * leverage;
 
                     if (direction === 'LONG') {
-                        if (entry > sl && sl > 0) {
-                            rMultiple = (currentPrice - entry) / (entry - sl);
+                        if (entry > initialSl && initialSl > 0) {
+                            rMultiple = (currentPrice - entry) / (entry - initialSl);
                         }
                     } else {
-                        if (sl > entry && sl > 0) {
-                            rMultiple = (entry - currentPrice) / (sl - entry);
+                        if (initialSl > entry && initialSl > 0) {
+                            rMultiple = (entry - currentPrice) / (initialSl - entry);
                         }
                     }
                 }
@@ -258,7 +263,9 @@
                     entry: entry,
                     currentPrice: currentPrice,
                     sl: sl,
+                    initialSl: initialSl,
                     suggestedStop: suggestedStop,
+                    stopAction: stopAction,
                     tp: tp,
                     margin: margin,
                     leverage: leverage,
@@ -334,10 +341,11 @@
                             pnlUsdt = pos.notional * diffRatio;
                             pnlPercent = diffRatio * 100 * pos.leverage;
 
-                            if (pos.direction === 'LONG' && pos.entry > pos.sl && pos.sl > 0) {
-                                rMultiple = (currentPrice - pos.entry) / (pos.entry - pos.sl);
-                            } else if (pos.direction === 'SHORT' && pos.sl > pos.entry && pos.sl > 0) {
-                                rMultiple = (pos.entry - currentPrice) / (pos.sl - pos.entry);
+                            const initialSl = pos.initialSl || pos.sl;
+                            if (pos.direction === 'LONG' && pos.entry > initialSl && initialSl > 0) {
+                                rMultiple = (currentPrice - pos.entry) / (pos.entry - initialSl);
+                            } else if (pos.direction === 'SHORT' && initialSl > pos.entry && initialSl > 0) {
+                                rMultiple = (pos.entry - currentPrice) / (initialSl - pos.entry);
                             }
                         }
 
@@ -438,6 +446,35 @@
         }));
         await loadLivePositions();
     }
+
+    let updatingStopId = null;
+
+    async function handleApplySuggestedStop(pos) {
+        if (!pos.rawId || !pos.suggestedStop || updatingStopId) return;
+        const confirmMsg = `Xác nhận dời Stop-loss của ${cleanSymbol(pos.symbol)} từ $${formatPrice(pos.sl)} sang $${formatPrice(pos.suggestedStop)}?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        updatingStopId = pos.id;
+        try {
+            const res = await updatePositionStopApi(
+                pos.rawId,
+                pos.suggestedStop,
+                pos.currentPrice,
+                pos.stopAction || pos.engineRec || 'TIGHTEN_STOP'
+            );
+            if (res.success) {
+                pos.sl = pos.suggestedStop;
+                pos.suggestedStop = null;
+                await loadLivePositions();
+            } else {
+                alert(`Cập nhật Stop thất bại: ${res.error || 'Lỗi không xác định'}`);
+            }
+        } catch (e) {
+            alert(`Lỗi kết nối: ${e.message}`);
+        } finally {
+            updatingStopId = null;
+        }
+    }
 </script>
 
 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -509,9 +546,20 @@
                         <span class="p-metric-label">Cắt Lỗ</span>
                         <span class="p-metric-val text-rose">${formatPrice(pos.sl)}</span>
                         {#if pos.suggestedStop && Math.abs(pos.suggestedStop - pos.sl) > 0.00001}
-                            <span style="font-size: 0.72rem; color: var(--amber); display: block; font-weight: 700; margin-top: 2px;" title="Khuyến nghị dời Stop-loss">
-                                ➔ Đề xuất: ${formatPrice(pos.suggestedStop)}
-                            </span>
+                            <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                                <span style="font-size: 0.72rem; color: var(--amber); font-weight: 700;" title="Khuyến nghị dời Stop-loss">
+                                    ➔ Đề xuất: ${formatPrice(pos.suggestedStop)}
+                                </span>
+                                <button
+                                    class="btn btn-outline"
+                                    style="padding: 0.15rem 0.45rem; font-size: 0.68rem; line-height: 1; border-color: var(--amber); color: var(--amber); border-radius: 4px; font-weight: 700; cursor: pointer;"
+                                    disabled={updatingStopId === pos.id}
+                                    on:click|stopPropagation={() => handleApplySuggestedStop(pos)}
+                                    title="Lưu Stop-loss đề xuất vào hệ thống"
+                                >
+                                    {updatingStopId === pos.id ? 'Đang lưu...' : 'Áp dụng'}
+                                </button>
+                            </div>
                         {/if}
                     </div>
 
