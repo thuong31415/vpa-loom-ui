@@ -15,6 +15,7 @@
     let totalCapital = 0;
     let totalNotional = 0;
     let liveTickerTimer = null;
+    let syncAnalysisTimer = null;
     let isUpdatingLivePrices = false;
 
     function evaluateActionBanner({ engineRec, reachedStop, reachedTarget, suggestedStop, anaReason, direction, sl, tp, rMultiple, rText, effortType }) {
@@ -41,7 +42,8 @@
             actionDesc = reachedStop && sl > 0
                 ? `Giá đã chạm ngưỡng cắt lỗ bảo vệ ($${formatPrice(sl)}). Khuyến nghị đóng vị thế ngay.`
                 : (anaReason || 'Giá đã chạm ngưỡng cắt lỗ bảo vệ. Khuyến nghị đóng vị thế ngay.');
-        } else if (engineRec === 'TAKE_PROFIT' || reachedTarget) {
+        } else if (engineRec === 'TAKE_PROFIT') {
+            // Chỉ chốt lời khi Backend VPA Engine thực sự ra khuyến nghị TAKE_PROFIT
             isSell = true;
             actionTitle = 'CHỐT LỜI (ĐẠT MỤC TIÊU)';
             actionBadge = 'badge-cyan';
@@ -66,7 +68,7 @@
             actionDesc = suggestedStop
                 ? `Vị thế bứt phá tốt (${rText}). Khuyến nghị dời Stop-loss ${moveDir} $${formatPrice(suggestedStop)} để bảo vệ lợi nhuận.`
                 : (anaReason || `Vị thế đang có lãi (${rText}). Khuyến nghị dời Stop-loss về giá vào lệnh (Hòa vốn).`);
-        } else if (engineRec === 'EXIT_ON_OPPOSITE_SIGNAL' || engineRec === 'EXIT_ON_OPEN_SURFACE_STRUCTURE_LOSS' || engineRec === 'EXIT_ON_OPEN_SURFACE_MATURE_RUNNER_REVERSAL' || engineRec === 'EXIT') {
+        } else if (engineRec === 'EXIT' || (typeof engineRec === 'string' && engineRec.startsWith('EXIT_'))) {
             isSell = true;
             actionTitle = 'CHỐT LỜI / THOÁT VỊ THẾ';
             actionBadge = 'badge-rose';
@@ -76,6 +78,18 @@
             actionBtnText = 'Thoát vị thế';
             actionBtnClass = 'btn-rose';
             actionDesc = anaReason || 'Nến 4H đã đóng xác nhận tín hiệu thoát vị thế. Đóng vị thế ngay.';
+        } else if (reachedTarget && tp > 0) {
+            // Vị thế Waypoint Runner đã chạm mốc cản ban đầu nhưng Backend đang HOLD để chạy sóng lớn
+            actionTitle = 'TIẾP TỤC NẮM GIỮ (GỒNG LÃI THEO SÓNG)';
+            actionBadge = 'badge-emerald';
+            bannerBg = 'var(--phase-markup-bg)';
+            bannerBorder = 'var(--phase-markup-border)';
+            bannerColor = 'var(--emerald)';
+            actionBtnText = 'Chốt đóng vị thế';
+            actionBtnClass = 'btn-outline';
+            actionDesc = anaReason
+                ? `${anaReason} (Đã chạm mốc cản ban đầu $${formatPrice(tp)}, hệ thống tiếp tục gồng lãi theo xu hướng).`
+                : `Vị thế đã chạm mốc cản mục tiêu ($${formatPrice(tp)}). Hệ thống tiếp tục nắm giữ theo sóng để tối đa hoá lợi nhuận (${rText}).`;
         }
 
         return {
@@ -91,8 +105,8 @@
         };
     }
 
-    export async function loadLivePositions() {
-        isLoading = true;
+    export async function loadLivePositions(silent = false) {
+        if (!silent) isLoading = true;
         try {
             const res = await fetchOpenPositionsApi();
             const rawPositions = (res.success && Array.isArray(res.data)) ? res.data : [];
@@ -130,13 +144,6 @@
                     } catch (_) {}
                 }
 
-                // Seed fallback for ZKUSDT (the user's open position: 200 margin, 5x leverage)
-                if ((!meta || meta.leverage === 1) && sym === 'ZKUSDT' && rawRisk === 1000) {
-                    leverage = 5;
-                    margin = 200;
-                    savePositionMeta('ZKUSDT', { margin: 200, leverage: 5, notional: 1000 });
-                }
-
                 if (!margin || margin <= 0) {
                     margin = rawRisk / leverage;
                 }
@@ -169,7 +176,9 @@
                             trend = d.market_state.trend;
                         }
                         if (d.position) {
-                            anaReason = d.position.reasonCode || d.position.reason_code || d.position.reason || d.reason;
+                            const backendReason = (d.reason && typeof d.reason === 'string' && d.reason !== 'HOLD' && d.reason !== 'MANAGE_POSITION') ? d.reason : null;
+                            const recDisplay = d.position.recommendation_display || d.position.recommendationDisplay;
+                            anaReason = backendReason || (recDisplay ? `${recDisplay}; chưa có điều kiện thoát.` : null) || 'Đang giữ vị thế; chưa có điều kiện thoát.';
                             if (d.position.recommendation) {
                                 engineRec = d.position.recommendation;
                             }
@@ -181,7 +190,7 @@
                                 suggestedStop = parseFloat(rawStop);
                             }
                         } else if (d.action === 'MANAGE_POSITION') {
-                            anaReason = d.reason;
+                            anaReason = (d.reason && typeof d.reason === 'string' && d.reason !== 'MANAGE_POSITION') ? d.reason : 'Đang giữ vị thế; chưa có điều kiện thoát.';
                         }
                     }
                 } catch (e) {
@@ -289,7 +298,7 @@
         } catch (err) {
             console.warn('Error loading live positions:', err);
         } finally {
-            isLoading = false;
+            if (!silent) isLoading = false;
         }
     }
 
@@ -305,6 +314,22 @@
         if (liveTickerTimer) {
             clearInterval(liveTickerTimer);
             liveTickerTimer = null;
+        }
+    }
+
+    function startSyncAnalysisTimer() {
+        stopSyncAnalysisTimer();
+        syncAnalysisTimer = setInterval(async () => {
+            if (!positions || positions.length === 0 || isLoading) return;
+            // Silent refresh không hiển thị spinner đè lên giao diện
+            await loadLivePositions(true);
+        }, 60000);
+    }
+
+    function stopSyncAnalysisTimer() {
+        if (syncAnalysisTimer) {
+            clearInterval(syncAnalysisTimer);
+            syncAnalysisTimer = null;
         }
     }
 
@@ -396,10 +421,12 @@
     onMount(() => {
         loadLivePositions();
         startLiveTicker();
+        startSyncAnalysisTimer();
     });
 
     onDestroy(() => {
         stopLiveTicker();
+        stopSyncAnalysisTimer();
     });
 
     let isCloseModalOpen = false;
