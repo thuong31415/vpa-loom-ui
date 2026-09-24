@@ -76,16 +76,6 @@
             actionBtnText = 'Thoát vị thế';
             actionBtnClass = 'btn-rose';
             actionDesc = anaReason || 'Nến 4H đã đóng xác nhận tín hiệu thoát vị thế. Đóng vị thế ngay.';
-        } else if (effortType === 'HIGH_EFFORT_LOW_RESULT') {
-            isSell = true;
-            actionTitle = 'CHỐT LỜI KHI BỊ XẢ HÀNG';
-            actionBadge = 'badge-rose';
-            bannerBg = 'var(--phase-markdown-bg)';
-            bannerBorder = 'var(--phase-markdown-border)';
-            bannerColor = 'var(--rose)';
-            actionBtnText = 'Bán ngay';
-            actionBtnClass = 'btn-rose';
-            actionDesc = 'Nến đóng có áp lực xả hàng lớn của dòng tiền lớn. Đóng vị thế chốt lời ngay.';
         }
 
         return {
@@ -179,7 +169,7 @@
                             trend = d.market_state.trend;
                         }
                         if (d.position) {
-                            anaReason = d.position.reason || d.reason;
+                            anaReason = d.position.reasonCode || d.position.reason_code || d.position.reason || d.reason;
                             if (d.position.recommendation) {
                                 engineRec = d.position.recommendation;
                             }
