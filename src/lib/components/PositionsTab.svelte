@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, fetchBinanceLivePrice, closePositionApi, updatePositionStopApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
+    import { fetchOpenPositionsApi, fetchPositionsApi, fetchAnalysis, fetchBinanceLivePrice, closePositionApi, updatePositionStopApi, UNIVERSE_COINS, cleanSymbol, formatPrice, formatVNTime, getStrategyStarRating, getFriendlyWyckoffTitle } from '../api.js';
     import { openPositions, getPositionMeta, savePositionMeta, removePositionMeta } from '../stores.js';
     import ClosePositionModal from './ClosePositionModal.svelte';
 
@@ -19,10 +19,11 @@
     let isUpdatingLivePrices = false;
 
     function evaluateActionBanner({ engineRec, reachedStop, reachedTarget, suggestedStop, anaReason, direction, sl, tp, rMultiple, rText, effortType }) {
+        const cleanReason = (anaReason && anaReason !== 'HOLD' && anaReason !== 'MANAGE_POSITION') ? anaReason : null;
         let isSell = false;
         let actionTitle = 'TIẾP TỤC NẮM GIỮ';
         let actionBadge = 'badge-emerald';
-        let actionDesc = anaReason || `Vị thế an toàn, xu hướng được bảo toàn (${rText}). Tiếp tục nắm giữ theo sóng.`;
+        let actionDesc = cleanReason || 'Đang giữ vị thế; chưa có điều kiện thoát.';
         let bannerBg = 'var(--phase-markup-bg)';
         let bannerBorder = 'var(--phase-markup-border)';
         let bannerColor = 'var(--emerald)';
@@ -190,7 +191,7 @@
                                 suggestedStop = parseFloat(rawStop);
                             }
                         } else if (d.action === 'MANAGE_POSITION') {
-                            anaReason = (d.reason && typeof d.reason === 'string' && d.reason !== 'MANAGE_POSITION') ? d.reason : 'Đang giữ vị thế; chưa có điều kiện thoát.';
+                            anaReason = (d.reason && typeof d.reason === 'string' && d.reason !== 'HOLD' && d.reason !== 'MANAGE_POSITION') ? d.reason : 'Đang giữ vị thế; chưa có điều kiện thoát.';
                         }
                     }
                 } catch (e) {
@@ -237,6 +238,10 @@
                 );
                 const rText = `${rMultiple >= 0 ? '+' : ''}${rMultiple.toFixed(2)} R`;
 
+                const rawPolicyId = p.policy_id || p.policyId || '';
+                const starInfo = getStrategyStarRating(rawPolicyId);
+                const friendlyTitle = getFriendlyWyckoffTitle(rawPolicyId, direction);
+
                 const banner = evaluateActionBanner({
                     engineRec,
                     reachedStop,
@@ -271,7 +276,12 @@
                     notional: notional,
                     risk: margin,
                     liqPrice: liqPrice,
-                    policyId: p.policy_id || p.policyId || '',
+                    policyId: rawPolicyId,
+                    friendlyTitle: friendlyTitle,
+                    starDisplay: starInfo.display,
+                    starTier: starInfo.tier,
+                    starAdvice: starInfo.advice,
+                    starBadgeClass: starInfo.badgeClass,
                     entryTime: p.entry_time || p.entryTime || '',
                     pnlPercent: pnlPercent,
                     pnlUsdt: pnlUsdt,
@@ -537,8 +547,10 @@
                         {/if}
                         <span class="badge {pos.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{pos.direction === 'SHORT' ? 'BÁN' : 'MUA'}</span>
                         <span class="badge {pos.statusClass}">{pos.statusLabel}</span>
-                        {#if pos.policyId}
-                            <span class="badge badge-neutral">Chiến Lược: {pos.policyId}</span>
+                        {#if pos.starDisplay}
+                            <span class="badge {pos.starBadgeClass || 'badge-neutral'}" title={pos.starAdvice} style="font-weight: 700;">
+                                {pos.starDisplay} {pos.starTier}{pos.friendlyTitle ? ` · ${pos.friendlyTitle}` : ''}
+                            </span>
                         {/if}
                     </div>
                     <button class="btn {pos.actionBtnClass || (pos.isSell ? 'btn-rose' : 'btn-outline')}" style="font-size: 0.825rem; padding: 0.35rem 0.85rem;" on:click={() => handleOpenCloseModal(pos)}>

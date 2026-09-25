@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { fetchPositionHistoryApi, cleanSymbol, formatPrice, formatVNTime } from '../api.js';
+    import { fetchPositionHistoryApi, cleanSymbol, formatPrice, formatVNTime, getStrategyStarRating, getFriendlyWyckoffTitle } from '../api.js';
 
     let historyList = [];
     let isLoading = false;
@@ -20,12 +20,20 @@
                     const r = p.realized_r != null ? parseFloat(p.realized_r) : 0;
                     const pnl = p.realized_pnl != null ? parseFloat(p.realized_pnl) : 0;
                     const pnlPercent = p.realized_pnl_percent_display || (p.realized_pnl_percent ? `${p.realized_pnl_percent.toFixed(2)}%` : '');
+                    const rawPolicyId = p.policy_id || '';
+                    const dir = p.direction || 'LONG';
+                    const starInfo = getStrategyStarRating(rawPolicyId);
+                    const friendlyTitle = rawPolicyId ? getFriendlyWyckoffTitle(rawPolicyId, dir) : 'Vị Thế Thủ Công';
 
                     return {
                         id: p.id,
                         symbol: p.symbol || 'ETHUSDT',
-                        direction: p.direction || 'LONG',
-                        policyId: p.policy_id || '',
+                        direction: dir,
+                        policyId: rawPolicyId,
+                        starDisplay: starInfo.display,
+                        starAdvice: starInfo.advice,
+                        starBadgeClass: starInfo.badgeClass,
+                        friendlyTitle: friendlyTitle,
                         entry: entry,
                         exit: exit,
                         exitReason: p.exit_reason || 'MANUAL_CLOSE',
@@ -120,7 +128,7 @@
                     <tr style="border-bottom: 1px solid var(--border-card); text-align: left;">
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Mã Coin</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Hướng</th>
-                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Chiến Lược</th>
+                        <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Độ Mạnh / Mô Hình</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Vào</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Giá Đóng</th>
                         <th style="padding: 0.75rem; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Lý Do Đóng</th>
@@ -137,8 +145,14 @@
                             <td style="padding: 0.85rem 0.75rem;">
                                 <span class="badge {item.direction === 'LONG' ? 'badge-emerald' : 'badge-rose'}">{item.direction === 'SHORT' ? 'BÁN' : 'MUA'}</span>
                             </td>
-                            <td style="padding: 0.85rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
-                                {item.policyId || 'THỦ CÔNG'}
+                            <td style="padding: 0.85rem 0.75rem;">
+                                {#if item.starDisplay}
+                                    <span class="badge {item.starBadgeClass}" style="font-size: 0.75rem;" title={item.starAdvice || ''}>
+                                        {item.starDisplay} {item.friendlyTitle}
+                                    </span>
+                                {:else}
+                                    <span class="badge badge-neutral" style="font-size: 0.75rem;">{item.friendlyTitle}</span>
+                                {/if}
                             </td>
                             <td style="padding: 0.85rem 0.75rem; font-weight: 600; font-family: var(--font-mono);">
                                 ${formatPrice(item.entry)}

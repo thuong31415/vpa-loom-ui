@@ -818,6 +818,14 @@ export function getFriendlyWyckoffTitle(policyId, direction = 'LONG') {
             return 'Kiểm Định Lại Vùng Vừa Phá Vỡ';
         case 'POST_BREAK_LOW_SUPPLY_ACCEPTANCE_V1':
             return 'Cạn Cung Sau Phá Vỡ Cản';
+        case 'REACCUMULATION_ABSORPTION_RECLAIM_V1':
+            return 'Hấp Thụ & Tái Tích Lũy';
+        case 'HIGHER_BALANCE_ABSORPTION_BREAKOUT_V1':
+            return 'Bứt Phá Nền Giá Cao';
+        case 'HEHR_DOWN_PROMPT_MARKDOWN_CONTINUATION_V1':
+            return 'Tiếp Diễn Đà Giảm Mạnh';
+        case 'HEHR_DOWN_CREATED_SUPPLY_RETEST_V1':
+            return 'Kiểm Định Vùng Cung Xả Mạnh';
         case 'RANGE_BREAK_IMPULSE_V1':
             return 'Bứt Phá Biên Độ Tích Lũy';
         case 'RANGE_BREAK_CONTINUATION_V1':
@@ -830,6 +838,96 @@ export function getFriendlyWyckoffTitle(policyId, direction = 'LONG') {
         default:
             return direction === 'LONG' ? 'Mô hình Mua Tích Lũy' : 'Mô hình Bán Phân Phối';
     }
+}
+
+export function getStrategyStarRating(policyId, ratingObj = null) {
+    if (ratingObj && typeof ratingObj.stars === 'number') {
+        const stars = ratingObj.stars;
+        return {
+            stars,
+            display: ratingObj.display || '⭐'.repeat(stars),
+            tier: ratingObj.tier || (stars >= 5 ? 'TOP ALPHA' : stars === 4 ? 'TIẾP DIỄN SÓNG' : stars === 3 ? 'THĂM DÒ BIÊN ĐỘ' : 'THẬN TRỌNG'),
+            advice: ratingObj.advice || '',
+            probation: Boolean(ratingObj.probation),
+            badgeClass: stars >= 4 ? 'badge-emerald' : stars === 3 ? 'badge-amber' : 'badge-neutral'
+        };
+    }
+
+    if (!policyId) {
+        return {
+            stars: 3,
+            display: '⭐⭐⭐',
+            tier: 'VỊ THẾ THỦ CÔNG',
+            advice: 'Quản lý rủi ro theo kỷ luật Stop-loss',
+            probation: false,
+            badgeClass: 'badge-neutral'
+        };
+    }
+
+    const code = String(policyId).toUpperCase();
+    // 5 Stars: Top Alpha families
+    if (
+        code.includes('SHORT_BREAK_CONTINUATION') ||
+        code.includes('WYCKOFF_CLIMAX_BASE') ||
+        code.includes('SC_SPRING_RECOVERY') ||
+        code.includes('DIRECTIONAL_OPEN_SURFACE') ||
+        code.includes('SC_MARKDOWN_RECOVERY') ||
+        code.includes('SC_TERMINAL_ABSORPTION')
+    ) {
+        return {
+            stars: 5,
+            display: '⭐⭐⭐⭐⭐',
+            tier: 'TOP ALPHA',
+            advice: 'Ưu tiên phân bổ vốn lớn · Săn sóng chủ lực',
+            probation: false,
+            badgeClass: 'badge-emerald'
+        };
+    }
+
+    // 4 Stars: Verified Trend / Reclaim Runners
+    if (
+        code.includes('RANGE_BREAK_IMPULSE') ||
+        code.includes('REACCUMULATION_ABSORPTION_RECLAIM') ||
+        code.includes('POST_BREAK_LOW_SUPPLY') ||
+        code.includes('HEHR_DOWN_CREATED_SUPPLY') ||
+        code.includes('HEHR_DOWN_PROMPT_MARKDOWN')
+    ) {
+        return {
+            stars: 4,
+            display: '⭐⭐⭐⭐',
+            tier: 'TIẾP DIỄN SÓNG',
+            advice: 'Vốn tiêu chuẩn · Mở rộng sóng theo xu hướng',
+            probation: false,
+            badgeClass: 'badge-emerald'
+        };
+    }
+
+    // 3 Stars: Bounded range / retest setups
+    if (
+        code.includes('SC_SECONDARY_TEST_ABSORPTION') ||
+        code.includes('SC_MARKUP_RECOVERY') ||
+        code.includes('POST_BREAK_RETEST') ||
+        code.includes('RANGE_BREAK_CONTINUATION')
+    ) {
+        return {
+            stars: 3,
+            display: '⭐⭐⭐',
+            tier: 'THĂM DÒ BIÊN ĐỘ',
+            advice: 'Vốn vừa phải · Chốt lời chủ động tại cản gần',
+            probation: false,
+            badgeClass: 'badge-amber'
+        };
+    }
+
+    // 2 Stars: Probation / Cautious setups
+    return {
+        stars: 2,
+        display: '⭐⭐',
+        tier: 'THẬN TRỌNG',
+        advice: 'Thăm dò vốn nhỏ · Biên độ hẹp hoặc chưa kiểm chứng',
+        probation: code.includes('HIGHER_BALANCE_ABSORPTION_BREAKOUT'),
+        badgeClass: 'badge-neutral'
+    };
 }
 
 export function getFriendlyVPADesc(candidate) {

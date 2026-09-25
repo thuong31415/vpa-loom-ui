@@ -27,6 +27,7 @@
         translateAction,
         getFriendlyWyckoffTitle, 
         getFriendlyVPADesc,
+        getStrategyStarRating,
         cleanSymbol,
         formatPrice,
         formatVNTime 
@@ -708,11 +709,19 @@
                                 </button>
                             </div>
                         {:else if singleAnalysisData.plan}
+                            {@const planRating = getStrategyStarRating(singleAnalysisData.plan.policy_id, singleAnalysisData.plan.rating)}
                             <div style="background: var(--emerald-bg); border: 1px solid var(--emerald-border); border-radius: 8px; padding: 0.75rem 1rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <span class="badge badge-emerald">
-                                        KẾ HOẠCH {singleAnalysisData.plan.direction === 'SHORT' ? 'BÁN' : 'MUA'}
-                                    </span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.35rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                        <span class="badge badge-emerald">
+                                            KẾ HOẠCH {singleAnalysisData.plan.direction === 'SHORT' ? 'BÁN' : 'MUA'}
+                                        </span>
+                                        {#if planRating.display}
+                                            <span class="badge {planRating.badgeClass}" title={planRating.advice}>
+                                                {planRating.display} {planRating.tier}
+                                            </span>
+                                        {/if}
+                                    </div>
                                     <span style="font-size: 0.8rem; font-weight: 700; color: var(--emerald);">
                                         R:R: {singleAnalysisData.plan.reward_risk?.toFixed(2)} R
                                     </span>
