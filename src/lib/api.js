@@ -865,14 +865,12 @@ export function getStrategyStarRating(policyId, ratingObj = null) {
     }
 
     const code = String(policyId).toUpperCase();
-    // 5 Stars: Top Alpha families
+    // 5 Stars: Top Alpha families (sample >= 3 AND closed R/trade >= 5.0R)
     if (
         code.includes('SHORT_BREAK_CONTINUATION') ||
         code.includes('WYCKOFF_CLIMAX_BASE') ||
         code.includes('SC_SPRING_RECOVERY') ||
-        code.includes('DIRECTIONAL_OPEN_SURFACE') ||
-        code.includes('SC_MARKDOWN_RECOVERY') ||
-        code.includes('SC_TERMINAL_ABSORPTION')
+        code.includes('SC_MARKDOWN_RECOVERY')
     ) {
         return {
             stars: 5,
@@ -884,14 +882,8 @@ export function getStrategyStarRating(policyId, ratingObj = null) {
         };
     }
 
-    // 4 Stars: Verified Trend / Reclaim Runners
-    if (
-        code.includes('RANGE_BREAK_IMPULSE') ||
-        code.includes('REACCUMULATION_ABSORPTION_RECLAIM') ||
-        code.includes('POST_BREAK_LOW_SUPPLY') ||
-        code.includes('HEHR_DOWN_CREATED_SUPPLY') ||
-        code.includes('HEHR_DOWN_PROMPT_MARKDOWN')
-    ) {
+    // 4 Stars: Verified Trend Runners (sample >= 3 AND closed R/trade >= 2.0R)
+    if (code.includes('RANGE_BREAK_IMPULSE')) {
         return {
             stars: 4,
             display: '⭐⭐⭐⭐',
@@ -902,12 +894,13 @@ export function getStrategyStarRating(policyId, ratingObj = null) {
         };
     }
 
-    // 3 Stars: Bounded range / retest setups
+    // 3 Stars: Positive canonical expectancy with thin sample size (1 <= N < 3)
     if (
-        code.includes('SC_SECONDARY_TEST_ABSORPTION') ||
-        code.includes('SC_MARKUP_RECOVERY') ||
-        code.includes('POST_BREAK_RETEST') ||
-        code.includes('RANGE_BREAK_CONTINUATION')
+        code.includes('DIRECTIONAL_OPEN_SURFACE') ||
+        code.includes('SC_TERMINAL_ABSORPTION') ||
+        code.includes('POST_BREAK_LOW_SUPPLY') ||
+        code.includes('HEHR_DOWN_CREATED_SUPPLY') ||
+        code.includes('SC_SECONDARY_TEST_ABSORPTION')
     ) {
         return {
             stars: 3,
